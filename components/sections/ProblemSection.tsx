@@ -25,7 +25,7 @@ export default function ProblemSection() {
       <div className="max-w-5xl mx-auto">
         <FadeIn>
           <h2
-            className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-14"
+            className="font-fraunces font-semibold text-[var(--bindr-navy)] text-center mb-14"
             style={{ fontSize: "clamp(28px, 4vw, 44px)", letterSpacing: "-0.02em" }}
           >
             You&rsquo;ve done this dance before.

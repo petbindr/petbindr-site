@@ -44,7 +44,7 @@ export default function BuildInPublicSection() {
       <div className="max-w-3xl mx-auto">
         <FadeIn>
           <h2
-            className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-6"
+            className="font-fraunces font-semibold text-[var(--bindr-navy)] text-center mb-6"
             style={{ fontSize: "clamp(28px, 4vw, 44px)", letterSpacing: "-0.02em" }}
           >
             We&rsquo;re building this in the open.
