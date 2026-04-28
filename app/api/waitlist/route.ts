@@ -106,12 +106,12 @@ export async function POST(req: NextRequest) {
                 <a href="https://petbindr.com" style="color:#1F3C5F;font-weight:600;">petbindr.com</a>
               </p>
               <hr style="border:none;border-top:1px solid #E8ECEF;margin:0 0 28px;" />
-              <p style="margin:0 0 16px;font-size:14px;color:#6B7785;line-height:1.5;">
+              <p style="margin:0;font-size:14px;color:#6B7785;line-height:1.8;">
                 — The PetBindr team<br />
-                <a href="mailto:hello@petbindr.com" style="color:#6B7785;">hello@petbindr.com</a>
-              </p>
-              <p style="margin:0;font-size:13px;color:#6B7785;">
-                <a href="https://instagram.com/petbindr" style="color:#6B7785;text-decoration:none;margin-right:12px;">Instagram</a>
+                <a href="mailto:hello@petbindr.com" style="color:#6B7785;text-decoration:none;">hello@petbindr.com</a>
+                &nbsp;&middot;&nbsp;
+                <a href="https://instagram.com/petbindr" style="color:#6B7785;text-decoration:none;">Instagram</a>
+                &nbsp;&middot;&nbsp;
                 <a href="https://tiktok.com/@petbindr" style="color:#6B7785;text-decoration:none;">TikTok</a>
               </p>
             </td>
