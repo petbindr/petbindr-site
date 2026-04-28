@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
                 <a href="https://petbindr.com" style="color:#1F3C5F;font-weight:600;">petbindr.com</a>
               </p>
               <hr style="border:none;border-top:1px solid #E8ECEF;margin:0 0 28px;" />
-              <p style="margin:0;font-size:14px;color:#6B7785;line-height:1.8;">
+              <p style="margin:0;font-size:14px;color:#6B7785;line-height:1.8;text-align:center;">
                 — The PetBindr team<br />
                 <a href="mailto:hello@petbindr.com" style="color:#6B7785;text-decoration:none;">hello@petbindr.com</a>
                 &nbsp;&middot;&nbsp;
