@@ -83,9 +83,7 @@ export async function POST(req: NextRequest) {
         <table width="100%" style="max-width:560px;background-color:#FFFFFF;border-radius:16px;padding:48px 40px;border:1px solid #E8ECEF;">
           <tr>
             <td>
-              <p style="margin:0 0 32px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#6B7785;">
-                PetBindr
-              </p>
+              <img src="https://petbindr.com/logo.png" alt="PetBindr" width="140" style="display:block;margin:0 0 32px;" />
               <h1 style="margin:0 0 20px;font-size:28px;font-weight:700;color:#1F3C5F;line-height:1.2;font-family:Georgia,serif;">
                 You&rsquo;re on the list.
               </h1>
@@ -108,9 +106,13 @@ export async function POST(req: NextRequest) {
                 <a href="https://petbindr.com" style="color:#1F3C5F;font-weight:600;">petbindr.com</a>
               </p>
               <hr style="border:none;border-top:1px solid #E8ECEF;margin:0 0 28px;" />
-              <p style="margin:0;font-size:14px;color:#6B7785;line-height:1.5;">
+              <p style="margin:0 0 16px;font-size:14px;color:#6B7785;line-height:1.5;">
                 — The PetBindr team<br />
-                <a href="mailto:contact@petbindr.com" style="color:#6B7785;">contact@petbindr.com</a>
+                <a href="mailto:hello@petbindr.com" style="color:#6B7785;">hello@petbindr.com</a>
+              </p>
+              <p style="margin:0;font-size:13px;color:#6B7785;">
+                <a href="https://instagram.com/petbindr" style="color:#6B7785;text-decoration:none;margin-right:12px;">Instagram</a>
+                <a href="https://tiktok.com/@petbindr" style="color:#6B7785;text-decoration:none;">TikTok</a>
               </p>
             </td>
           </tr>
@@ -138,7 +140,11 @@ ${
     : ""
 }If you have a friend who's ever had to leave a 13-page binder for a pet sitter, send them our way: https://petbindr.com
 
-— The PetBindr team`;
+— The PetBindr team
+hello@petbindr.com
+
+Instagram: https://instagram.com/petbindr
+TikTok: https://tiktok.com/@petbindr`;
 
     await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
