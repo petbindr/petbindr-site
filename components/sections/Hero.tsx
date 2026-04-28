@@ -21,8 +21,8 @@ export default function Hero() {
       </nav>
 
       {/* Hero content */}
-      <div className="flex-1 flex items-center px-6 md:px-12 pb-20 pt-8">
-        <div className="max-w-3xl">
+      <div className="flex-1 flex items-center justify-center px-6 md:px-12 pb-20 pt-8">
+        <div className="max-w-3xl w-full text-center flex flex-col items-center">
           <FadeIn delay={0}>
             <h1
               className="font-fraunces font-semibold text-[var(--bindr-navy)] leading-tight tracking-tight mb-6"
