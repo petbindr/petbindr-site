@@ -1,0 +1,10 @@
+<!-- TODO: Replace this file with the real PetBindr logo SVG.
+     Requirements: transparent background, works on both cream (#FBF8F3) and white (#FFFFFF).
+     Target display size: 160px wide on desktop, 120px wide on mobile. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" fill="none">
+  <!-- Paw mark placeholder -->
+  <circle cx="36" cy="48" r="18" fill="#1F3C5F" opacity="0.15"/>
+  <circle cx="36" cy="48" r="10" fill="#1F3C5F"/>
+  <!-- Wordmark placeholder -->
+  <text x="66" y="60" font-family="Georgia, serif" font-size="32" font-weight="700" fill="#1F3C5F">PetBindr</text>
+</svg>

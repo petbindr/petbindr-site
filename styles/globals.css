@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Brand CSS Variables ─────────────────────────────────────────────────── */
+:root {
+  --bindr-navy:    #1F3C5F;
+  --bindr-teal:    #74C4CD;
+  --soft-teal:     #B5DDDF;
+  --warm-cream:    #FBF8F3;
+  --pure-white:    #FFFFFF;
+  --coral-cta:     #FF6B5B;
+  --coral-cta-hover: #e55a4a;
+  --charcoal:      #1A1F2E;
+  --slate-gray:    #6B7785;
+  --mist-gray:     #E8ECEF;
+  --success-green: #4FAE7C;
+  --alert-amber:   #E5A547;
+  --error-red:     #D14545;
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--warm-cream);
+  color: var(--charcoal);
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Typography helpers ──────────────────────────────────────────────────── */
+.font-fraunces { font-family: "Fraunces", serif; }
+.font-inter    { font-family: "Inter", sans-serif; }
+
+/* ─── CTA button ──────────────────────────────────────────────────────────── */
+.btn-coral {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--coral-cta);
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.btn-coral:hover {
+  background-color: var(--coral-cta-hover);
+}
+.btn-coral:active {
+  transform: scale(0.98);
+}
+.btn-coral:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ─── Ghost button ────────────────────────────────────────────────────────── */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--bindr-navy);
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 2px solid var(--bindr-navy);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  min-height: 44px;
+  text-decoration: none;
+}
+.btn-ghost:hover {
+  background-color: rgba(31, 60, 95, 0.06);
+}
+
+/* ─── Email input ─────────────────────────────────────────────────────────── */
+.email-input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1.5px solid var(--mist-gray);
+  background: var(--pure-white);
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  color: var(--charcoal);
+  outline: none;
+  transition: border-color 0.2s ease;
+  min-height: 44px;
+}
+.email-input:focus {
+  border-color: var(--bindr-teal);
+}
+.email-input::placeholder {
+  color: var(--slate-gray);
+}
+
+/* Screenshot placeholder */
+.screenshot-placeholder {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  background-color: var(--soft-teal);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bindr-navy);
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.7;
+  max-width: 260px;
+}
