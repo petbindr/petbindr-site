@@ -152,6 +152,13 @@ TikTok: https://tiktok.com/@petbindr`;
       text: textBody,
       html: htmlBody,
     });
+
+    await getResend().emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: "hello@petbindr.com",
+      subject: `New waitlist signup: ${email}`,
+      text: `${email} just joined the waitlist.${isFoundingMember ? " Founding member." : ""}`,
+    });
   } catch (emailErr) {
     // Don't fail the request if email sending fails — signup is saved
     console.error("Resend error:", emailErr);
