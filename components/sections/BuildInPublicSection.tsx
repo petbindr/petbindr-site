@@ -41,7 +41,7 @@ const socials = [
 export default function BuildInPublicSection() {
   return (
     <section style={{ background: "var(--pure-white)" }} className="py-20 md:py-28 px-6 md:px-12">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto text-center">
         <FadeIn>
           <h2
             className="font-fraunces font-semibold text-[var(--bindr-navy)] text-center mb-6"
@@ -63,7 +63,7 @@ export default function BuildInPublicSection() {
         </FadeIn>
 
         <FadeIn delay={0.2}>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 justify-center">
             {socials.map(({ icon: Icon, href, label }) => (
               <a
                 key={label}
