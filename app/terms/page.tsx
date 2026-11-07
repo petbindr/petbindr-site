@@ -53,10 +53,10 @@ export default function TermsPage() {
           <p>
             <strong>Contact:</strong> Questions? Email us at{" "}
             <a
-              href="mailto:contact@petbindr.com"
+              href="mailto:hello@petbindr.com"
               className="text-[var(--bindr-navy)] underline"
             >
-              contact@petbindr.com
+              hello@petbindr.com
             </a>
             .
           </p>

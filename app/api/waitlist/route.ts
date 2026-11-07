@@ -3,6 +3,7 @@ import { z } from "zod";
 import { FieldValue } from "firebase-admin/firestore";
 import { getFirebaseAdmin } from "@/lib/firebase-admin";
 import { getResend, FROM_EMAIL, FROM_NAME } from "@/lib/resend";
+import { newUnsubscribeToken, unsubscribePageUrl, unsubscribeHeaders } from "@/lib/unsubscribe";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email address.").toLowerCase().trim(),
@@ -58,15 +59,18 @@ export async function POST(req: NextRequest) {
   const currentCount = countSnap.data().count;
   const isFoundingMember = currentCount < FOUNDING_MEMBER_LIMIT;
 
-  // Write to Firestore
+  // Write to Firestore (unsubscribeToken lets every marketing email carry an unsubscribe link)
+  const unsubscribeToken = newUnsubscribeToken();
   await docRef.set({
     email,
+    unsubscribeToken,
     createdAt: FieldValue.serverTimestamp(),
     foundingMember: isFoundingMember,
     ...(finalSource ? { source: finalSource } : {}),
   });
 
   // Send confirmation email
+  const unsubscribeUrl = unsubscribePageUrl(email, unsubscribeToken);
   try {
     const htmlBody = `
 <!DOCTYPE html>
@@ -118,7 +122,8 @@ export async function POST(req: NextRequest) {
         </table>
         <p style="margin:20px 0 0;font-size:12px;color:#6B7785;">
           © PetBindr LLC 2026 &bull;
-          <a href="https://petbindr.com/privacy" style="color:#6B7785;">Privacy</a>
+          <a href="https://petbindr.com/privacy" style="color:#6B7785;">Privacy</a> &bull;
+          <a href="${unsubscribeUrl}" style="color:#6B7785;">Unsubscribe</a>
         </p>
       </td>
     </tr>
@@ -143,7 +148,9 @@ ${
 hello@petbindr.com
 
 Instagram: https://instagram.com/petbindr
-TikTok: https://tiktok.com/@petbindr`;
+TikTok: https://tiktok.com/@petbindr
+
+Don't want these emails? Unsubscribe: ${unsubscribeUrl}`;
 
     await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
@@ -151,6 +158,7 @@ TikTok: https://tiktok.com/@petbindr`;
       subject: "You're on the list.",
       text: textBody,
       html: htmlBody,
+      headers: unsubscribeHeaders(email, unsubscribeToken),
     });
 
     await getResend().emails.send({

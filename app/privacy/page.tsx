@@ -84,7 +84,7 @@ const sections: { title: string; body: React.ReactNode }[] = [
         <li>To send the emails and notifications you&rsquo;d expect: invites, account verification and password resets, reminders, check-off updates, and missed-dose alerts. You can turn notifications off in the app or in iPhone Settings.</li>
         <li>To keep PetBindr working and secure: fix crashes, prevent abuse, and enforce who can see what.</li>
         <li>To improve PetBindr, using the usage events and crash reports described above.</li>
-        <li>For the waitlist: to email you about the launch and occasional product updates. To stop them, reply to any of these emails or write to <a href="mailto:hello@petbindr.com" className={link}>hello@petbindr.com</a>.</li>
+        <li>For the waitlist: to email you about the launch and occasional product updates. Every one has an unsubscribe link, or you can write to <a href="mailto:hello@petbindr.com" className={link}>hello@petbindr.com</a>.</li>
       </ul>
     ),
   },

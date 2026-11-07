@@ -48,9 +48,8 @@ export default function FooterSection() {
           <Link href="/security" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
             Security
           </Link>
-          {/* TODO: Set up contact@petbindr.com email forwarding in GoDaddy */}
-          <a href="mailto:contact@petbindr.com" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
-            contact@petbindr.com
+          <a href="mailto:hello@petbindr.com" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+            hello@petbindr.com
           </a>
         </nav>
 
