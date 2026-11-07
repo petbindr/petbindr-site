@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 
 // Keep every statement here true of the app as it ships today.
 // Don't add claims (e.g. "encrypted codes", "access log") until they exist.
+// Photos: true since 2026-11-06 (SDK loading + removeDownloadTokens + one-time token cleanup).
 
 const sections: { title: string; body: React.ReactNode }[] = [
   {
@@ -68,6 +69,11 @@ const sections: { title: string; body: React.ReactNode }[] = [
           Who can see what isn&rsquo;t just hidden in the app. Our database checks permissions on
           every request, so someone without access can&rsquo;t read your pet&rsquo;s records or
           your home codes, even with a modified app.
+        </p>
+        <p>
+          Pet photos, diary and sit-update photos, and health documents are protected the same
+          way. There are no public links to them, so once someone&rsquo;s access ends, they
+          can&rsquo;t keep opening your photos, even from a link they saved.
         </p>
       </>
     ),
