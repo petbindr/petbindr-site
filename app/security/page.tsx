@@ -8,8 +8,10 @@ export const metadata: Metadata = {
 };
 
 // Keep every statement here true of the app as it ships today.
-// Don't add claims (e.g. "encrypted codes", "access log") until they exist.
+// Don't add claims (e.g. "encrypted codes") until they exist.
 // Photos: true since 2026-11-06 (SDK loading + removeDownloadTokens + one-time token cleanup).
+// Recently Viewed: true since 2026-11-06 (getSharedHousehold logs to households/{uid}/accessLog;
+// rules: owner read only, no client writes).
 
 const sections: { title: string; body: React.ReactNode }[] = [
   {
@@ -40,6 +42,12 @@ const sections: { title: string; body: React.ReactNode }[] = [
           On the Property Information screen, <strong>Who Can See This</strong> lists everyone
           who currently has your codes, with a <strong>Turn Off</strong> button next to each
           person and a <strong>Turn Off for Everyone</strong> button.
+        </p>
+        <p>
+          The same screen shows <strong>Recently Viewed</strong>: each time someone you&rsquo;ve
+          shared with opens your home info, it&rsquo;s recorded there with their name and the
+          time. Only you can see this list, and no one you&rsquo;ve shared with can change or
+          delete it.
         </p>
       </>
     ),
