@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 // PetBindr/PetBindr/PrivacyInfo.xcprivacy. Every statement must be true of the
 // app and website as they ship. Not legal advice: have it reviewed before launch.
 
-const LAST_UPDATED = "November 6, 2026";
+const LAST_UPDATED = "November 8, 2026";
 
 const link = "text-[var(--bindr-navy)] underline";
 
@@ -126,8 +126,10 @@ const sections: { title: string; body: React.ReactNode }[] = [
       <p>
         We keep your information while you have an account. When people you shared with lose
         access, because you turned it off or the end date passed, they can no longer see your
-        information. If you ask us to delete your account and information, we&rsquo;ll delete it
-        within 30 days, except where we must keep something for legal reasons. Waitlist emails are
+        information. Deleting your account in the app removes your information right away; if you
+        ask us by email instead, we&rsquo;ll delete it within 30 days. Our database is backed up
+        daily and each backup is kept for 14 days, so deleted information is fully gone from backups
+        within 14 days. We keep something longer only where the law requires it. Waitlist emails are
         kept until you unsubscribe or ask us to remove them.
       </p>
     ),
@@ -138,7 +140,7 @@ const sections: { title: string; body: React.ReactNode }[] = [
       <ul className="list-disc pl-5 space-y-2">
         <li><strong>Sharing:</strong> change or remove anyone&rsquo;s access at any time in Sharing &amp; Sits, and turn home access off for anyone on the Property Information screen.</li>
         <li><strong>Notifications:</strong> turn them off in the app&rsquo;s Notification Settings or in iPhone Settings.</li>
-        <li><strong>Your information:</strong> view and edit it in the app. To get a copy, or to have your account and all your information deleted, email <a href="mailto:hello@petbindr.com" className={link}>hello@petbindr.com</a>. Deleting your account in the app signs you out and removes your account; to remove your pets&rsquo; records too, email us.</li>
+        <li><strong>Your information:</strong> view and edit it in the app. To get a copy, use Account &rarr; Export My Data. To delete everything, use Account &rarr; Delete Account: it deletes your account, pets, records, photos, home information, and reminders, and ends access for everyone you shared with. Check-offs and updates you made on other people&rsquo;s pets stay with those pets. You can also email <a href="mailto:hello@petbindr.com" className={link}>hello@petbindr.com</a> for either.</li>
         <li>Depending on where you live, you may have additional rights to access, correct, or delete your information, or to object to how it&rsquo;s used. Email us and we&rsquo;ll help.</li>
       </ul>
     ),
