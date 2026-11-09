@@ -33,6 +33,7 @@ type Pet = {
 type LinkData =
   | {
       state: "active"; sitterName: string; ownerName: string; ownerPhone: string | null; timeZone: string;
+      notes?: string | null; // "What's different this time", from the owner's trip setup
       endDate: string | null; now: string; pets: Pet[];
       emergencyContacts: { name: string; relationship: string | null; phone: string }[] | null;
     }
@@ -183,6 +184,17 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
           </a>
         )}
       </header>
+
+      {data.notes && (
+        <Card title="This time" tone="note">
+          <p className="font-inter text-[var(--charcoal)] whitespace-pre-line" style={{ fontSize: "16px" }}>
+            {data.notes}
+          </p>
+          <p className="font-inter text-[var(--slate-gray)] mt-2" style={{ fontSize: "14px" }}>
+            From {owner}
+          </p>
+        </Card>
+      )}
 
       {data.pets.some((p) => p.today.length > 0) && (
         <Card title={`Today, ${fmtDay(data.now, tz)}`}>
@@ -380,11 +392,14 @@ function PetCard({ pet }: { pet: Pet }) {
   );
 }
 
-function Card({ title, tone, children }: { title?: string; tone?: "alert"; children: React.ReactNode }) {
+function Card({ title, tone, children }: { title?: string; tone?: "alert" | "note"; children: React.ReactNode }) {
   return (
     <section
       className="rounded-2xl p-5 md:p-6"
-      style={{ background: tone === "alert" ? "#FDECEA" : "var(--pure-white)", border: "1px solid var(--mist-gray)" }}
+      style={{
+        background: tone === "alert" ? "#FDECEA" : tone === "note" ? "#E8F4F3" : "var(--pure-white)",
+        border: "1px solid var(--mist-gray)",
+      }}
     >
       {title && (
         <h2
