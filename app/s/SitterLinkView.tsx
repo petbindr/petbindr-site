@@ -39,13 +39,22 @@ type LinkData =
     }
   | { state: "notFound" | "turnedOff" | "expired" | "notStarted"; ownerName: string | null; sitterName: string | null; startDate: string | null };
 
+const OFFLINE_MESSAGE = "Couldn't reach PetBindr. Check your connection and try again.";
+
 async function callFunction<T>(name: string, data: Record<string, unknown>): Promise<T> {
-  const res = await fetch(`${FUNCTIONS_URL}/${name}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data }),
-    referrerPolicy: "no-referrer",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${FUNCTIONS_URL}/${name}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data }),
+      referrerPolicy: "no-referrer",
+    });
+  } catch {
+    // No signal or the request was blocked: the browser's own text ("Load failed",
+    // "Failed to fetch") meant nothing to a sitter standing next to the pet
+    throw new Error(OFFLINE_MESSAGE);
+  }
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.error) {
     throw new Error(json?.error?.message || "Something went wrong. Please try again.");
@@ -124,7 +133,7 @@ export default function SitterLinkView() {
 
   if (!data) {
     return loadError ? (
-      <Message heading="Couldn't load this page" text={`${loadError} Check your connection and try again.`}>
+      <Message heading="Couldn't load this page" text={loadError}>
         <button className="btn-coral" onClick={() => token && load(token)}>Try Again</button>
       </Message>
     ) : (
@@ -175,7 +184,7 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
           Caring for {namesText}
         </h1>
         <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "16px" }}>
-          Hi {data.sitterName}! {owner} shared everything you need here
+          {data.sitterName?.trim() ? `Hi ${data.sitterName.trim()}! ` : "Hi! "}{owner} shared everything you need here
           {data.endDate ? <>, through <strong>{fmtDay(data.endDate, tz)}</strong></> : null}.
         </p>
         {data.ownerPhone && (
