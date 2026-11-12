@@ -330,6 +330,8 @@ function SignedIn({ user }: { user: User }) {
           </Card>
         </>
       )}
+      {ready && pets.length > 0 && <AlertEmails uid={user.uid} email={user.email || ""} />}
+
       <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
         Signed in as {user.email}. Tap a pet for its vets, allergies, medications and more.
       </p>
@@ -459,6 +461,48 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
 
 function fmtTime(d: Date) {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+// Missed-dose / missed-feeding alerts by email, for people without the iPhone
+// app (the server sends them when it can't send a notification). On unless
+// turned off here: users/{uid}.alertEmails.
+function AlertEmails({ uid, email }: { uid: string; email: string }) {
+  const [on, setOn] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    getDoc(doc(firebase().db, "users", uid))
+      .then((d) => setOn(!(d.exists() && d.data().alertEmails === false)))
+      .catch(() => setOn(true));
+  }, [uid]);
+  if (on === null) return null;
+  async function toggle(next: boolean) {
+    setSaving(true);
+    setError(false);
+    try {
+      await setDoc(doc(firebase().db, "users", uid), { alertEmails: next }, { merge: true });
+      setOn(next);
+    } catch {
+      setError(true);
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <Card title="Alerts">
+      <label className="flex items-start gap-3 font-inter text-[var(--charcoal)] cursor-pointer">
+        <input type="checkbox" className="mt-1" style={{ width: 20, height: 20 }} checked={on} disabled={saving}
+          onChange={(e) => toggle(e.target.checked)} />
+        <span>
+          Email me at <strong>{email}</strong> when a dose or feeding is missed.
+          <span className="block text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+            Only if you don&apos;t have the PetBindr iPhone app (it sends a notification instead).
+          </span>
+        </span>
+      </label>
+      {error && <p className="font-inter mt-2" style={{ fontSize: "14px", color: "var(--error-red)" }} role="alert">Couldn&apos;t save that. Try again.</p>}
+    </Card>
+  );
 }
 
 // Someone handing a pet over to you (adoption, end of a foster): accept it with

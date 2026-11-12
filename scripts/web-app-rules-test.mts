@@ -46,6 +46,9 @@ const { user } = await createUserWithEmailAndPassword(auth, email, "secret-123")
 const uid = user.uid;
 await setDoc(doc(db, "users", uid), { id: uid, email, displayName: "Priya", createdAt: serverTimestamp(), showOverdueReminders: false, overdueReminderPetIds: [] });
 check("sign-up profile saved", (await getDoc(doc(db, "users", uid))).data()?.displayName === "Priya");
+await setDoc(doc(db, "users", uid), { alertEmails: false }, { merge: true });
+check("Alerts setting: can turn alert emails off", (await getDoc(doc(db, "users", uid))).data()?.alertEmails === false);
+await denied("Alerts setting: can't change someone else's", setDoc(doc(db, "users", "owner"), { alertEmails: false }, { merge: true }));
 
 // Not a co-owner yet
 const coQuery = query(collection(db, "pets"), where("coOwnerIds", "array-contains", uid));
