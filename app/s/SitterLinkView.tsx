@@ -11,7 +11,11 @@ const REFRESH_MS = 5 * 60 * 1000;
 // and whether this link made the check-off, so it can change the amount
 type Amount = "some" | "none" | null;
 type Done = { by: string; at: string; amount?: Amount; canChange?: boolean } | null;
-type TodayItem = { kind: "feeding" | "medication"; id: string; title: string; detail: string | null; due: string; done: Done };
+// Medications also carry how to give it and the owner's photo, for the "Give it now" panel
+type TodayItem = {
+  kind: "feeding" | "medication"; id: string; title: string; detail: string | null; due: string; done: Done;
+  howTo?: string | null; photo?: string | null;
+};
 type Vet = { role: string; name: string; vetName: string | null; phone: string | null; address: string | null };
 type Pet = {
   id: string;
@@ -279,6 +283,16 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isFeeding = item.kind === "feeding";
+  // "Give it now": a dose from 30 minutes before it's due until it's given
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (isFeeding || done) return;
+    const t = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(t);
+  }, [isFeeding, done]);
+  const dueAt = Date.parse(item.due);
+  const giveNow = !isFeeding && !done && dueAt - 30 * 60_000 <= now;
+  const overdue = giveNow && dueAt < now - 5 * 60_000;
 
   useEffect(() => setDone(item.done), [item.done]);
   useEffect(() => {
@@ -324,7 +338,15 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
   const choices = (done ? (["all", "some", "none"] as const).filter((a) => a !== doneAmount) : (["some", "none"] as const));
 
   return (
-    <li className="py-3">
+    <li
+      className={giveNow ? "my-2 rounded-2xl p-3" : "py-3"}
+      style={giveNow ? { border: `2px solid ${overdue ? "var(--error-red)" : "var(--bindr-teal)"}`, background: "white" } : undefined}
+    >
+      {giveNow && (
+        <p className="font-inter font-semibold mb-1" style={{ fontSize: "14px", color: overdue ? "var(--error-red)" : "var(--bindr-navy)" }}>
+          {overdue ? `Overdue since ${fmtTime(item.due, tz)}: give it now` : `Time to give ${pet.name} this`}
+        </p>
+      )}
       <div className="flex items-center gap-3">
         <div className="w-16 shrink-0 font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
           {fmtTime(item.due, tz)}
@@ -334,7 +356,11 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
             {item.kind === "medication" ? "💊 " : "🍽️ "}
             {item.title}
           </p>
-          {item.detail && <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{item.detail}</p>}
+          {item.detail && (
+            <p className="font-inter" style={giveNow ? { fontSize: "18px", fontWeight: 600, color: "var(--charcoal)" } : { fontSize: "14px", color: "var(--slate-gray)" }}>
+              {item.detail}
+            </p>
+          )}
           {done && (
             <p className="font-inter" style={{ fontSize: "14px", color: doneColor }}>
               {doneMark} {isFeeding && doneAmount !== "all" ? `${AMOUNT_TEXT[doneAmount]} · ` : "Done "}
@@ -365,6 +391,17 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
           </button>
         )}
       </div>
+      {giveNow && (item.howTo || item.photo) && (
+        <div className="mt-2 space-y-2">
+          {item.howTo && (
+            <p className="font-inter text-[var(--charcoal)] whitespace-pre-line" style={{ fontSize: "16px" }}>{item.howTo}</p>
+          )}
+          {item.photo && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.photo} alt={`How to give ${item.title}`} className="rounded-xl w-full" style={{ maxHeight: 260, objectFit: "contain" }} />
+          )}
+        </div>
+      )}
       {isFeeding && choosing && (
         <div className="flex flex-wrap items-center gap-2 mt-2 sm:pl-[76px]">
           {choices.map((a) => (
