@@ -60,6 +60,10 @@ const pets = await getDocs(coQuery);
 check("Rex shows up once added", pets.size === 1 && pets.docs[0].data().name === "Rex");
 check("can read the feeding schedule", (await getDoc(doc(db, "pets/rex/feedingSchedule/schedule"))).exists());
 check("can read medication schedules", (await getDocs(collection(db, "pets/rex/medicationSchedules"))).size === 1);
+await admin.doc("pets/rex/allergies/a1").set({ allergenName: "Chicken", severity: "Severe", isActive: true });
+check("pet page: can read allergies", (await getDocs(collection(db, "pets/rex/allergies"))).size === 1);
+check("pet page: can read the pet's details", (await getDoc(doc(db, "pets/rex"))).data()?.name === "Rex");
+await denied("pet page: can't read the owner's household (home codes, contacts)", getDoc(doc(db, "households/owner")));
 
 // Feeding: check off, change amount, back to all, undo
 await setDoc(doc(db, `pets/rex/feedingLogs/${feed.id}`), feed.data);

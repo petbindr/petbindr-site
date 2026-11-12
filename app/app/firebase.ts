@@ -13,6 +13,7 @@ import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, connectAuthEmulator, type Auth } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator, type Firestore } from "firebase/firestore";
 import { getFunctions, connectFunctionsEmulator, type Functions } from "firebase/functions";
+import { getStorage, connectStorageEmulator, type FirebaseStorage } from "firebase/storage";
 
 const useEmulators = process.env.NEXT_PUBLIC_USE_EMULATORS === "1";
 const apiKey = useEmulators ? "demo-key" : (process.env.NEXT_PUBLIC_FIREBASE_API_KEY || WEB_API_KEY);
@@ -20,7 +21,7 @@ const apiKey = useEmulators ? "demo-key" : (process.env.NEXT_PUBLIC_FIREBASE_API
 /** False until the web app is registered in Firebase and its key is set */
 export const webAppConfigured = !!apiKey;
 
-let cached: { app: FirebaseApp; auth: Auth; db: Firestore; functions: Functions } | null = null;
+let cached: { app: FirebaseApp; auth: Auth; db: Firestore; functions: Functions; storage: FirebaseStorage } | null = null;
 
 export function firebase() {
   if (cached) return cached;
@@ -34,11 +35,13 @@ export function firebase() {
   const auth = getAuth(app);
   const db = getFirestore(app);
   const functions = getFunctions(app, "us-central1");
+  const storage = getStorage(app);
   if (useEmulators) {
     connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
     connectFirestoreEmulator(db, "127.0.0.1", 8080);
     connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+    connectStorageEmulator(storage, "127.0.0.1", 9199);
   }
-  cached = { app, auth, db, functions };
+  cached = { app, auth, db, functions, storage };
   return cached;
 }

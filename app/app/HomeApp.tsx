@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { firebase, webAppConfigured } from "./firebase";
+import PetPage from "./PetPage";
 import {
   tasksFor, startOfDay, feedingLogDoc, medicationLogDoc,
   type PetDay, type TodayTask, type FeedingAmount, type MedicationSchedule,
@@ -149,6 +150,14 @@ function SignedIn({ user }: { user: User }) {
   const [myName, setMyName] = useState(user.displayName || "");
   const [now, setNow] = useState(() => new Date());
   const [verified, setVerified] = useState(user.emailVerified);
+  // A pet's page is "#pet/<id>", so the browser's Back button returns to Today
+  const [openPetId, setOpenPetId] = useState<string | null>(null);
+  useEffect(() => {
+    const read = () => setOpenPetId(/^#pet\/(.+)$/.exec(window.location.hash)?.[1] || null);
+    read();
+    window.addEventListener("hashchange", read);
+    return () => window.removeEventListener("hashchange", read);
+  }, []);
   const [verifyNote, setVerifyNote] = useState<string | null>(null);
 
   // Pets you were invited to co-own (by email) are added once your email is confirmed
@@ -251,6 +260,10 @@ function SignedIn({ user }: { user: User }) {
     }, now, { ...names, [user.uid]: myName || "You" });
   }).sort((a, b) => a.time.getTime() - b.time.getTime());
 
+  if (openPetId) {
+    return <PetPage petId={openPetId} onBack={() => (window.history.length > 1 ? window.history.back() : (window.location.hash = ""))} />;
+  }
+
   const doneCount = tasks.filter((t) => t.done).length;
   const ready = loaded.own && loaded.co;
   const first = (myName || "").split(" ")[0];
@@ -302,8 +315,13 @@ function SignedIn({ user }: { user: User }) {
             <ul className="space-y-2">
               {pets.map((p) => (
                 <li key={p.id} className="font-inter">
-                  <span className="font-semibold text-[var(--charcoal)]">{p.name}</span>
-                  <span className="text-[var(--slate-gray)]"> · {[p.species, p.breed].filter(Boolean).join(" · ")}</span>
+                  <a href={`#pet/${p.id}`} className="flex items-center justify-between gap-3 py-1" style={{ textDecoration: "none" }}>
+                    <span>
+                      <span className="font-semibold text-[var(--bindr-navy)] underline">{p.name}</span>
+                      <span className="text-[var(--slate-gray)]"> · {[p.species, p.breed].filter(Boolean).join(" · ")}</span>
+                    </span>
+                    <span className="text-[var(--slate-gray)]" aria-hidden>›</span>
+                  </a>
                 </li>
               ))}
             </ul>
@@ -311,7 +329,7 @@ function SignedIn({ user }: { user: User }) {
         </>
       )}
       <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
-        Signed in as {user.email}. Health records, vets and more are in the PetBindr iPhone app; they&apos;re coming here next.
+        Signed in as {user.email}. Tap a pet for its vets, allergies, medications and more.
       </p>
     </div>
   );
