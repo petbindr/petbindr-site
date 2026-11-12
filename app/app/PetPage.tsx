@@ -8,7 +8,6 @@
 
 import { useEffect, useState } from "react";
 import { collection, doc, onSnapshot } from "firebase/firestore";
-import { getBlob, ref } from "firebase/storage";
 import { firebase } from "./firebase";
 import { toDate, type MedicationSchedule } from "./today";
 
@@ -29,7 +28,7 @@ type Feeding = {
 } | null;
 
 export default function PetPage({ petId, onBack }: { petId: string; onBack: () => void }) {
-  const { db, storage } = firebase();
+  const { db } = firebase();
   const [pet, setPet] = useState<PetData | null | undefined>(undefined);
   const [allergies, setAllergies] = useState<Allergy[]>([]);
   const [meds, setMeds] = useState<MedicationSchedule[]>([]);
@@ -47,14 +46,12 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
     return () => stops.forEach((s) => s());
   }, [db, petId]);
 
-  // Photos are loaded through Storage (its rules decide), not a public link
+  // The app saves a Storage download link (with its token). Only people who
+  // can read the pet (Firestore rules) ever see it, so it's shown as is.
   useEffect(() => {
     const url = pet?.photoURL;
-    if (!url) return;
-    let objectUrl: string | null = null;
-    getBlob(ref(storage, url)).then((b) => { objectUrl = URL.createObjectURL(b); setPhoto(objectUrl); }).catch(() => {});
-    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [storage, pet?.photoURL]);
+    setPhoto(url && /^https:\/\/firebasestorage\.googleapis\.com\//.test(url) ? url : null);
+  }, [pet?.photoURL]);
 
   useEffect(() => { window.scrollTo(0, 0); }, [petId]);
 
