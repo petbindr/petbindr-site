@@ -12,6 +12,7 @@ import {
   collection, query, where, serverTimestamp,
 } from "firebase/firestore";
 import { feedingLogDoc, medicationLogDoc, tasksFor } from "../app/app/today.ts";
+import { healthRecordDoc, dayFromInput } from "../app/app/records.ts";
 
 const fns = process.argv[2];
 const require = createRequire(fns + "/index.js");
@@ -71,6 +72,25 @@ await admin.doc("pets/rex/healthRecords/h1").set({ type: "Vaccination", title: "
 await admin.doc("pets/other/healthRecords/h2").set({ type: "Vet Visit", title: "Private", date: new Date() });
 check("pet page: can read health records", (await getDocs(collection(db, "pets/rex/healthRecords"))).size === 1);
 await denied("pet page: can't read another pet's health records", getDocs(collection(db, "pets/other/healthRecords")));
+
+// Adding to the record from the website (AddToRecord)
+const day = dayFromInput("2026-11-12")!;
+check("date input → that day at noon", day.getFullYear() === 2026 && day.getMonth() === 10 && day.getDate() === 12 && day.getHours() === 12);
+check("bad date input refused", dayFromInput("12/11/2026") === null);
+const w = healthRecordDoc("rex", uid, "Weight", day, { title: "Weight", notes: " after a walk ", weightData: { weight: 12.4, unit: "lbs" } });
+await setDoc(doc(db, `pets/rex/healthRecords/${w.id}`), w.data);
+const savedW = (await getDoc(doc(db, `pets/rex/healthRecords/${w.id}`))).data();
+check("co-owner logs a weight", savedW?.weightData?.weight === 12.4 && savedW?.type === "Weight" && savedW?.source === "owner" && savedW?.createdBy === uid && savedW?.notes === "after a walk");
+check("record has every field the app needs", ["id", "petId", "type", "date", "title", "notes", "source", "createdAt", "createdBy", "attachments"].every((k) => k in (savedW || {})) && savedW?.id === w.id);
+const v = healthRecordDoc("rex", uid, "Vet Visit", day, { title: "Ear infection", vetVisitData: { clinicName: "Vet Co", reason: "Ear infection", veterinarianName: "", diagnosis: "Otitis" } });
+await setDoc(doc(db, `pets/rex/healthRecords/${v.id}`), v.data);
+const savedV = (await getDoc(doc(db, `pets/rex/healthRecords/${v.id}`))).data();
+check("co-owner adds a vet visit (empty optional fields left out)", savedV?.vetVisitData?.reason === "Ear infection" && savedV?.vetVisitData?.diagnosis === "Otitis" && !("veterinarianName" in (savedV?.vetVisitData || {})));
+await updateDoc(doc(db, "pets/rex"), { notes: "Loves the blue ball" });
+check("co-owner edits the pet's notes", (await getDoc(doc(db, "pets/rex"))).data()?.notes === "Loves the blue ball");
+await denied("co-owner can't make themselves the owner", updateDoc(doc(db, "pets/rex"), { ownerId: uid }));
+const x = healthRecordDoc("other", uid, "Weight", day, { title: "Weight", weightData: { weight: 3, unit: "kg" } });
+await denied("can't add to a pet she doesn't co-own", setDoc(doc(db, `pets/other/healthRecords/${x.id}`), x.data));
 
 // Feeding: check off, change amount, back to all, undo
 await setDoc(doc(db, `pets/rex/feedingLogs/${feed.id}`), feed.data);

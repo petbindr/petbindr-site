@@ -11,6 +11,7 @@ import { collection, doc, onSnapshot } from "firebase/firestore";
 import { getBlob, ref } from "firebase/storage";
 import { firebase } from "./firebase";
 import { toDate, type MedicationSchedule } from "./today";
+import AddToRecord from "./AddToRecord";
 import { latestVaccines, weightSummary, newest, fmtDay, fmtWeight, type HealthRecord, type Attachment } from "./health";
 
 type Stamp = Parameters<typeof toDate>[0];
@@ -214,8 +215,14 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
 
       {pet.notes && <Card title="Notes"><p className="font-inter text-[var(--charcoal)] whitespace-pre-line">{pet.notes}</p></Card>}
 
+      {!pet.isDeceased && firebase().auth.currentUser && (
+        <AddToRecord petId={petId} petName={name} uid={firebase().auth.currentUser!.uid}
+          regularVet={pet.primaryVetClinic?.name || ""} notes={pet.notes || ""}
+          lastUnit={(weightSummary(records, new Date())?.latest.unit === "kg" ? "kg" : "lbs")} />
+      )}
+
       <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
-        To change {name}&apos;s info or add records, use the PetBindr iPhone app.
+        For everything else (vaccines, medications, feeding times), use the PetBindr iPhone app.
       </p>
     </div>
   );
