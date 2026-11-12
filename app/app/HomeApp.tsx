@@ -290,6 +290,8 @@ function SignedIn({ user }: { user: User }) {
         </Card>
       )}
 
+      {verified && <TransferOffers user={user} />}
+
       {!ready ? (
         <p className="font-inter text-[var(--slate-gray)]">Loading your pets…</p>
       ) : pets.length === 0 ? (
@@ -457,6 +459,84 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
 
 function fmtTime(d: Date) {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+// Someone handing a pet over to you (adoption, end of a foster): accept it with
+// every record, or decline. Same functions as the iPhone app (petTransfers).
+type TransferOffer = {
+  petId: string; petName: string; species: string | null; breed: string | null;
+  fromName: string; note: string | null; keepAsCoOwner: boolean;
+};
+
+function TransferOffers({ user }: { user: User }) {
+  const [offers, setOffers] = useState<TransferOffer[]>([]);
+  const [working, setWorking] = useState<string | null>(null);
+  const [confirmDecline, setConfirmDecline] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        await user.getIdToken(true); // the confirmed-email flag must be in the token
+        const r = await httpsCallable<unknown, { transfers: TransferOffer[] }>(firebase().functions, "myPetTransfers")();
+        if (!cancelled) setOffers(r.data.transfers || []);
+      } catch { /* offers show on the next visit */ }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  async function respond(petId: string, accept: boolean) {
+    setWorking(petId);
+    setError(null);
+    try {
+      await httpsCallable(firebase().functions, "respondToPetTransfer")({ petId, accept });
+      // An accepted pet appears under "Your pets" by itself
+      setOffers((list) => list.filter((o) => o.petId !== petId));
+    } catch (e) {
+      setError((e as Error).message || "Couldn't do that. Please try again.");
+    } finally {
+      setWorking(null);
+      setConfirmDecline(null);
+    }
+  }
+
+  if (offers.length === 0) return null;
+  return (
+    <>
+      {offers.map((o) => {
+        const kind = [o.species, o.breed].filter(Boolean).join(" · ");
+        return (
+          <Card key={o.petId} title={`${o.fromName} is giving you ${o.petName}`}>
+            <p className="font-inter text-[var(--charcoal)]">
+              {kind ? `${kind}, with` : "With"} all their records: vaccines, vet visits, medications, feeding and the vet&apos;s details.
+            </p>
+            {o.note && <p className="font-inter italic mt-2 text-[var(--charcoal)]">“{o.note}”</p>}
+            {o.keepAsCoOwner && (
+              <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--slate-gray)" }}>
+                {o.fromName} will stay on as a co-owner. You can remove them in the iPhone app.
+              </p>
+            )}
+            {error && <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--error-red)" }} role="alert">{error}</p>}
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button className="btn-coral" style={{ padding: "10px 16px" }} disabled={!!working} onClick={() => respond(o.petId, true)}>
+                {working === o.petId ? "Accepting…" : `Accept ${o.petName}`}
+              </button>
+              {confirmDecline === o.petId ? (
+                <button className="btn-ghost" style={{ padding: "10px 16px", color: "var(--error-red)" }} disabled={!!working} onClick={() => respond(o.petId, false)}>
+                  Tap to decline
+                </button>
+              ) : (
+                <button className="btn-ghost" style={{ padding: "10px 16px" }} disabled={!!working} onClick={() => setConfirmDecline(o.petId)}>
+                  Decline
+                </button>
+              )}
+            </div>
+          </Card>
+        );
+      })}
+    </>
+  );
 }
 
 function Card({ title, children }: { title?: string; children: React.ReactNode }) {
