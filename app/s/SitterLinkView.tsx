@@ -36,6 +36,7 @@ type Pet = {
 type LinkData =
   | {
       state: "active"; sitterName: string; ownerName: string; ownerPhone: string | null; timeZone: string;
+      helper?: boolean; // a household helper's chores page ("Emma feeds the hamster"): feedings only, no end date
       notes?: string | null; // "What's different this time", from the owner's trip setup
       endDate: string | null; now: string; pets: Pet[];
       emergencyContacts: { name: string; relationship: string | null; phone: string }[] | null;
@@ -184,12 +185,18 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
           ))}
         </div>
         <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "clamp(26px, 6vw, 34px)" }}>
-          Caring for {namesText}
+          {data.helper ? (data.sitterName?.trim() ? `Hi ${data.sitterName.trim()}!` : "Hi!") : <>Caring for {namesText}</>}
         </h1>
-        <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "16px" }}>
-          {data.sitterName?.trim() ? `Hi ${data.sitterName.trim()}! ` : "Hi! "}{owner} shared everything you need here
-          {data.endDate ? <>, through <strong>{fmtDay(data.endDate, tz)}</strong></> : null}.
-        </p>
+        {data.helper ? (
+          <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "16px" }}>
+            Here are today&apos;s chores for {namesText}. Tap each one when it&apos;s done, so {owner} knows.
+          </p>
+        ) : (
+          <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "16px" }}>
+            {data.sitterName?.trim() ? `Hi ${data.sitterName.trim()}! ` : "Hi! "}{owner} shared everything you need here
+            {data.endDate ? <>, through <strong>{fmtDay(data.endDate, tz)}</strong></> : null}.
+          </p>
+        )}
         {data.ownerPhone && (
           <a href={telHref(data.ownerPhone)} className="btn-coral" style={{ textDecoration: "none" }}>
             Call {owner}
@@ -209,7 +216,7 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
       )}
 
       {data.pets.some((p) => p.today.length > 0) && (
-        <Card title={`Today, ${fmtDay(data.now, tz)}`}>
+        <Card title={data.helper ? `Today's chores, ${fmtDay(data.now, tz)}` : `Today, ${fmtDay(data.now, tz)}`}>
           <div className="space-y-5">
             {data.pets.filter((p) => p.today.length > 0).map((pet) => (
               <div key={pet.id}>
@@ -238,6 +245,12 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
         </Card>
       )}
 
+      {data.helper && !data.pets.some((p) => p.today.length > 0) && (
+        <Card title={`Today's chores, ${fmtDay(data.now, tz)}`}>
+          <p className="font-inter text-[var(--charcoal)]">Nothing to do today.</p>
+        </Card>
+      )}
+
       {data.pets.map((pet) => (
         <PetCard key={pet.id} pet={pet} />
       ))}
@@ -246,9 +259,11 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
         <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
           Shared with PetBindr. Only {owner} can change what you see here.
         </p>
-        <a href="https://petbindr.com" className="font-inter text-[var(--bindr-navy)] underline" style={{ fontSize: "14px" }}>
-          Get the PetBindr app for notifications and photo updates
-        </a>
+        {!data.helper && (
+          <a href="https://petbindr.com" className="font-inter text-[var(--bindr-navy)] underline" style={{ fontSize: "14px" }}>
+            Get the PetBindr app for notifications and photo updates
+          </a>
+        )}
       </footer>
     </div>
   );
