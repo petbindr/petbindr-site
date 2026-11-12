@@ -124,6 +124,10 @@ function SignedOut() {
         {mode !== "up" && <LinkButton onClick={() => { setMode("up"); setError(null); setNotice(null); }}>New here? Create an account</LinkButton>}
         {mode === "in" && <LinkButton onClick={() => { setMode("reset"); setError(null); }}>Forgot password?</LinkButton>}
       </div>
+      <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+        Your pets&apos; info is only shown to the people you share it with.{" "}
+        <a href="/security" className="underline text-[var(--bindr-navy)]">How we protect it</a>
+      </p>
     </div>
   );
 }
