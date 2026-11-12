@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, doc, onSnapshot } from "firebase/firestore";
+import { getBlob, ref } from "firebase/storage";
 import { firebase } from "./firebase";
 import { toDate, type MedicationSchedule } from "./today";
 
@@ -28,7 +29,7 @@ type Feeding = {
 } | null;
 
 export default function PetPage({ petId, onBack }: { petId: string; onBack: () => void }) {
-  const { db } = firebase();
+  const { db, storage } = firebase();
   const [pet, setPet] = useState<PetData | null | undefined>(undefined);
   const [allergies, setAllergies] = useState<Allergy[]>([]);
   const [meds, setMeds] = useState<MedicationSchedule[]>([]);
@@ -46,12 +47,19 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
     return () => stops.forEach((s) => s());
   }, [db, petId]);
 
-  // The app saves a Storage download link (with its token). Only people who
-  // can read the pet (Firestore rules) ever see it, so it's shown as is.
+  // Photos load through Storage, so storage.rules decide (the files have no
+  // public link: the access keys were removed on purpose).
   useEffect(() => {
-    const url = pet?.photoURL;
-    setPhoto(url && /^https:\/\/firebasestorage\.googleapis\.com\//.test(url) ? url : null);
-  }, [pet?.photoURL]);
+    const path = storagePath(pet?.photoURL);
+    setPhoto(null);
+    if (!path) return;
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    getBlob(ref(storage, path))
+      .then((b) => { if (cancelled) return; objectUrl = URL.createObjectURL(b); setPhoto(objectUrl); })
+      .catch(() => {});
+    return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [storage, pet?.photoURL]);
 
   useEffect(() => { window.scrollTo(0, 0); }, [petId]);
 
@@ -148,7 +156,8 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
             {info?.specialBowl && <Labeled label="Bowl" value={info.specialBowl} />}
             {info?.feedingLocation && <Labeled label="Where" value={info.feedingLocation} />}
             {info?.specialInstructions && <Labeled label="Special instructions" value={info.specialInstructions} />}
-            {pet.foodInstructions && <Labeled label="Instructions" value={pet.foodInstructions} />}
+            {/* older summary of the same schedule: only when there is no schedule */}
+            {pet.foodInstructions && items.length === 0 && !info?.foodName && <Labeled label="Instructions" value={pet.foodInstructions} />}
           </div>
         </Card>
       )}
@@ -272,4 +281,18 @@ function Card({ title, tone, children }: { title: string; tone?: "alert"; childr
       {children}
     </section>
   );
+}
+
+/** The file path inside the bucket from what the app saved: gs://bucket/path,
+ *  or an older download link https://firebasestorage.googleapis.com[:443]/v0/b/bucket/o/<path>.
+ *  (The Storage SDK refuses links with :443, so the path is read here.) */
+export function storagePath(saved?: string): string | null {
+  if (!saved) return null;
+  try {
+    const u = new URL(saved);
+    if (u.protocol === "gs:") return decodeURIComponent(u.pathname.replace(/^\//, "")) || null;
+    if (u.protocol !== "https:" || u.hostname !== "firebasestorage.googleapis.com") return null;
+    const m = u.pathname.match(/^\/v0\/b\/[^/]+\/o\/(.+)$/);
+    return m ? decodeURIComponent(m[1]) : null;
+  } catch { return null; }
 }
