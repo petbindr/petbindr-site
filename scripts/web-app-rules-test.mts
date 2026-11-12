@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import { feedingLogDoc, medicationLogDoc, tasksFor } from "../app/app/today.ts";
 import { healthRecordDoc, dayFromInput } from "../app/app/records.ts";
+import { dayAt, linkMessage } from "../app/app/links.ts";
 
 const fns = process.argv[2];
 const require = createRequire(fns + "/index.js");
@@ -91,6 +92,18 @@ check("co-owner edits the pet's notes", (await getDoc(doc(db, "pets/rex"))).data
 await denied("co-owner can't make themselves the owner", updateDoc(doc(db, "pets/rex"), { ownerId: uid }));
 const x = healthRecordDoc("other", uid, "Weight", day, { title: "Weight", weightData: { weight: 3, unit: "kg" } });
 await denied("can't add to a pet she doesn't co-own", setDoc(doc(db, `pets/other/healthRecords/${x.id}`), x.data));
+
+// Sitter links from the website (SitterLinkMaker): her links, and turning one off
+check("link dates: first day from midnight, last day to 11:59 PM", dayAt("2026-11-12", 0)!.getHours() === 0 && dayAt("2026-11-14", 23, 59)!.getMinutes() === 59 && dayAt("bad", 0) === null);
+const msg = linkMessage("Jess Taylor", ["Rex", "Mittens"], "https://www.petbindr.com/s#abc", "Trash Tuesday");
+check("link message names the sitter, pets and note", msg.startsWith("Hi Jess! ") && msg.includes("Rex and Mittens: https://www.petbindr.com/s#abc") && msg.endsWith("This time: Trash Tuesday"));
+await admin.doc("petShares/rex_link_mine").set({ petId: "rex", ownerId: uid, sharedWithUserId: "", shareType: "link", linkId: "mine", status: "active", sitterName: "Jess" });
+await admin.doc("petShares/rex_link_theirs").set({ petId: "rex", ownerId: "owner", sharedWithUserId: "", shareType: "link", linkId: "theirs", status: "active", sitterName: "Sam" });
+const myLinks = await getDocs(query(collection(db, "petShares"), where("ownerId", "==", uid), where("shareType", "==", "link")));
+check("lists the links she made (not the other owner's)", myLinks.size === 1 && myLinks.docs[0].id === "rex_link_mine");
+await updateDoc(doc(db, "petShares/rex_link_mine"), { status: "revoked", revokedAt: serverTimestamp(), updatedAt: serverTimestamp() });
+check("turns her link off", (await getDoc(doc(db, "petShares/rex_link_mine"))).data()?.status === "revoked");
+await denied("can't repoint a link to another pet", updateDoc(doc(db, "petShares/rex_link_mine"), { petId: "other" }));
 
 // Feeding: check off, change amount, back to all, undo
 await setDoc(doc(db, `pets/rex/feedingLogs/${feed.id}`), feed.data);

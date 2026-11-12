@@ -20,6 +20,7 @@ import {
 import { httpsCallable } from "firebase/functions";
 import { firebase, webAppConfigured } from "./firebase";
 import PetPage from "./PetPage";
+import SitterLinkMaker from "./SitterLinkMaker";
 import {
   tasksFor, startOfDay, feedingLogDoc, medicationLogDoc,
   type PetDay, type TodayTask, type FeedingAmount, type MedicationSchedule,
@@ -330,6 +331,10 @@ function SignedIn({ user }: { user: User }) {
           </Card>
         </>
       )}
+      {ready && pets.filter((p) => !p.isDeceased).length > 0 && (
+        <SitterLinkMaker uid={user.uid} pets={pets.filter((p) => !p.isDeceased).map((p) => ({ id: p.id, name: p.name }))} />
+      )}
+
       {ready && pets.length > 0 && <AlertEmails uid={user.uid} email={user.email || ""} />}
 
       <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
