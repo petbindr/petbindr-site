@@ -64,6 +64,10 @@ await admin.doc("pets/rex/allergies/a1").set({ allergenName: "Chicken", severity
 check("pet page: can read allergies", (await getDocs(collection(db, "pets/rex/allergies"))).size === 1);
 check("pet page: can read the pet's details", (await getDoc(doc(db, "pets/rex"))).data()?.name === "Rex");
 await denied("pet page: can't read the owner's household (home codes, contacts)", getDoc(doc(db, "households/owner")));
+await admin.doc("pets/rex/healthRecords/h1").set({ type: "Vaccination", title: "Rabies", date: new Date(), vaccinationData: { vaccineName: "Rabies" } });
+await admin.doc("pets/other/healthRecords/h2").set({ type: "Vet Visit", title: "Private", date: new Date() });
+check("pet page: can read health records", (await getDocs(collection(db, "pets/rex/healthRecords"))).size === 1);
+await denied("pet page: can't read another pet's health records", getDocs(collection(db, "pets/other/healthRecords")));
 
 // Feeding: check off, change amount, back to all, undo
 await setDoc(doc(db, `pets/rex/feedingLogs/${feed.id}`), feed.data);

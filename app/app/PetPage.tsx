@@ -11,11 +11,12 @@ import { collection, doc, onSnapshot } from "firebase/firestore";
 import { getBlob, ref } from "firebase/storage";
 import { firebase } from "./firebase";
 import { toDate, type MedicationSchedule } from "./today";
+import { latestVaccines, weightSummary, newest, fmtDay, fmtWeight, type HealthRecord, type Attachment } from "./health";
 
 type Stamp = Parameters<typeof toDate>[0];
 type Vet = { name?: string; veterinarianName?: string; phoneNumber?: string; address?: string; city?: string; state?: string; zipCode?: string };
 type PetData = {
-  name?: string; species?: string; breed?: string; gender?: string; isFixed?: boolean; birthday?: Stamp;
+  name?: string; species?: string; breed?: string; gender?: string; isFixed?: boolean; birthday?: Stamp; isDeceased?: boolean;
   photoURL?: string; allergies?: string[]; foodInstructions?: string; quirks?: string; notes?: string;
   primaryVetClinic?: Vet | null; emergencyVetClinic?: Vet | null; secondaryEmergencyVetClinic?: Vet | null;
   microchipInfo?: { chipNumber?: string; provider?: string; registryPhone?: string } | null;
@@ -35,6 +36,7 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
   const [meds, setMeds] = useState<MedicationSchedule[]>([]);
   const [feeding, setFeeding] = useState<Feeding>(null);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [records, setRecords] = useState<HealthRecord[]>([]);
 
   useEffect(() => {
     const base = `pets/${petId}`;
@@ -43,6 +45,7 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
       onSnapshot(collection(db, `${base}/allergies`), (s) => setAllergies(s.docs.map((d) => ({ ...(d.data() as Allergy), id: d.id }))), () => {}),
       onSnapshot(collection(db, `${base}/medicationSchedules`), (s) => setMeds(s.docs.map((d) => ({ ...(d.data() as MedicationSchedule), id: d.id }))), () => {}),
       onSnapshot(doc(db, `${base}/feedingSchedule/schedule`), (s) => setFeeding(s.exists() ? (s.data() as Feeding) : null), () => {}),
+      onSnapshot(collection(db, `${base}/healthRecords`), (s) => setRecords(s.docs.map((d) => ({ ...(d.data() as HealthRecord), id: d.id }))), () => {}),
     ];
     return () => stops.forEach((s) => s());
   }, [db, petId]);
@@ -136,6 +139,8 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
         </Card>
       )}
 
+      <HealthCard records={records} deceased={!!pet.isDeceased} />
+
       {(items.length > 0 || info?.foodName || pet.foodInstructions) && (
         <Card title="Feeding">
           <div className="space-y-3 font-inter">
@@ -210,7 +215,7 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
       {pet.notes && <Card title="Notes"><p className="font-inter text-[var(--charcoal)] whitespace-pre-line">{pet.notes}</p></Card>}
 
       <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
-        To change {name}&apos;s info, or see health records, use the PetBindr iPhone app.
+        To change {name}&apos;s info or add records, use the PetBindr iPhone app.
       </p>
     </div>
   );
@@ -257,6 +262,210 @@ function fullAddress(v: Vet): string {
 
 function minutes(d: Date | null): number { return d ? d.getHours() * 60 + d.getMinutes() : 0; }
 function fmtTime(d: Date | null): string { return d ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""; }
+
+// MARK: - Health
+
+const STATUS: Record<string, { text: (d: Date | null) => string; color: string }> = {
+  pastDue: { text: (d) => `Past due (${fmtDay(d)})`, color: "var(--error-red)" },
+  dueSoon: { text: (d) => `Due ${fmtDay(d)}`, color: "#9C5F0E" },
+  upToDate: { text: (d) => `Up to date, next ${fmtDay(d)}`, color: "var(--success-green)" },
+  noDate: { text: () => "No due date", color: "var(--slate-gray)" },
+};
+
+function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: boolean }) {
+  const [now] = useState(() => new Date());
+  const [all, setAll] = useState(false);
+  if (records.length === 0) return null;
+  const vaccines = latestVaccines(records, now, deceased);
+  const weight = weightSummary(records, now);
+  const limit = all ? 50 : 3;
+  const visits = newest(records, "Vet Visit", limit);
+  const prescriptions = newest(records, "Medication", limit);
+  const labs = newest(records, "Lab Result", limit);
+  const dental = newest(records, "Dental", limit);
+  const documents = newest(records, "Document", limit);
+  const more = ["Vet Visit", "Medication", "Lab Result", "Dental", "Document"].some((t) => records.filter((r) => r.type === t).length > 3);
+  return (
+    <Card title="Health">
+      <div className="space-y-5 font-inter">
+        {vaccines.length > 0 && (
+          <Sub title="Vaccines">
+            <ul className="space-y-2">
+              {vaccines.map((v) => (
+                <li key={v.id}>
+                  <p className="font-semibold text-[var(--charcoal)]">{v.name}</p>
+                  <p style={{ fontSize: "15px" }}>
+                    <span className="text-[var(--slate-gray)]">Given {fmtDay(v.given)} · </span>
+                    <span style={{ color: STATUS[v.status].color, fontWeight: 600 }}>{STATUS[v.status].text(v.nextDue)}</span>
+                  </p>
+                  <Files files={v.attachments} />
+                </li>
+              ))}
+            </ul>
+          </Sub>
+        )}
+
+        {weight && (
+          <Sub title="Weight">
+            <p className="text-[var(--charcoal)]">
+              <span className="font-semibold" style={{ fontSize: "18px" }}>{fmtWeight(weight.latest.value, weight.latest.unit)}</span>
+              <span className="text-[var(--slate-gray)]"> on {fmtDay(weight.latest.date)}</span>
+            </p>
+            {weight.change && (
+              <p style={{ fontSize: "15px", color: Math.abs(weight.change.percent) >= 10 ? "#9C5F0E" : "var(--charcoal)" }}>
+                {weight.change.amount === 0 ? "No change" : `${weight.change.amount > 0 ? "+" : "−"}${fmtWeight(Math.abs(weight.change.amount), weight.latest.unit)} (${Math.abs(weight.change.percent).toFixed(0)}%)`} since {fmtDay(weight.change.since)}
+              </p>
+            )}
+            {weight.recent.length > 1 && (
+              <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+                Recent: {weight.recent.slice(1).map((w) => `${fmtWeight(w.value, w.unit)} (${fmtDay(w.date)})`).join(", ")}
+              </p>
+            )}
+          </Sub>
+        )}
+
+        {visits.length > 0 && (
+          <Sub title="Vet Visits">
+            <ul className="space-y-3">
+              {visits.map((r) => {
+                const v = r.vetVisitData || {};
+                return (
+                  <li key={r.id}>
+                    <p className="text-[var(--charcoal)]"><span className="text-[var(--slate-gray)]">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{v.reason || r.title}</span></p>
+                    {[v.clinicName, v.veterinarianName].filter(Boolean).length > 0 && <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{[v.clinicName, v.veterinarianName].filter(Boolean).join(", ")}</p>}
+                    {v.diagnosis && <Labeled label="Diagnosis" value={v.diagnosis} />}
+                    {v.treatment && <Labeled label="Treatment" value={v.treatment} />}
+                    {toDate(v.followUpDate) && <Labeled label="Follow-up" value={fmtDay(toDate(v.followUpDate))} />}
+                    {r.notes && <p className="text-[var(--slate-gray)] whitespace-pre-line" style={{ fontSize: "14px" }}>{r.notes}</p>}
+                    <Files files={r.attachments} />
+                  </li>
+                );
+              })}
+            </ul>
+          </Sub>
+        )}
+
+        {prescriptions.length > 0 && (
+          <Sub title="Prescriptions">
+            <ul className="space-y-2">
+              {prescriptions.map((r) => {
+                const m = r.medicationData || {};
+                const end = toDate(m.endDate);
+                return (
+                  <li key={r.id}>
+                    <p className="font-semibold text-[var(--charcoal)]">{m.medicationName || r.title}</p>
+                    <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+                      {[m.dosage, m.frequency, `${fmtDay(toDate(m.startDate) || toDate(r.date))}${end ? ` – ${fmtDay(end)}` : ""}`, m.prescribedBy && `by ${m.prescribedBy}`, m.reason].filter(Boolean).join(" · ")}
+                    </p>
+                    <Files files={r.attachments} />
+                  </li>
+                );
+              })}
+            </ul>
+          </Sub>
+        )}
+
+        {labs.length > 0 && (
+          <Sub title="Lab Results">
+            <ul className="space-y-2">
+              {labs.map((r) => {
+                const l = r.labResultData || {};
+                return (
+                  <li key={r.id}>
+                    <p className="text-[var(--charcoal)]"><span className="text-[var(--slate-gray)]">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{l.testName || r.title}</span>
+                      {l.isAbnormal && <span style={{ color: "var(--error-red)", fontWeight: 600 }}> · Abnormal</span>}</p>
+                    {l.resultSummary && <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{l.resultSummary}</p>}
+                    <Files files={r.attachments} />
+                  </li>
+                );
+              })}
+            </ul>
+          </Sub>
+        )}
+
+        {dental.length > 0 && (
+          <Sub title="Dental">
+            <ul className="space-y-2">
+              {dental.map((r) => {
+                const d = r.dentalData || {};
+                return (
+                  <li key={r.id}>
+                    <p className="text-[var(--charcoal)]"><span className="text-[var(--slate-gray)]">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{d.procedureType || r.title}</span></p>
+                    {toDate(d.nextRecommendedDate) && <Labeled label="Next" value={fmtDay(toDate(d.nextRecommendedDate))} />}
+                  </li>
+                );
+              })}
+            </ul>
+          </Sub>
+        )}
+
+        {documents.length > 0 && (
+          <Sub title="Documents">
+            <ul className="space-y-2">
+              {documents.map((r) => (
+                <li key={r.id}>
+                  <p className="text-[var(--charcoal)]"><span className="text-[var(--slate-gray)]">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{r.title}</span></p>
+                  <Files files={r.attachments} />
+                </li>
+              ))}
+            </ul>
+          </Sub>
+        )}
+
+        {more && (
+          <button className="underline text-[var(--bindr-navy)]" onClick={() => setAll(!all)}>
+            {all ? "Show less" : "Show the full history"}
+          </button>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function Sub({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="font-semibold uppercase tracking-wide text-[var(--slate-gray)] mb-2" style={{ fontSize: "13px" }}>{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+/** Attached files (vaccine certificates, invoices, lab PDFs): opened through
+ *  Storage, so the storage rules decide who can see them */
+function Files({ files }: { files?: Attachment[] }) {
+  const [opening, setOpening] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const list = (files || []).filter((f) => f.storagePath);
+  if (!list.length) return null;
+  async function open(f: Attachment) {
+    // Open the tab now (pop-up blockers allow it only straight from the tap), then fill it
+    const win = window.open("", "_blank");
+    setOpening(f.storagePath!);
+    setFailed(false);
+    try {
+      const { storage } = firebase();
+      const blob = await getBlob(ref(storage, f.storagePath!));
+      const url = URL.createObjectURL(blob);
+      if (win) win.location.href = url; else window.location.href = url;
+    } catch {
+      win?.close();
+      setFailed(true);
+    } finally {
+      setOpening(null);
+    }
+  }
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1" style={{ fontSize: "14px" }}>
+      {list.map((f) => (
+        <button key={f.storagePath} className="underline text-[var(--bindr-navy)]" onClick={() => open(f)} disabled={!!opening}>
+          {opening === f.storagePath ? "Opening…" : `📎 ${f.fileName || "File"}`}
+        </button>
+      ))}
+      {failed && <span style={{ color: "var(--error-red)" }}>Couldn&apos;t open it. Try again.</span>}
+    </div>
+  );
+}
 
 // MARK: - Pieces
 
