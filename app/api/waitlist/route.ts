@@ -1,16 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { FieldValue } from "firebase-admin/firestore";
 import { getFirebaseAdmin } from "@/lib/firebase-admin";
 import { getResend, FROM_EMAIL, FROM_NAME } from "@/lib/resend";
 import { newUnsubscribeToken, unsubscribePageUrl, unsubscribeHeaders } from "@/lib/unsubscribe";
 
+// trim before checking: " a@b.com" (a pasted space) was rejected as invalid
 const schema = z.object({
-  email: z.string().email("Please enter a valid email address.").toLowerCase().trim(),
-  source: z.string().optional(),
+  email: z.string().trim().toLowerCase().max(254).email("Please enter a valid email address."),
+  source: z.string().max(100).optional(),
+  // Hidden from people (WaitlistForm); bots that fill every field fill it
+  website: z.string().max(500).optional(),
 });
 
 const FOUNDING_MEMBER_LIMIT = 1000;
+// Signups from one connection: each one sends an email from petbindr.com, so a
+// script posting thousands of addresses could email-bomb strangers
+const PER_IP_PER_HOUR = 5;
+
+async function allowedFromIp(db: FirebaseFirestore.Firestore, req: NextRequest) {
+  const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+  const ref = db.collection("waitlistThrottle").doc(createHash("sha256").update(ip).digest("hex").slice(0, 32));
+  const now = Date.now();
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const recent = ((snap.exists ? snap.data()?.at : []) as number[] || []).filter((t) => now - t < 3600_000);
+    if (recent.length >= PER_IP_PER_HOUR) return false;
+    tx.set(ref, { at: [...recent, now] });
+    return true;
+  });
+}
 
 export async function POST(req: NextRequest) {
   // Parse and validate
@@ -29,7 +49,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { email, source } = parsed.data;
+  const { email, source, website } = parsed.data;
+  // Honeypot filled in: look like it worked, save and send nothing
+  if (website) return NextResponse.json({ success: true, foundingMember: false }, { status: 200 });
 
   // Derive source from UTM params if not explicitly provided
   const utmSource = req.nextUrl.searchParams.get("utm_source") ?? undefined;
@@ -47,27 +69,51 @@ export async function POST(req: NextRequest) {
   }
 
   const docRef = db.collection("waitlist").doc(email);
+  let unsubscribeToken: string;
+  let isFoundingMember: boolean;
+  try {
+    if (!(await allowedFromIp(db, req))) {
+      return NextResponse.json({ error: "Too many signups from here. Please try again in an hour." }, { status: 429 });
+    }
 
-  // Check for existing signup
-  const existing = await docRef.get();
-  if (existing.exists) {
-    return NextResponse.json({ alreadyExists: true }, { status: 200 });
+    // Check for existing signup
+    const existing = await docRef.get();
+    if (existing.exists) {
+      const prev = existing.data() || {};
+      if (!prev.unsubscribed) return NextResponse.json({ alreadyExists: true }, { status: 200 });
+      // Signed up again after unsubscribing: back on the list (they said "already on
+      // the list" but stayed unsubscribed, so they'd never hear about launch)
+      unsubscribeToken = prev.unsubscribeToken || newUnsubscribeToken();
+      isFoundingMember = prev.foundingMember === true;
+      await docRef.update({
+        unsubscribed: FieldValue.delete(), unsubscribedAt: FieldValue.delete(),
+        unsubscribeToken, resubscribedAt: FieldValue.serverTimestamp(),
+      });
+    } else {
+      // Count existing signups to determine founding member status
+      const countSnap = await db.collection("waitlist").count().get();
+      isFoundingMember = countSnap.data().count < FOUNDING_MEMBER_LIMIT;
+
+      // create(), not set(): two submits at once both passed the check above and the
+      // second overwrote the first one's unsubscribe token (its email's link stopped working)
+      unsubscribeToken = newUnsubscribeToken();
+      try {
+        await docRef.create({
+          email,
+          unsubscribeToken,
+          createdAt: FieldValue.serverTimestamp(),
+          foundingMember: isFoundingMember,
+          ...(finalSource ? { source: finalSource } : {}),
+        });
+      } catch (err) {
+        if ((err as { code?: number }).code === 6) return NextResponse.json({ alreadyExists: true }, { status: 200 });
+        throw err;
+      }
+    }
+  } catch (err) {
+    console.error("Waitlist save error:", err);
+    return NextResponse.json({ error: "Service temporarily unavailable. Please try again." }, { status: 503 });
   }
-
-  // Count existing signups to determine founding member status
-  const countSnap = await db.collection("waitlist").count().get();
-  const currentCount = countSnap.data().count;
-  const isFoundingMember = currentCount < FOUNDING_MEMBER_LIMIT;
-
-  // Write to Firestore (unsubscribeToken lets every marketing email carry an unsubscribe link)
-  const unsubscribeToken = newUnsubscribeToken();
-  await docRef.set({
-    email,
-    unsubscribeToken,
-    createdAt: FieldValue.serverTimestamp(),
-    foundingMember: isFoundingMember,
-    ...(finalSource ? { source: finalSource } : {}),
-  });
 
   // Send confirmation email
   const unsubscribeUrl = unsubscribePageUrl(email, unsubscribeToken);

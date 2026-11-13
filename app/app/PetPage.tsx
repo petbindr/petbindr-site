@@ -455,6 +455,8 @@ function Files({ files }: { files?: Attachment[] }) {
       const blob = await getBlob(ref(storage, f.storagePath!));
       const url = URL.createObjectURL(blob);
       if (win) win.location.href = url; else window.location.href = url;
+      // Let it go once the new tab has it (each opened file stayed in memory)
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch {
       win?.close();
       setFailed(true);

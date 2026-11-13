@@ -47,6 +47,9 @@ export default function AddToRecord({ petId, petName, uid, regularVet, lastUnit,
     setDay(todayInput());
     setNote("");
     if (next === "notes") setPetNotes(notes);
+    // The unit of the latest weigh-in, now that records have loaded (it was fixed at
+    // "lbs" when this mounted, so 5.2 meant as kg was saved as 5.2 lbs)
+    if (next === "weight") setUnit(lastUnit);
   }
 
   const weightValue = Number(weight.replace(",", "."));

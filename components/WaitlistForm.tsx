@@ -10,6 +10,9 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "duplicate" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [founding, setFounding] = useState(false);
+  // Honeypot: hidden from people; bots that fill every field fill it too
+  const [website, setWebsite] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,10 +24,11 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, ...(website ? { website } : {}) }),
       });
       const data = await res.json();
       if (res.ok) {
+        setFounding(data.foundingMember === true);
         setStatus(data.alreadyExists ? "duplicate" : "success");
         setEmail("");
       } else {
@@ -40,7 +44,8 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
   if (status === "success") {
     return (
       <div className="rounded-xl border border-[var(--success-green)] bg-[#4FAE7C1F] px-7 py-5 max-w-lg text-[var(--success-green)] font-semibold text-base font-inter">
-        You&rsquo;re on the list. Welcome, Founding Member.
+        {/* "Founding Member" only for the first 1,000 (it said so to everyone) */}
+        You&rsquo;re on the list.{founding ? " Welcome, Founding Member." : " We\u2019ll see you at launch."}
       </div>
     );
   }
@@ -56,6 +61,16 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
   return (
     <div className="w-full max-w-lg">
       <form onSubmit={handleSubmit} noValidate>
+        <input
+          type="text"
+          name="website"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-10000px", width: 1, height: 1, opacity: 0 }}
+        />
         <div className="flex flex-wrap gap-2.5">
           <input
             type="email"

@@ -10,7 +10,8 @@ const REFRESH_MS = 5 * 60 * 1000;
 // Feedings also say how much was eaten ("some" / "none"; null = all of it)
 // and whether this link made the check-off, so it can change the amount
 type Amount = "some" | "none" | null;
-type Done = { by: string; at: string; amount?: Amount; canChange?: boolean } | null;
+// skipped: the owner marked this dose "Not given" (nothing to give)
+type Done = { by: string; at: string; amount?: Amount; canChange?: boolean; skipped?: boolean } | null;
 // Medications also carry how to give it and the owner's photo, for the "Give it now" panel
 type TodayItem = {
   kind: "feeding" | "medication"; id: string; title: string; detail: string | null; due: string; done: Done;
@@ -36,6 +37,8 @@ type Pet = {
   routines: Record<string, string | null> | null;
   vets: Vet[] | null;
   today: TodayItem[];
+  // Medication photos, once per medication (not copied onto every dose)
+  medicationPhotos?: Record<string, string>;
 };
 type LinkData =
   | {
@@ -45,7 +48,10 @@ type LinkData =
       endDate: string | null; now: string; pets: Pet[];
       emergencyContacts: { name: string; relationship: string | null; phone: string }[] | null;
     }
-  | { state: "notFound" | "turnedOff" | "expired" | "notStarted"; ownerName: string | null; sitterName: string | null; startDate: string | null };
+  | {
+      state: "notFound" | "turnedOff" | "expired" | "notStarted"; ownerName: string | null; sitterName: string | null;
+      startDate: string | null; timeZone?: string | null;
+    };
 
 const OFFLINE_MESSAGE = "Couldn't reach PetBindr. Check your connection and try again.";
 
@@ -65,7 +71,12 @@ async function callFunction<T>(name: string, data: Record<string, unknown>): Pro
   }
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.error) {
-    throw new Error(json?.error?.message || "Something went wrong. Please try again.");
+    // Unexpected server errors come back as the bare word "INTERNAL"
+    const status = json?.error?.status;
+    const friendly = status && !["INTERNAL", "UNAVAILABLE", "UNKNOWN", "DEADLINE_EXCEEDED"].includes(status);
+    const err = new Error(friendly && json.error.message ? json.error.message : "Something went wrong. Please try again.");
+    (err as Error & { status?: string }).status = status;
+    throw err;
   }
   return json.result as T;
 }
@@ -106,23 +117,46 @@ export default function SitterLinkView() {
   const [token, setToken] = useState<string | null>(null);
   const [data, setData] = useState<LinkData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [lastLoaded, setLastLoaded] = useState<number | null>(null);
   const loading = useRef(false);
+  const again = useRef(false);
+  const havePhotos = useRef(false);
 
+  // One load at a time. A load asked for meanwhile (a check-off just saved) runs
+  // right after, so a reply read before the save can't put "Done" back to not done
+  // (it was dropped, and the red "give it now" came back for a dose just given).
+  // Photos come once; refreshes keep them (they were re-sent every 5 minutes).
   const load = useCallback(async (link: string) => {
-    if (loading.current) return;
+    if (loading.current) { again.current = true; return; }
     loading.current = true;
     try {
-      setData(await callFunction<LinkData>("getSitterLink", { link }));
-      setLoadError(null);
-    } catch (e) {
-      setLoadError((e as Error).message);
+      do {
+        again.current = false;
+        try {
+          const fresh = await callFunction<LinkData>("getSitterLink", { link, v: 2, photos: !havePhotos.current });
+          setData((prev) => {
+            if (fresh.state !== "active" || !havePhotos.current || !prev || prev.state !== "active") return fresh;
+            const before = new Map(prev.pets.map((p) => [p.id, p]));
+            return { ...fresh, pets: fresh.pets.map((p) => ({
+              ...p, photo: before.get(p.id)?.photo ?? null, medicationPhotos: before.get(p.id)?.medicationPhotos,
+            })) };
+          });
+          if (fresh.state === "active") havePhotos.current = true;
+          setLoadError(null);
+          setLastLoaded(Date.now());
+        } catch (e) {
+          setLoadError((e as Error).message);
+        }
+      } while (again.current);
     } finally {
       loading.current = false;
     }
   }, []);
 
   useEffect(() => {
-    const link = window.location.hash.replace(/^#/, "");
+    // Just the link's own 43 characters: a "." or ")" picked up when copying broke it
+    const raw = window.location.hash.replace(/^#/, "");
+    const link = raw.match(/^[A-Za-z0-9_-]{43}/)?.[0] ?? raw;
     setToken(link);
     if (!link) {
       setData({ state: "notFound", ownerName: null, sitterName: null, startDate: null });
@@ -155,13 +189,25 @@ export default function SitterLinkView() {
       notFound: ["This link isn't working", "It may be incomplete. Try opening it again from the original message, or ask the person who sent it for a new one."],
       turnedOff: ["This link was turned off", `${owner} turned off this link. If you still need the info, ask ${owner} for a new one.`],
       expired: ["This link has ended", `The sit is over, so this link no longer works. Thanks for taking care of things! Ask ${owner} if you need it again.`],
-      notStarted: ["This link isn't active yet", `It starts ${data.startDate ? fmtDay(data.startDate) : "soon"}. Check back then.`],
+      notStarted: ["This link isn't active yet", `It starts ${data.startDate ? fmtDay(data.startDate, data.timeZone || undefined) : "soon"}. Check back then.`],
     } as const;
     const [heading, text] = texts[data.state];
     return <Message heading={heading} text={text} />;
   }
 
-  return <ActiveLink data={data} token={token!} onChanged={() => token && load(token)} />;
+  return (
+    <>
+      {loadError && (
+        // A refresh failed: what's shown may be out of date (it used to say nothing)
+        <p className="font-inter text-center rounded-xl p-2 mb-3" role="status"
+          style={{ fontSize: "14px", background: "#FFF4E5", color: "#7A4A00" }}>
+          Couldn&rsquo;t refresh{lastLoaded ? `, showing what was here at ${new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(lastLoaded)}` : ""}.{" "}
+          <button className="underline" onClick={() => token && load(token)}>Try again</button>
+        </p>
+      )}
+      <ActiveLink data={data} token={token!} onChanged={() => token && load(token)} />
+    </>
+  );
 }
 
 function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { state: "active" }>; token: string; onChanged: () => void }) {
@@ -315,6 +361,8 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
       onChanged();
     } catch (e) {
       setError((e as Error).message);
+      // Link ended, or the page is out of date (e.g. after midnight): reload it
+      onChanged();
     } finally {
       setSaving(false);
     }
@@ -329,6 +377,8 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
     save();
   }
 
+  const skipped = !isFeeding && done?.skipped === true;
+  const photo = item.photo ?? pet.medicationPhotos?.[item.id] ?? null;
   const doneAmount: "all" | "some" | "none" = done?.amount || "all";
   // ✓ ate it all (and every medication), ◐ ate some, ✕ didn't eat
   // Darker than --alert-amber so the text is readable on white
@@ -361,7 +411,12 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
               {item.detail}
             </p>
           )}
-          {done && (
+          {skipped && done && (
+            <p className="font-inter" style={{ fontSize: "14px", color: "var(--slate-gray)" }}>
+              Skipped: {done.by} marked this dose as not given. Don&rsquo;t give it.
+            </p>
+          )}
+          {done && !skipped && (
             <p className="font-inter" style={{ fontSize: "14px", color: doneColor }}>
               {doneMark} {isFeeding && doneAmount !== "all" ? `${AMOUNT_TEXT[doneAmount]} · ` : "Done "}
               {isFeeding && doneAmount !== "all" ? "" : "by "}
@@ -391,14 +446,14 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
           </button>
         )}
       </div>
-      {giveNow && (item.howTo || item.photo) && (
+      {giveNow && (item.howTo || photo) && (
         <div className="mt-2 space-y-2">
           {item.howTo && (
             <p className="font-inter text-[var(--charcoal)] whitespace-pre-line" style={{ fontSize: "16px" }}>{item.howTo}</p>
           )}
-          {item.photo && (
+          {photo && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.photo} alt={`How to give ${item.title}`} className="rounded-xl w-full" style={{ maxHeight: 260, objectFit: "contain" }} />
+            <img src={photo} alt={`How to give ${item.title}`} className="rounded-xl w-full" style={{ maxHeight: 260, objectFit: "contain" }} />
           )}
         </div>
       )}

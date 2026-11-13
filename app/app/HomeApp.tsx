@@ -200,10 +200,12 @@ function SignedIn({ user }: { user: User }) {
   }, []);
 
   useEffect(() => {
-    getDoc(doc(db, "users", user.uid)).then((d) => {
+    // Live: right after signing up here the profile isn't saved yet, and a one-time
+    // read missed it, so check-offs went out with the email address as the name
+    const me = onSnapshot(doc(db, "users", user.uid), (d) => {
       const n = d.exists() ? (d.data().displayName as string) : "";
       if (n) setMyName(n);
-    }).catch(() => {});
+    }, () => {});
     const own = onSnapshot(query(collection(db, "pets"), where("ownerId", "==", user.uid)), (s) => {
       setOwnPets(s.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Pet, "id">) })));
       setLoaded((l) => ({ ...l, own: true }));
@@ -212,7 +214,7 @@ function SignedIn({ user }: { user: User }) {
       setCoPets(s.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Pet, "id">) })));
       setLoaded((l) => ({ ...l, co: true }));
     }, () => setLoaded((l) => ({ ...l, co: true })));
-    return () => { own(); co(); };
+    return () => { me(); own(); co(); };
   }, [db, user.uid]);
 
   const pets = useMemo(() => {
@@ -222,6 +224,10 @@ function SignedIn({ user }: { user: User }) {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [ownPets, coPets]);
   const petKey = pets.map((p) => p.id).join(",");
+  // Same array until the pets change: a new one each minute reset the link maker's pet choice
+  const linkPets = useMemo(() => pets.filter((p) => !p.isDeceased).map((p) => ({ id: p.id, name: p.name })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [petKey, pets.map((p) => p.name).join("|")]);
 
   // Each pet's schedules and the last two days of check-offs, live
   useEffect(() => {
@@ -233,12 +239,14 @@ function SignedIn({ user }: { user: User }) {
       const base = `pets/${pet.id}`;
       stops.push(onSnapshot(doc(db, `${base}/feedingSchedule/schedule`),
         (s) => set({ feeding: s.exists() ? (s.data() as FeedingSchedule) : null }), () => set({ feeding: null })));
-      stops.push(onSnapshot(query(collection(db, `${base}/feedingLogs`), where("date", ">=", since)),
-        (s) => set({ feedingLogs: s.docs.map((d) => ({ ...(d.data() as FeedingLog), id: d.id })) }), () => set({ feedingLogs: [] })));
+      // With metadata changes: a check-off saved here with no signal shows "Not sent yet"
+      // (it looked done; closing the tab then lost it and the owner gave the dose again)
+      stops.push(onSnapshot(query(collection(db, `${base}/feedingLogs`), where("date", ">=", since)), { includeMetadataChanges: true },
+        (s) => set({ feedingLogs: s.docs.map((d) => ({ ...(d.data() as FeedingLog), id: d.id, pending: d.metadata.hasPendingWrites })) }), () => set({ feedingLogs: [] })));
       stops.push(onSnapshot(collection(db, `${base}/medicationSchedules`),
         (s) => set({ medications: s.docs.map((d) => ({ ...(d.data() as MedicationSchedule), id: d.id })) }), () => set({ medications: [] })));
-      stops.push(onSnapshot(query(collection(db, `${base}/medicationLogs`), where("actualTime", ">=", since)),
-        (s) => set({ medicationLogs: s.docs.map((d) => ({ ...(d.data() as MedicationLog), id: d.id })) }), () => set({ medicationLogs: [] })));
+      stops.push(onSnapshot(query(collection(db, `${base}/medicationLogs`), where("actualTime", ">=", since)), { includeMetadataChanges: true },
+        (s) => set({ medicationLogs: s.docs.map((d) => ({ ...(d.data() as MedicationLog), id: d.id, pending: d.metadata.hasPendingWrites })) }), () => set({ medicationLogs: [] })));
     }
     return () => stops.forEach((s) => s());
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -266,7 +274,8 @@ function SignedIn({ user }: { user: User }) {
   }).sort((a, b) => a.time.getTime() - b.time.getTime());
 
   if (openPetId) {
-    return <PetPage petId={openPetId} onBack={() => (window.history.length > 1 ? window.history.back() : (window.location.hash = ""))} />;
+    // Back to Today, not "history.back()": opened from a link or after a reload, that left petbindr.com
+    return <PetPage petId={openPetId} onBack={() => { window.location.hash = ""; }} />;
   }
 
   const doneCount = tasks.filter((t) => t.done).length;
@@ -279,7 +288,7 @@ function SignedIn({ user }: { user: User }) {
         <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "clamp(24px, 6vw, 32px)" }}>
           {first ? `Hi, ${first}` : "PetBindr"}
         </h1>
-        <button className="btn-ghost" style={{ padding: "8px 14px", fontSize: "15px" }} onClick={() => signOut(firebase().auth)}>Sign Out</button>
+        <button className="btn-ghost" style={{ padding: "8px 14px", fontSize: "15px" }} onClick={() => { window.location.hash = ""; signOut(firebase().auth); }}>Sign Out</button>
       </header>
 
       {!verified && (
@@ -336,7 +345,7 @@ function SignedIn({ user }: { user: User }) {
         </>
       )}
       {ready && pets.filter((p) => !p.isDeceased).length > 0 && (
-        <SitterLinkMaker uid={user.uid} pets={pets.filter((p) => !p.isDeceased).map((p) => ({ id: p.id, name: p.name }))} />
+        <SitterLinkMaker uid={user.uid} pets={linkPets} />
       )}
 
       {ready && pets.length > 0 && <AlertEmails uid={user.uid} email={user.email || ""} />}
@@ -373,13 +382,15 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
       setChoosing(false);
     } catch (err) {
       const code = (err as { code?: string }).code || "";
+      // "Someone else checked it off" only fits a feeding just checked off; otherwise
+      // it's lost access (e.g. removed as a co-owner)
       setError(code.includes("permission-denied")
-        ? "Someone else just checked this off. It'll update in a moment."
+        ? (isFeeding && !task.done ? "Someone else just checked this off. It'll update in a moment." : "You can't change this anymore. The owner may have changed who can see this pet.")
         : "Couldn't save that. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [isFeeding, task.done]);
 
   // The same documents the app writes (FeedingStore / MedicationStore)
   function checkOff(amount: FeedingAmount = "all") {
@@ -388,7 +399,8 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
     run(async () => {
       // Dates become Firestore timestamps when saved
       if (isFeeding) {
-        const log = feedingLogDoc(task.petId, task.itemId, uid, myName, new Date(), amount);
+        // The row's day: a tap just after midnight on last night's row logged today's meal
+        const log = feedingLogDoc(task.petId, task.itemId, uid, myName, new Date(), amount, task.time);
         await setDoc(doc(db, `${base}/feedingLogs/${log.id}`), log.data);
       } else {
         const log = medicationLogDoc(task.petId, task.itemId, task.title, task.detail, task.time, uid, new Date(), crypto.randomUUID().toUpperCase());
@@ -422,9 +434,19 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
             {isFeeding ? "🍽️ " : "💊 "}{showPet ? `${task.petName} · ` : ""}{task.title}
           </p>
           {task.detail && <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{task.detail}</p>}
-          {done && (
+          {done && done.skipped && (
+            <p className="font-inter" style={{ fontSize: "14px", color: "var(--slate-gray)" }}>
+              Skipped by {done.by} at {fmtTime(done.at)} (not given)
+            </p>
+          )}
+          {done && !done.skipped && (
             <p className="font-inter" style={{ fontSize: "14px", color: doneColor }}>
               {doneMark} {isFeeding && amount !== "all" ? `${AMOUNT_TEXT[amount]} · ${done.by}` : `Done by ${done.by}`} at {fmtTime(done.at)}
+            </p>
+          )}
+          {done?.pending && (
+            <p className="font-inter" style={{ fontSize: "14px", color: "#9C5F0E" }} role="status">
+              Not sent yet. It&rsquo;ll send when you&rsquo;re back online; keep this page open until then.
             </p>
           )}
           <div className="flex flex-wrap gap-x-4">

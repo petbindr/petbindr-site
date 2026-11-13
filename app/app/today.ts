@@ -5,7 +5,8 @@
 
 export type FeedingAmount = "all" | "some" | "none";
 
-export type Done = { by: string; at: Date; amount: FeedingAmount; logId: string; byUserId: string };
+// pending: saved on this device, not sent yet (no signal). skipped: a dose marked "Not given"
+export type Done = { by: string; at: Date; amount: FeedingAmount; logId: string; byUserId: string; pending?: boolean; skipped?: boolean };
 
 export type TodayTask = {
   key: string;
@@ -86,8 +87,8 @@ export function shouldGiveOn(s: MedicationSchedule, now: Date): boolean {
 }
 
 export type FeedingSchedule = { scheduleItems?: { id: string; time?: Stamp; portion?: string }[] } | null;
-export type FeedingLog = { id: string; scheduleItemId?: string; date?: Stamp; completedAt?: Stamp; completedBy?: string; completedByName?: string; amount?: string };
-export type MedicationLog = { id: string; scheduleId?: string; scheduledTime?: Stamp; actualTime?: Stamp; ownerId?: string; givenBy?: string; notes?: string };
+export type FeedingLog = { id: string; scheduleItemId?: string; date?: Stamp; completedAt?: Stamp; completedBy?: string; completedByName?: string; amount?: string; pending?: boolean };
+export type MedicationLog = { id: string; scheduleId?: string; scheduledTime?: Stamp; actualTime?: Stamp; ownerId?: string; givenBy?: string; notes?: string; wasGiven?: boolean; pending?: boolean };
 
 export type PetDay = {
   petId: string; petName: string;
@@ -116,7 +117,7 @@ export function tasksFor(day: PetDay, now: Date, names: Record<string, string>):
       done: log ? {
         by: log.completedByName || "Someone", at: toDate(log.completedAt) || time,
         amount: log.amount === "some" || log.amount === "none" ? log.amount : "all",
-        logId: log.id, byUserId: log.completedBy || "",
+        logId: log.id, byUserId: log.completedBy || "", pending: log.pending === true,
       } : null,
     });
   }
@@ -135,7 +136,10 @@ export function tasksFor(day: PetDay, now: Date, names: Record<string, string>):
       tasks.push({
         key: `${day.petId}-med-${med.id}-${time.getTime()}`, kind: "medication", petId: day.petId, petName: day.petName,
         itemId: med.id, title: med.medicationName || "Medication", detail: (med.dosage || "").trim(), time,
-        done: log ? { by: doseBy(log, names), at: toDate(log.actualTime) || time, amount: "all", logId: log.id, byUserId: log.givenBy || log.ownerId || "" } : null,
+        done: log ? {
+          by: doseBy(log, names), at: toDate(log.actualTime) || time, amount: "all", logId: log.id,
+          byUserId: log.givenBy || log.ownerId || "", pending: log.pending === true, skipped: log.wasGiven === false,
+        } : null,
       });
     }
   }
@@ -145,8 +149,9 @@ export function tasksFor(day: PetDay, now: Date, names: Record<string, string>):
 // MARK: - What a check-off saves (the same fields as the app; see firestore.rules)
 
 /** pets/{petId}/feedingLogs/{id}: one per meal per day */
-export function feedingLogDoc(petId: string, itemId: string, uid: string, name: string, now: Date, amount: FeedingAmount) {
-  const day = startOfDay(now);
+export function feedingLogDoc(petId: string, itemId: string, uid: string, name: string, now: Date, amount: FeedingAmount, rowTime: Date = now) {
+  // The day of the row tapped, not of the tap (a page left open past midnight)
+  const day = startOfDay(rowTime);
   const id = feedingLogId(itemId, day);
   return {
     id,

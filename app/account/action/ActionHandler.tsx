@@ -15,6 +15,9 @@ type State =
   | { kind: "done"; heading: string; text: string }
   | { kind: "error"; heading: string; text: string };
 
+// Same key as app/app/firebase.ts (WEB_API_KEY)
+const PETBINDR_WEB_API_KEY = "AIzaSyC-Yc92DGkgvm9X63WhEQViyyIpYvgDyzE";
+
 async function callAuth(endpoint: string, apiKey: string, body: Record<string, string>) {
   const res = await fetch(`${IDENTITY_TOOLKIT}/${endpoint}?key=${encodeURIComponent(apiKey)}`, {
     method: "POST",
@@ -44,7 +47,11 @@ export default function ActionHandler() {
   const params = useSearchParams();
   const mode = params.get("mode") || "";
   const oobCode = params.get("oobCode") || "";
-  const apiKey = params.get("apiKey") || "";
+  // Always PetBindr's own (public) web key, never the one in the link: a link made
+  // in someone else's Firebase project, carrying their key, would otherwise show
+  // "Choose a new password for you@…" on petbindr.com and send the password there.
+  // The one-time code works with any of this project's keys.
+  const apiKey = PETBINDR_WEB_API_KEY;
 
   const [state, setState] = useState<State>({ kind: "working", text: "One moment…" });
   const [password, setPassword] = useState("");
@@ -54,8 +61,7 @@ export default function ActionHandler() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const validKey = /^[A-Za-z0-9_-]{20,60}$/.test(apiKey);
-    if (!oobCode || !validKey) {
+    if (!oobCode) {
       setState({
         kind: "error",
         heading: "That link didn't work",

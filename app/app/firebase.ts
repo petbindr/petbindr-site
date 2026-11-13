@@ -11,7 +11,7 @@ const WEB_APP_ID = "1:116519914036:web:680378a11f742f9cb09861";
 
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, connectAuthEmulator, type Auth } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator, type Firestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, type Firestore } from "firebase/firestore";
 import { getFunctions, connectFunctionsEmulator, type Functions } from "firebase/functions";
 import { getStorage, connectStorageEmulator, type FirebaseStorage } from "firebase/storage";
 
@@ -33,7 +33,14 @@ export function firebase() {
     appId: useEmulators ? undefined : (process.env.NEXT_PUBLIC_FIREBASE_APP_ID || WEB_APP_ID),
   });
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  // Kept on the device (IndexedDB): a check-off made with no signal is sent when the
+  // signal's back, even after the tab was closed (in memory only, it was lost)
+  let db: Firestore;
+  try {
+    db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  } catch {
+    db = getFirestore(app); // already set up (hot reload), or storage not available
+  }
   const functions = getFunctions(app, "us-central1");
   const storage = getStorage(app);
   if (useEmulators) {
