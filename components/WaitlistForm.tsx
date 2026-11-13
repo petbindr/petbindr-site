@@ -8,9 +8,8 @@ interface WaitlistFormProps {
 
 export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "duplicate" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
-  const [founding, setFounding] = useState(false);
   // Honeypot: hidden from people; bots that fill every field fill it too
   const [website, setWebsite] = useState("");
 
@@ -28,8 +27,9 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
       });
       const data = await res.json();
       if (res.ok) {
-        setFounding(data.foundingMember === true);
-        setStatus(data.alreadyExists ? "duplicate" : "success");
+        // Same reply whether or not the address was already on the list (so the
+        // page can't be used to check someone's email); the email says which
+        setStatus("success");
         setEmail("");
       } else {
         setStatus("error");
@@ -43,17 +43,8 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
 
   if (status === "success") {
     return (
-      <div className="rounded-xl border border-[var(--success-green)] bg-[#4FAE7C1F] px-7 py-5 max-w-lg text-[var(--success-green)] font-semibold text-base font-inter">
-        {/* "Founding Member" only for the first 1,000 (it said so to everyone) */}
-        You&rsquo;re on the list.{founding ? " Welcome, Founding Member." : " We\u2019ll see you at launch."}
-      </div>
-    );
-  }
-
-  if (status === "duplicate") {
-    return (
-      <div className="rounded-xl border border-[var(--bindr-teal)] bg-[#74C4CD1F] px-7 py-5 max-w-lg text-[var(--bindr-navy)] font-medium text-base font-inter">
-        You&rsquo;re already on the list. We&rsquo;ll see you at launch.
+      <div role="status" className="rounded-xl border border-[var(--success-green)] bg-[#4FAE7C1F] px-7 py-5 max-w-lg text-[var(--success-green)] font-semibold text-base font-inter">
+        Thanks! Check your email: we&rsquo;ve sent you a note about your spot on the list.
       </div>
     );
   }

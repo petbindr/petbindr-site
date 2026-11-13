@@ -15,6 +15,14 @@ const schema = z.object({
 });
 
 const FOUNDING_MEMBER_LIMIT = 1000;
+// Every signup gets the same reply ({ success: true }), whether or not the
+// address was already on the list: "You're already on the list" (and the
+// founding-member flag, which only new signups got) let anyone check whether
+// someone's email is signed up (2026-11-13). The person finds out by email.
+const SAME_REPLY = { success: true };
+// An address already on the list gets a short "you're already on it" email,
+// at most once a day, so repeated submits can't flood someone's inbox
+const ALREADY_NOTICE_EVERY_MS = 24 * 3600_000;
 // Signups from one connection: each one sends an email from petbindr.com, so a
 // script posting thousands of addresses could email-bomb strangers
 const PER_IP_PER_HOUR = 5;
@@ -51,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   const { email, source, website } = parsed.data;
   // Honeypot filled in: look like it worked, save and send nothing
-  if (website) return NextResponse.json({ success: true, foundingMember: false }, { status: 200 });
+  if (website) return NextResponse.json(SAME_REPLY, { status: 200 });
 
   // Derive source from UTM params if not explicitly provided
   const utmSource = req.nextUrl.searchParams.get("utm_source") ?? undefined;
@@ -80,7 +88,10 @@ export async function POST(req: NextRequest) {
     const existing = await docRef.get();
     if (existing.exists) {
       const prev = existing.data() || {};
-      if (!prev.unsubscribed) return NextResponse.json({ alreadyExists: true }, { status: 200 });
+      if (!prev.unsubscribed) {
+        await noticeAlreadyOnList(docRef, email, prev);
+        return NextResponse.json(SAME_REPLY, { status: 200 });
+      }
       // Signed up again after unsubscribing: back on the list (they said "already on
       // the list" but stayed unsubscribed, so they'd never hear about launch)
       unsubscribeToken = prev.unsubscribeToken || newUnsubscribeToken();
@@ -106,7 +117,8 @@ export async function POST(req: NextRequest) {
           ...(finalSource ? { source: finalSource } : {}),
         });
       } catch (err) {
-        if ((err as { code?: number }).code === 6) return NextResponse.json({ alreadyExists: true }, { status: 200 });
+        // Another submit of the same address got there first; it sends the email
+        if ((err as { code?: number }).code === 6) return NextResponse.json(SAME_REPLY, { status: 200 });
         throw err;
       }
     }
@@ -218,5 +230,49 @@ Don't want these emails? Unsubscribe: ${unsubscribeUrl}`;
     console.error("Resend error:", emailErr);
   }
 
-  return NextResponse.json({ success: true, foundingMember: isFoundingMember }, { status: 200 });
+  return NextResponse.json(SAME_REPLY, { status: 200 });
+}
+
+/** "You're already on the list", by email only (see SAME_REPLY). */
+async function noticeAlreadyOnList(
+  docRef: FirebaseFirestore.DocumentReference, email: string, prev: FirebaseFirestore.DocumentData,
+) {
+  const last = prev.alreadyNoticeAt?.toMillis?.() ?? 0;
+  if (Date.now() - last < ALREADY_NOTICE_EVERY_MS) return;
+  try {
+    await docRef.update({ alreadyNoticeAt: FieldValue.serverTimestamp() });
+    const token = prev.unsubscribeToken || newUnsubscribeToken();
+    if (!prev.unsubscribeToken) await docRef.update({ unsubscribeToken: token });
+    const unsubscribeUrl = unsubscribePageUrl(email, token);
+    const founding = prev.foundingMember === true
+      ? " And you're a Founding Member: early access, an in-app badge, and locked-in best pricing." : "";
+    await getResend().emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: email,
+      subject: "You're already on the list.",
+      text: `Hey,
+
+Someone (probably you) just tried to join the PetBindr waitlist with this address. You're already on it, so there's nothing to do. We'll email you when we launch on iOS.${founding}
+
+If that wasn't you, you can ignore this email.
+
+— The PetBindr team
+hello@petbindr.com
+
+Don't want these emails? Unsubscribe: ${unsubscribeUrl}`,
+      html: `<!DOCTYPE html><html lang="en"><body style="margin:0;padding:40px 20px;background-color:#FBF8F3;font-family:Inter,Helvetica,Arial,sans-serif;">
+<table width="100%" style="max-width:560px;margin:0 auto;background-color:#FFFFFF;border-radius:16px;padding:40px;border:1px solid #E8ECEF;"><tr><td>
+<img src="https://petbindr.com/logo.png" alt="PetBindr" width="140" style="display:block;margin:0 0 28px;" />
+<h1 style="margin:0 0 16px;font-size:26px;color:#1F3C5F;font-family:Georgia,serif;">You&rsquo;re already on the list.</h1>
+<p style="margin:0 0 16px;font-size:16px;color:#1A1F2E;line-height:1.6;">Someone (probably you) just tried to join the PetBindr waitlist with this address. You&rsquo;re already on it, so there&rsquo;s nothing to do. We&rsquo;ll email you when we launch on iOS.${founding ? ` You&rsquo;re a <strong style="color:#1F3C5F;">Founding Member</strong>: early access, an in-app badge, and locked-in best pricing.` : ""}</p>
+<p style="margin:0;font-size:14px;color:#6B7785;line-height:1.6;">If that wasn&rsquo;t you, you can ignore this email.</p>
+</td></tr></table>
+<p style="margin:20px 0 0;font-size:12px;color:#6B7785;text-align:center;">&copy; PetBindr LLC 2026 &bull; <a href="${unsubscribeUrl}" style="color:#6B7785;">Unsubscribe</a></p>
+</body></html>`,
+      headers: unsubscribeHeaders(email, token),
+    });
+  } catch (err) {
+    // The reply is the same either way; a failed notice only loses the email
+    console.error("Already-on-list notice error:", err);
+  }
 }
