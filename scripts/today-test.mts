@@ -12,6 +12,7 @@ const log = feedingLogDoc("rex", "pm", "u1", "Priya", tap, "all", lastDinner);
 check("row's day used for the log date", (log.data.date as Date).getDate() === 11);
 check("and for its ID", log.id.includes("2026-11-11"));
 check("completedAt is the tap", log.data.completedAt === tap);
+check("day stored at local noon (reads the same day in other time zones)", (log.data.date as Date).getHours() === 12);
 check("without a row time: the tap's day", (feedingLogDoc("rex", "pm", "u1", "Priya", tap, "all").data.date as Date).getDate() === 12);
 
 // Skipped and not-yet-sent doses

@@ -37,6 +37,11 @@ export function sameDay(a: Date, b: Date): boolean {
 }
 
 /** The app's feeding log ID: one per meal per day ("<item>_2026-11-12") */
+/** Local noon of that calendar day (see feedingLogDoc) */
+export function feedingDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0);
+}
+
 export function feedingLogId(itemId: string, day: Date): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${itemId}_${day.getFullYear()}-${p(day.getMonth() + 1)}-${p(day.getDate())}`;
@@ -150,8 +155,10 @@ export function tasksFor(day: PetDay, now: Date, names: Record<string, string>):
 
 /** pets/{petId}/feedingLogs/{id}: one per meal per day */
 export function feedingLogDoc(petId: string, itemId: string, uid: string, name: string, now: Date, amount: FeedingAmount, rowTime: Date = now) {
-  // The day of the row tapped, not of the tap (a page left open past midnight)
-  const day = startOfDay(rowTime);
+  // The day of the row tapped, not of the tap (a page left open past midnight).
+  // Stored at local noon, like the app (FeedingStore.feedingDay): at midnight, a
+  // co-owner in another time zone read it as the day before.
+  const day = feedingDay(rowTime);
   const id = feedingLogId(itemId, day);
   return {
     id,
