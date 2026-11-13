@@ -8,7 +8,8 @@ export const metadata: Metadata = {
 };
 
 // Keep every statement here true of the app as it ships today.
-// Don't add claims (e.g. "encrypted codes") until they exist.
+// Don't add claims until they exist.
+// Encrypted home codes: true since 2026-11-13 (HOME_INFO_KEY; lock-home-info.js run on live data).
 // Photos: true since 2026-11-06 (SDK loading + removeDownloadTokens + one-time token cleanup).
 // Recently Viewed: true since 2026-11-06 (getSharedHousehold logs to households/{uid}/accessLog;
 // rules: owner read only, no client writes).
@@ -93,6 +94,10 @@ const sections: { title: string; body: React.ReactNode }[] = [
         <p>
           PetBindr runs on Google Firebase. Your information is encrypted while it travels
           between your phone and our servers, and Google encrypts it when it&rsquo;s stored.
+        </p>
+        <p>
+          Your home access codes get an extra lock: they&rsquo;re stored encrypted with a key only
+          our server holds, so even someone looking at the database sees gibberish.
         </p>
       </>
     ),
