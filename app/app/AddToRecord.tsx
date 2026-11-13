@@ -10,7 +10,7 @@
 import { useState } from "react";
 import { doc, setDoc, updateDoc } from "firebase/firestore";
 import { firebase } from "./firebase";
-import { healthRecordDoc, dayFromInput } from "./records";
+import { healthRecordDoc, dayFromInput, notesChangedSinceOpened } from "./records";
 
 type Mode = null | "weight" | "visit" | "notes";
 
@@ -39,6 +39,8 @@ export default function AddToRecord({ petId, petName, uid, regularVet, lastUnit,
   const [day, setDay] = useState(todayInput());
   const [note, setNote] = useState("");
   const [petNotes, setPetNotes] = useState(notes);
+  // The notes as they were when the editor opened (`notes` stays live)
+  const [openedNotes, setOpenedNotes] = useState(notes);
 
   function open(next: Mode) {
     setMode(next);
@@ -46,7 +48,7 @@ export default function AddToRecord({ petId, petName, uid, regularVet, lastUnit,
     setDone(null);
     setDay(todayInput());
     setNote("");
-    if (next === "notes") setPetNotes(notes);
+    if (next === "notes") { setPetNotes(notes); setOpenedNotes(notes); }
     // The unit of the latest weigh-in, now that records have loaded (it was fixed at
     // "lbs" when this mounted, so 5.2 meant as kg was saved as 5.2 lbs)
     if (next === "weight") setUnit(lastUnit);
@@ -66,6 +68,16 @@ export default function AddToRecord({ petId, petName, uid, regularVet, lastUnit,
     try {
       const { db } = firebase();
       if (mode === "notes") {
+        // Changed in the app or by someone else while this was open: saving
+        // would erase theirs (it used to; last save won). Say so once; a second
+        // Save replaces them on purpose.
+        if (notesChangedSinceOpened(openedNotes, notes, petNotes)) {
+          setOpenedNotes(notes);
+          setError(notes.trim()
+            ? `Someone else changed these notes since you opened them. Theirs now say: "${notes.trim().slice(0, 300)}${notes.trim().length > 300 ? "…" : ""}". Copy what you need into yours, then Save again to replace them, or Cancel to keep theirs.`
+            : "Someone else cleared these notes since you opened them. Save again to put yours back, or Cancel to leave them empty.");
+          return;
+        }
         await updateDoc(doc(db, "pets", petId), { notes: petNotes.trim().slice(0, 5000) });
         setDone("Notes saved.");
       } else if (mode === "weight") {

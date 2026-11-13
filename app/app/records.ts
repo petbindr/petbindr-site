@@ -35,3 +35,10 @@ export function dayFromInput(value: string): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
+
+/** Saving the pet's notes from petbindr.com/app: true when someone (the app,
+ * another tab, a co-owner) changed them after this editor opened, and the
+ * change isn't the same text being saved. Saving anyway would erase theirs. */
+export function notesChangedSinceOpened(opened: string, latest: string, mine: string): boolean {
+  return latest !== opened && latest.trim() !== mine.trim();
+}
