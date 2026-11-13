@@ -79,6 +79,12 @@ const third = await join("old@example.test");
 check("again the same day: same reply", JSON.stringify(third.body) === JSON.stringify(fresh.body));
 check("again the same day: no second email", mailTo("old@example.test").length === before);
 
+// Two submits of an address already on the list at the same moment: one email
+await db.doc("waitlist/twice@example.test").set({ email: "twice@example.test", unsubscribeToken: "t3", createdAt: Timestamp.now() });
+const both = await Promise.all([join("twice@example.test"), join("twice@example.test")]);
+check("two at once: same reply both times", both.every((r) => JSON.stringify(r.body) === JSON.stringify(fresh.body)));
+check("two at once: one 'already on the list' email", mailTo("twice@example.test").length === 1);
+
 // After unsubscribing, joining again puts them back on, with the normal email
 await db.doc("waitlist/gone@example.test").set({ email: "gone@example.test", unsubscribeToken: "t2", unsubscribed: true, createdAt: Timestamp.now() });
 const back = await join("gone@example.test");

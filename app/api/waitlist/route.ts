@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getFirebaseAdmin } from "@/lib/firebase-admin";
 import { getResend, FROM_EMAIL, FROM_NAME } from "@/lib/resend";
 import { newUnsubscribeToken, unsubscribePageUrl, unsubscribeHeaders } from "@/lib/unsubscribe";
@@ -237,12 +237,19 @@ Don't want these emails? Unsubscribe: ${unsubscribeUrl}`;
 async function noticeAlreadyOnList(
   docRef: FirebaseFirestore.DocumentReference, email: string, prev: FirebaseFirestore.DocumentData,
 ) {
-  const last = prev.alreadyNoticeAt?.toMillis?.() ?? 0;
-  if (Date.now() - last < ALREADY_NOTICE_EVERY_MS) return;
   try {
-    await docRef.update({ alreadyNoticeAt: FieldValue.serverTimestamp() });
-    const token = prev.unsubscribeToken || newUnsubscribeToken();
-    if (!prev.unsubscribeToken) await docRef.update({ unsubscribeToken: token });
+    // In a transaction: two submits at once (from different connections) both
+    // passed a plain read-then-write check and each sent a notice
+    const now = Date.now();
+    const token = await docRef.firestore.runTransaction(async (tx) => {
+      const d = (await tx.get(docRef)).data() || {};
+      const last = d.alreadyNoticeAt?.toMillis?.() ?? 0;
+      if (now - last < ALREADY_NOTICE_EVERY_MS) return null;
+      const t: string = d.unsubscribeToken || newUnsubscribeToken();
+      tx.update(docRef, { alreadyNoticeAt: Timestamp.fromMillis(now), ...(d.unsubscribeToken ? {} : { unsubscribeToken: t }) });
+      return t;
+    });
+    if (!token) return;
     const unsubscribeUrl = unsubscribePageUrl(email, token);
     const founding = prev.foundingMember === true
       ? " And you're a Founding Member: early access, an in-app badge, and locked-in best pricing." : "";
