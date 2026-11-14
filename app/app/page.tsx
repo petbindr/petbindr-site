@@ -6,8 +6,13 @@ import HomeApp from "./HomeApp";
 // petbindr.com/app: PetBindr in the browser for co-owners without an iPhone
 // (Android, or a computer). See HomeApp.tsx. Branded like the rest of the
 // site: the logo (back to the homepage) at the top, the site's links below.
+// Its own link preview (the homepage's talked about a waitlist)
+const description = "Your pets' care from any phone or computer: today's feedings and medications, their records, and invites from family.";
 export const metadata: Metadata = {
   title: "PetBindr",
+  description,
+  openGraph: { title: "PetBindr in your browser", description, siteName: "PetBindr", type: "website", images: [{ url: "/opengraph-image", width: 1200, height: 630 }] },
+  twitter: { card: "summary_large_image", title: "PetBindr in your browser", description, images: ["/opengraph-image"] },
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 };

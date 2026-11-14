@@ -16,38 +16,29 @@ const inter = Inter({
   display: "swap",
 });
 
+// The link-preview picture and the tab icons come from app/opengraph-image.tsx,
+// icon.tsx and apple-icon.tsx (made at build time from the logo). One address,
+// www: petbindr.com redirects there.
+const description =
+  "A live, shareable care plan for your pet: feeding, medications, the vet and your home. Your sitter just opens a link, no app needed. Join the iOS waitlist.";
+
 export const metadata: Metadata = {
-  title: "PetBindr — The pet care app for sitters, vets, and everyone who watches your pet",
-  description:
-    "Replace the printed pet binder. PetBindr is a live, shareable care plan for your pet — built for sitters, vets, and family. Join the iOS waitlist.",
+  title: "PetBindr: the pet care app for sitters, vets and everyone who watches your pet",
+  description,
   openGraph: {
-    title: "PetBindr — The pet care app for sitters, vets, and everyone who watches your pet",
-    description:
-      "Replace the printed pet binder. PetBindr is a live, shareable care plan for your pet — built for sitters, vets, and family. Join the iOS waitlist.",
-    url: "https://petbindr.com",
+    title: "PetBindr: your pet's whole life, in one binder you can share",
+    description,
+    url: "https://www.petbindr.com",
     siteName: "PetBindr",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "PetBindr — Our pet binder was 13 pages. So we built this instead.",
-      },
-    ],
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "PetBindr — The pet care app for sitters, vets, and everyone who watches your pet",
-    description:
-      "Replace the printed pet binder. PetBindr is a live, shareable care plan for your pet — built for sitters, vets, and family. Join the iOS waitlist.",
-    images: ["/og-image.png"],
+    title: "PetBindr: your pet's whole life, in one binder you can share",
+    description,
   },
-  icons: {
-    icon: "/favicon.ico",
-  },
-  metadataBase: new URL("https://petbindr.com"),
+  metadataBase: new URL("https://www.petbindr.com"),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

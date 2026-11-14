@@ -1,22 +1,23 @@
+import Image from "next/image";
 import FadeIn from "@/components/FadeIn";
 
 const features = [
   {
     heading: "Share exactly what they need.",
-    body: "Toggle permissions per sitter — feeding, meds, vet info, the alarm code. Turn things on and off in real time. Revoke access the moment they're done.",
-    screenshotLabel: "Sharing & permissions",
+    body: "Pick what each person sees, from a dog walker to family. Send your sitter a link they open in their phone's browser: no app, no account. Turn it off the moment they're done.",
+    screenshot: { src: "/screenshots/share.jpg", alt: "Invite a Sitter in PetBindr: Biscuit selected, sent as a link with no app needed, and a choice of what the sitter can see" },
     imageRight: false,
   },
   {
     heading: "Watch it happen.",
     body: "Sitters check off feedings and medication doses as they go. You see who did what, when, with timestamps. No more \u201cdid anyone feed her?\u201d group texts.",
-    screenshotLabel: "Real-time task tracking",
+    screenshot: { src: "/screenshots/track.jpg", alt: "Biscuit's feeding in PetBindr: breakfast checked off, \"Fed by Sam at 7:04 AM\", dinner still to do" },
     imageRight: true,
   },
   {
     heading: "The Quick Reference Card.",
     body: "One screen with everything an emergency sitter needs: photo, microchip, meds, allergies, vet, emergency contacts. Tap-to-call built in.",
-    screenshotLabel: "Quick Reference Card",
+    screenshot: { src: "/screenshots/quickref.jpg", alt: "Biscuit's Quick Reference in PetBindr: microchip number, behavior notes, feeding times and medications on one screen" },
     imageRight: false,
   },
 ];
@@ -38,7 +39,7 @@ export default function SolutionSection() {
         </FadeIn>
 
         <div className="flex flex-col gap-20 md:gap-28">
-          {features.map(({ heading, body, screenshotLabel, imageRight }, i) => (
+          {features.map(({ heading, body, screenshot, imageRight }, i) => (
             <FadeIn key={i}>
               <div
                 className={`flex flex-col gap-10 md:gap-16 items-center ${
@@ -61,13 +62,19 @@ export default function SolutionSection() {
                   </p>
                 </div>
 
-                {/* Screenshot placeholder */}
+                {/* Real app screens (iPhone 17 Pro Max, demo data on the test
+                    servers), in public/screenshots/. These were grey
+                    "Screenshot: …" placeholder boxes until 2026-11-14. */}
                 <div className="flex-shrink-0 flex justify-center w-full md:w-auto">
-                  {/* TODO: Replace this div with an actual <Image> when screenshots are ready.
-                      Put screenshots in /public/screenshots/ and update src accordingly. */}
-                  <div className="screenshot-placeholder">
-                    Screenshot: {screenshotLabel}
-                  </div>
+                  <Image
+                    src={screenshot.src}
+                    alt={screenshot.alt}
+                    width={660}
+                    height={1434}
+                    sizes="(min-width: 768px) 280px, 70vw"
+                    className="w-[70vw] max-w-[280px] h-auto rounded-[32px]"
+                    style={{ border: "1px solid var(--mist-gray)", boxShadow: "0 12px 32px rgba(31, 60, 95, 0.12)" }}
+                  />
                 </div>
               </div>
             </FadeIn>
