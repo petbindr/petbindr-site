@@ -165,15 +165,6 @@ function SignedIn({ user }: { user: User }) {
   }, []);
   const [verifyNote, setVerifyNote] = useState<string | null>(null);
 
-  // Pets you were invited to co-own (by email) are added once your email is confirmed
-  const claim = useCallback(async () => {
-    try {
-      await user.getIdToken(true);
-      await httpsCallable(firebase().functions, "claimCoOwnerInvites")();
-    } catch { /* invites wait for the next visit */ }
-  }, [user]);
-  useEffect(() => { if (verified) claim(); }, [verified, claim]);
-
   async function checkVerified() {
     await user.reload();
     if (firebase().auth.currentUser?.emailVerified) {
@@ -257,7 +248,8 @@ function SignedIn({ user }: { user: User }) {
   useEffect(() => {
     for (const uid of new Set(doseUserIds)) {
       if (names[uid]) continue;
-      getDoc(doc(db, "users", uid)).then((d) => {
+      // Name only: other people's profiles are private (publicProfiles, 2026-11-14)
+      getDoc(doc(db, "publicProfiles", uid)).then((d) => {
         if (d.exists()) setNames((n) => ({ ...n, [uid]: (d.data().displayName as string) || "Someone" }));
       }).catch(() => {});
     }
@@ -294,7 +286,7 @@ function SignedIn({ user }: { user: User }) {
       {!verified && (
         <Card title="Confirm your email">
           <p className="font-inter text-[var(--charcoal)]">
-            We sent a link to <strong>{user.email}</strong>. Open it to confirm your email; pets you&apos;ve been invited to co-own show up after that.
+            We sent a link to <strong>{user.email}</strong>. Open it to confirm your email; invites to co-own a pet, or pets handed over to you, show up after that.
           </p>
           {verifyNote && <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--slate-gray)" }} role="status">{verifyNote}</p>}
           <div className="flex flex-wrap gap-2 mt-3">
@@ -304,6 +296,7 @@ function SignedIn({ user }: { user: User }) {
         </Card>
       )}
 
+      {verified && <CoOwnerInviteOffers user={user} />}
       {verified && <TransferOffers user={user} />}
 
       {!ready ? (
@@ -311,7 +304,7 @@ function SignedIn({ user }: { user: User }) {
       ) : pets.length === 0 ? (
         <Card title="No pets yet">
           <p className="font-inter text-[var(--charcoal)]">
-            Ask the pet&apos;s owner to add you as a co-owner in the PetBindr app (the pet&apos;s page, then Manage Ownership), using <strong>{user.email}</strong>.{verified ? " The pets show up here right away." : " Confirm your email first."}
+            Ask the pet&apos;s owner to invite you as a co-owner in the PetBindr app (the pet&apos;s page, then Manage Ownership), using <strong>{user.email}</strong>.{verified ? " The invite shows up here to accept." : " Confirm your email first."}
           </p>
         </Card>
       ) : (
@@ -533,6 +526,78 @@ function AlertEmails({ uid, email }: { uid: string; email: string }) {
       </label>
       {error && <p className="font-inter mt-2" style={{ fontSize: "14px", color: "var(--error-red)" }} role="alert">Couldn&apos;t save that. Try again.</p>}
     </Card>
+  );
+}
+
+// Someone inviting you to co-own a pet: accept or decline. Co-owners always
+// join by accepting now; they used to be added without asking (2026-11-14).
+// Same functions as the iPhone app (myCoOwnerInvites, respondToCoOwnerInvite).
+type CoOwnerInvite = {
+  inviteId: string; petId: string; petName: string; species: string | null; breed: string | null; fromName: string;
+};
+
+function CoOwnerInviteOffers({ user }: { user: User }) {
+  const [invites, setInvites] = useState<CoOwnerInvite[]>([]);
+  const [working, setWorking] = useState<string | null>(null);
+  const [confirmDecline, setConfirmDecline] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        await user.getIdToken(true); // the confirmed-email flag must be in the token
+        const r = await httpsCallable<unknown, { invites: CoOwnerInvite[] }>(firebase().functions, "myCoOwnerInvites")();
+        if (!cancelled) setInvites(r.data.invites || []);
+      } catch { /* invites show on the next visit */ }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  async function respond(inviteId: string, accept: boolean) {
+    setWorking(inviteId);
+    setError(null);
+    try {
+      await httpsCallable(firebase().functions, "respondToCoOwnerInvite")({ inviteId, accept });
+      // An accepted pet appears under "Your pets" by itself
+      setInvites((list) => list.filter((i) => i.inviteId !== inviteId));
+    } catch (e) {
+      setError((e as Error).message || "Couldn't do that. Please try again.");
+    } finally {
+      setWorking(null);
+      setConfirmDecline(null);
+    }
+  }
+
+  if (invites.length === 0) return null;
+  return (
+    <>
+      {invites.map((i) => {
+        const kind = [i.species, i.breed].filter(Boolean).join(" · ");
+        return (
+          <Card key={i.inviteId} title={`${i.fromName} invited you to co-own ${i.petName}`}>
+            <p className="font-inter text-[var(--charcoal)]">
+              {kind ? `${kind}. ` : ""}You&apos;ll both see {i.petName}&apos;s feedings, medications, vet and records, and either of you can check things off and make changes.
+            </p>
+            {error && <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--error-red)" }} role="alert">{error}</p>}
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button className="btn-coral" style={{ padding: "10px 16px" }} disabled={!!working} onClick={() => respond(i.inviteId, true)}>
+                {working === i.inviteId ? "Accepting…" : "Accept"}
+              </button>
+              {confirmDecline === i.inviteId ? (
+                <button className="btn-ghost" style={{ padding: "10px 16px", color: "var(--error-red)" }} disabled={!!working} onClick={() => respond(i.inviteId, false)}>
+                  Tap to decline
+                </button>
+              ) : (
+                <button className="btn-ghost" style={{ padding: "10px 16px" }} disabled={!!working} onClick={() => setConfirmDecline(i.inviteId)}>
+                  Decline
+                </button>
+              )}
+            </div>
+          </Card>
+        );
+      })}
+    </>
   );
 }
 
