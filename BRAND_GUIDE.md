@@ -9,7 +9,7 @@
 | `--soft-teal` | `#B5DDDF` | Section backgrounds, illustration fills, icon backgrounds |
 | `--warm-cream` | `#FBF8F3` | Page background |
 | `--pure-white` | `#FFFFFF` | Cards, lifted sections |
-| `--coral-cta` | `#FF6B5B` | Primary CTA buttons ONLY |
+| `--coral-cta` | `#C8432F` (was #FF6B5B until 2026-11-16; white on it was only 2.8:1) | Primary CTA buttons ONLY |
 | `--charcoal` | `#1A1F2E` | Body text |
 | `--slate-gray` | `#6B7785` | Secondary text, captions, footer |
 | `--mist-gray` | `#E8ECEF` | Borders, dividers |
@@ -52,7 +52,7 @@
 ## Components
 
 ### CTA Button (`.btn-coral`)
-- Background: `--coral-cta` (#FF6B5B)
+- Background: `--coral-cta` (#C8432F)
 - Hover: `--coral-cta-hover` (#e55a4a) — 10% darker
 - Text: white, Inter 16px weight 600
 - Padding: 14px 28px
