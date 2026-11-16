@@ -43,7 +43,7 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
 
   if (status === "success") {
     return (
-      <div role="status" className="rounded-xl border border-[var(--success-green)] bg-[#4FAE7C1F] px-7 py-5 max-w-lg text-[var(--success-green)] font-semibold text-base font-inter">
+      <div role="status" className="rounded-xl border border-[var(--success-green)] bg-[#2E7D561F] px-7 py-5 max-w-lg text-[var(--success-green)] font-semibold text-base font-inter">
         {/* True for everyone (new or already signed up), so it says nothing about the address */}
         Thanks! That address is on the list. We&rsquo;ll email you when we launch.
       </div>

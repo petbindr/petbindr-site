@@ -20,7 +20,7 @@ const config: Config = {
         "charcoal":      "#1A1F2E",
         "slate-gray":    "#6B7785",
         "mist-gray":     "#E8ECEF",
-        "success-green": "#4FAE7C",
+        "success-green": "#2E7D56",
         "alert-amber":   "#E5A547",
         "error-red":     "#D14545",
       },

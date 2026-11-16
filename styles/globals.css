@@ -14,7 +14,7 @@
   --charcoal:      #1A1F2E;
   --slate-gray:    #6B7785;
   --mist-gray:     #E8ECEF;
-  --success-green: #4FAE7C;
+  --success-green: #2E7D56; /* was #4FAE7C (2.7:1 on white); now 5.0:1 */
   --alert-amber:   #E5A547;
   --error-red:     #D14545;
 }
@@ -104,7 +104,9 @@ body {
   min-height: 44px;
 }
 .email-input:focus {
-  border-color: var(--bindr-teal);
+  /* Navy edge plus a teal glow: teal alone was 2.0:1 on white (needs 3:1) */
+  border-color: var(--bindr-navy);
+  box-shadow: 0 0 0 3px rgba(116, 196, 205, 0.45);
 }
 .email-input::placeholder {
   color: var(--slate-gray);

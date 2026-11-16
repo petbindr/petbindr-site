@@ -13,7 +13,7 @@
 | `--charcoal` | `#1A1F2E` | Body text |
 | `--slate-gray` | `#6B7785` | Secondary text, captions, footer |
 | `--mist-gray` | `#E8ECEF` | Borders, dividers |
-| `--success-green` | `#4FAE7C` | Confirmations |
+| `--success-green` | `#2E7D56` (was #4FAE7C until 2026-11-16; 2.7:1 on white) | Confirmations |
 | `--alert-amber` | `#E5A547` | Warnings |
 | `--error-red` | `#D14545` | Errors |
 
