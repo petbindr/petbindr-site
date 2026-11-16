@@ -309,10 +309,13 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
         <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
           Shared with PetBindr. Only {owner} can change what you see here.
         </p>
+        {/* "Get the PetBindr app…" went to a waitlist for an app that isn't
+            out yet (review panel 2026-11-14): say what it is honestly */}
         {!data.helper && (
-          <a href="https://petbindr.com" className="font-inter text-[var(--bindr-navy)] underline" style={{ fontSize: "14px" }}>
-            Get the PetBindr app for notifications and photo updates
-          </a>
+          <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+            Have a pet of your own? PetBindr for iPhone is coming soon.{" "}
+            <a href="https://www.petbindr.com/#get-notified" className="text-[var(--bindr-navy)] underline">Get notified</a>
+          </p>
         )}
       </footer>
     </div>

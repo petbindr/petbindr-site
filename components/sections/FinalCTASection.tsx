@@ -4,6 +4,7 @@ import WaitlistForm from "@/components/WaitlistForm";
 export default function FinalCTASection() {
   return (
     <section
+      id="get-notified"
       style={{ background: "var(--bindr-navy)" }}
       className="py-24 md:py-32 px-6 md:px-12"
     >
