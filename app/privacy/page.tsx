@@ -83,7 +83,11 @@ const sections: { title: string; body: React.ReactNode }[] = [
         </p>
         <p><strong>Crash reports.</strong> If the app crashes, technical details about the crash.</p>
         <p>
-          <strong>Website and waitlist.</strong> If you join the waitlist, your email address.
+          <strong>Website and waitlist.</strong> If you join the waitlist, your email address, and
+          where your visit came from if we can tell (a campaign tag in the link you followed, or
+          the name of the site that linked to us). We count visits to petbindr.com with Vercel Web
+          Analytics, which uses no cookies and doesn&rsquo;t identify you: which pages were viewed,
+          the referring site, the country, and the kind of device and browser.
         </p>
         <p>
           <strong>What we don&rsquo;t collect.</strong> The &ldquo;find a vet nearby&rdquo; search
@@ -122,7 +126,7 @@ const sections: { title: string; body: React.ReactNode }[] = [
         <ul className="list-disc pl-5 space-y-2">
           <li><strong>Google Firebase</strong> (Google LLC): sign-in, database, photo storage, notifications, analytics, and crash reporting.</li>
           <li><strong>Resend</strong>: sending our emails.</li>
-          <li><strong>Vercel</strong>: hosting the petbindr.com website.</li>
+          <li><strong>Vercel</strong>: hosting the petbindr.com website, and counting visits to it.</li>
           <li><strong>Apple</strong>: delivering notifications to your iPhone.</li>
         </ul>
         <p>

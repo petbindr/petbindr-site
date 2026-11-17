@@ -96,6 +96,19 @@ const bot = await join("bot@example.test", { website: "http://spam" });
 check("bot field filled: same reply", JSON.stringify(bot.body) === JSON.stringify(fresh.body));
 check("bot field filled: nothing saved or sent", !(await db.doc("waitlist/bot@example.test").get()).exists && mailTo("bot@example.test").length === 0);
 
+// Where the signup came from (sent by the form from the landing page)
+await join("tagged@example.test", { source: "instagram", medium: "social", campaign: "launch" });
+const tagged = (await db.doc("waitlist/tagged@example.test").get()).data() || {};
+check("source: utm tags saved", tagged.source === "instagram" && tagged.medium === "social" && tagged.campaign === "launch");
+await join("linked@example.test", { referrer: "reddit.com" });
+const linked = (await db.doc("waitlist/linked@example.test").get()).data() || {};
+check("source: a referring site is saved as a referral", linked.source === "referral" && linked.referrer === "reddit.com");
+await join("direct@example.test");
+const direct = (await db.doc("waitlist/direct@example.test").get()).data() || {};
+check("source: none when nobody linked here", !("source" in direct) && !("referrer" in direct));
+const tooLong = await join("long@example.test", { campaign: "x".repeat(101) });
+check("source: an overlong tag is refused", tooLong.status === 400);
+
 // A bad address still says what's wrong
 const badAddr = await join("not-an-email");
 check("invalid address: error message", badAddr.status === 400 && typeof badAddr.body.error === "string");

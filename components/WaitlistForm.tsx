@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signupSource } from "@/lib/signupSource";
 
 interface WaitlistFormProps {
   variant?: "light" | "dark";
@@ -23,7 +24,8 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, ...(website ? { website } : {}) }),
+        // Where this visit came from (utm_* tags, referring site), if known
+        body: JSON.stringify({ email, ...signupSource(), ...(website ? { website } : {}) }),
       });
       const data = await res.json();
       if (res.ok) {

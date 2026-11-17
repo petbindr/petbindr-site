@@ -48,6 +48,9 @@ export default function FooterSection() {
           <Link href="/security" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
             Security
           </Link>
+          <a href="mailto:hello@petbindr.com?subject=PetBindr%20feedback" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+            Send feedback
+          </a>
           <a href="mailto:hello@petbindr.com" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
             hello@petbindr.com
           </a>

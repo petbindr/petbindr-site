@@ -9,7 +9,11 @@ import { newUnsubscribeToken, unsubscribePageUrl, unsubscribeHeaders } from "@/l
 // trim before checking: " a@b.com" (a pasted space) was rejected as invalid
 const schema = z.object({
   email: z.string().trim().toLowerCase().max(254).email("Please enter a valid email address."),
+  // Where the visit came from (lib/signupSource): utm_* tags and the referring site
   source: z.string().max(100).optional(),
+  medium: z.string().max(100).optional(),
+  campaign: z.string().max(100).optional(),
+  referrer: z.string().max(100).optional(),
   // Hidden from people (WaitlistForm); bots that fill every field fill it
   website: z.string().max(500).optional(),
 });
@@ -57,13 +61,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { email, source, website } = parsed.data;
+  const { email, source, medium, campaign, referrer, website } = parsed.data;
   // Honeypot filled in: look like it worked, save and send nothing
   if (website) return NextResponse.json(SAME_REPLY, { status: 200 });
 
-  // Derive source from UTM params if not explicitly provided
-  const utmSource = req.nextUrl.searchParams.get("utm_source") ?? undefined;
-  const finalSource = source ?? utmSource;
+  // Sent by the form from the page the visitor landed on (this request's own
+  // address never had utm_source, so nothing was ever recorded before)
+  const finalSource = source ?? (referrer ? "referral" : undefined);
+  const origin = {
+    ...(finalSource ? { source: finalSource } : {}),
+    ...(medium ? { medium } : {}),
+    ...(campaign ? { campaign } : {}),
+    ...(referrer ? { referrer } : {}),
+  };
 
   let db: ReturnType<typeof getFirebaseAdmin>["db"];
   try {
@@ -114,7 +124,7 @@ export async function POST(req: NextRequest) {
           unsubscribeToken,
           createdAt: FieldValue.serverTimestamp(),
           foundingMember: isFoundingMember,
-          ...(finalSource ? { source: finalSource } : {}),
+          ...origin,
         });
       } catch (err) {
         // Another submit of the same address got there first; it sends the email

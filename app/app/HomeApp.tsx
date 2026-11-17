@@ -349,6 +349,9 @@ function SignedIn({ user }: { user: User }) {
       <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
         Signed in as {user.email}. Tap a pet for its vets, allergies, medications and more.
       </p>
+      <p className="font-inter text-center" style={{ fontSize: "14px" }}>
+        <a href="mailto:hello@petbindr.com?subject=PetBindr%20feedback%20(web)" className="text-[var(--bindr-navy)] underline">Send feedback</a>
+      </p>
     </div>
   );
 }
