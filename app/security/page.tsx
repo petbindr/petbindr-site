@@ -40,7 +40,7 @@ const sections: { title: string; body: React.ReactNode }[] = [
           them, on purpose, for that person.
         </p>
         <p>
-          On the Property Information screen, <strong>Who Can See This</strong> lists everyone
+          On the Home Access screen, <strong>Who Can See This</strong> lists everyone
           who currently has your codes, with a <strong>Turn Off</strong> button next to each
           person and a <strong>Turn Off for Everyone</strong> button.
         </p>
