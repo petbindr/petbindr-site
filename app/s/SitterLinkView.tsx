@@ -37,6 +37,7 @@ type Pet = {
   notes: string | null;
   routines: Record<string, string | null> | null;
   vets: Vet[] | null;
+  microchip?: { number: string; provider: string | null; registryPhone: string | null } | null;
   today: TodayItem[];
   // Medication photos, once per medication (not copied onto every dose)
   medicationPhotos?: Record<string, string>;
@@ -217,13 +218,12 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
   const petNames = data.pets.map((p) => p.name);
   const namesText = petNames.length <= 2 ? petNames.join(" and ") : `${petNames.slice(0, -1).join(", ")}, and ${petNames.at(-1)}`;
 
-  // Emergency vets across pets, without repeats
+  // Vets across pets, without repeats: emergency vets first, then the regular
+  // vet (often the first call during the day; it was left out, review item 19)
   const emergencyVets: Vet[] = [];
-  for (const pet of data.pets) {
-    for (const vet of pet.vets || []) {
-      if (vet.role === "Regular vet") continue;
-      if (!emergencyVets.some((v) => v.name === vet.name && v.phone === vet.phone)) emergencyVets.push(vet);
-    }
+  const byRole = (v: Vet) => (v.role === "Emergency vet" ? 0 : v.role === "Regular vet" ? 2 : 1);
+  for (const vet of data.pets.flatMap((p) => p.vets || []).sort((a, b) => byRole(a) - byRole(b))) {
+    if (!emergencyVets.some((v) => v.name === vet.name && v.phone === vet.phone)) emergencyVets.push(vet);
   }
   const contacts = data.emergencyContacts || [];
 
@@ -703,6 +703,12 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
   );
 }
 
+/** "Every Other Day" -> "Every other day" */
+function frequencyText(frequency: string | null): string | null {
+  if (!frequency) return null;
+  return frequency.charAt(0).toUpperCase() + frequency.slice(1).toLowerCase();
+}
+
 function PetCard({ pet }: { pet: Pet }) {
   const about = [pet.breed || pet.species, ageText(pet.birthday)].filter(Boolean).join(" · ");
   const routineEntries = Object.entries(pet.routines || {}).filter(([, v]) => v);
@@ -725,6 +731,7 @@ function PetCard({ pet }: { pet: Pet }) {
                   <strong>{a.name}</strong>
                   {a.severity ? ` (${a.severity})` : ""}
                   {a.symptoms ? `: ${a.symptoms}` : ""}
+                  {a.notes && <p style={{ fontSize: "0.875rem" }}>{a.notes}</p>}
                 </li>
               ))}
             </ul>
@@ -754,7 +761,10 @@ function PetCard({ pet }: { pet: Pet }) {
               {pet.medications.map((m) => (
                 <li key={m.id}>
                   <strong>{m.name}</strong>{m.dosage ? `, ${m.dosage}` : ""}
-                  {m.times.length > 0 && <span className="text-[var(--slate-gray)]"> · {m.times.join(", ")}</span>}
+                  {/* How often: an every-other-day med read as daily (review item 19) */}
+                  {(m.frequency || m.times.length > 0) && (
+                    <span className="text-[var(--slate-gray)]"> · {[frequencyText(m.frequency), m.times.join(", ")].filter(Boolean).join(", ")}</span>
+                  )}
                   {m.notes && <p className="text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>{m.notes}</p>}
                 </li>
               ))}
@@ -771,6 +781,15 @@ function PetCard({ pet }: { pet: Pet }) {
         )}
 
         {pet.notes && <Section title="Notes"><p className="whitespace-pre-line">{pet.notes}</p></Section>}
+
+        {pet.microchip && (
+          <Section title="Microchip">
+            <p><strong>{pet.microchip.number}</strong>{pet.microchip.provider ? ` (${pet.microchip.provider})` : ""}</p>
+            {pet.microchip.registryPhone && (
+              <p>Registry: <a href={telHref(pet.microchip.registryPhone)} className="text-[var(--bindr-navy)] underline">{pet.microchip.registryPhone}</a></p>
+            )}
+          </Section>
+        )}
 
         {pet.vets && pet.vets.length > 0 && (
           <Section title="Vets">
