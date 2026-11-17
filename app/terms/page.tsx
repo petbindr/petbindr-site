@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 // the privacy page). Not legal advice: have it reviewed before launch, and add
 // subscription terms (price, renewal, cancellation) before any paid feature ships.
 
-const LAST_UPDATED = "November 8, 2026";
+const LAST_UPDATED = "November 16, 2026";
 
 const link = "text-[var(--bindr-navy)] underline";
 
@@ -98,10 +98,13 @@ const sections: { title: string; body: React.ReactNode }[] = [
           time, and it takes effect right away in the app.
         </p>
         <p>
-          <strong>Sitter links</strong> let someone see your pets&rsquo; care information in a web
-          browser without an account. Anyone who has the link can open it until it ends, so send it
-          only to the person caring for your pets. Every link has an end date (at most 30 days), you
-          can turn it off at any time, and home access details are never shown on a link.
+          <strong>Links</strong> let someone see your pets&rsquo; care information in a web
+          browser without an account. Anyone who has a link can open it until it ends, so send it
+          only to the person it&rsquo;s for. A <strong>sitter link</strong> always has an end date,
+          at most 30 days away. A <strong>helper link</strong> (for someone in your household, such
+          as a child, who helps with feedings) shows only feedings and allergies and keeps working
+          until you turn it off or reach the end date you set, if any. You can turn off any link at
+          any time, and home access details are never shown on a link.
         </p>
         <p>
           <strong>If someone shares with you:</strong> use what you see only to care for their pets
@@ -159,8 +162,11 @@ const sections: { title: string; body: React.ReactNode }[] = [
         </p>
         <p>
           <strong>Waitlist and Founding Members.</strong> Joining the waitlist isn&rsquo;t a
-          purchase and doesn&rsquo;t guarantee particular features or availability. Founding Member
-          benefits will be described in the app when paid features launch.
+          purchase and doesn&rsquo;t guarantee particular features or availability. Founding Members
+          (the first 1,000 people on the waitlist) will get early access, an in-app badge, and special
+          pricing when paid features arrive. We&rsquo;ll describe that pricing, and how long it
+          lasts, before you&rsquo;re ever asked to pay; it isn&rsquo;t a promise of any particular
+          price or of free access forever.
         </p>
       </>
     ),

@@ -94,7 +94,7 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
         }`}
       >
         Launching on iOS soon. The first 1,000 signups become Founding Members —
-        early access, in-app badge, and locked-in best pricing forever.
+        early access, an in-app badge, and special Founding Member pricing when paid features arrive.
       </p>
     </div>
   );

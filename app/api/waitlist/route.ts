@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getFirebaseAdmin } from "@/lib/firebase-admin";
-import { getResend, FROM_EMAIL, FROM_NAME } from "@/lib/resend";
+import { getResend, FROM_EMAIL, FROM_NAME, mailingAddressLine } from "@/lib/resend";
 import { newUnsubscribeToken, unsubscribePageUrl, unsubscribeHeaders } from "@/lib/unsubscribe";
 
 // trim before checking: " a@b.com" (a pasted space) was rejected as invalid
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
                 isFoundingMember
                   ? `<p style="margin:0 0 16px;font-size:16px;color:#1A1F2E;line-height:1.6;">
                 You&rsquo;re one of the first 1,000 — which means you&rsquo;re a <strong style="color:#1F3C5F;">Founding Member</strong>.
-                Early access, in-app badge, and locked-in best pricing forever.
+                Early access, an in-app badge, and special Founding Member pricing when paid features arrive.
               </p>`
                   : ""
               }
@@ -182,7 +182,8 @@ export async function POST(req: NextRequest) {
           © PetBindr LLC 2026 &bull;
           <a href="https://petbindr.com/privacy" style="color:#6B7785;">Privacy</a> &bull;
           <a href="${unsubscribeUrl}" style="color:#6B7785;">Unsubscribe</a>
-        </p>
+        </p>${mailingAddressLine() ? `
+        <p style="margin:6px 0 0;font-size:12px;color:#6B7785;">${mailingAddressLine()}</p>` : ""}
       </td>
     </tr>
   </table>
@@ -196,7 +197,7 @@ You're officially on the PetBindr waitlist. We'll email you when we launch on iO
 
 ${
   isFoundingMember
-    ? `You're one of the first 1,000 — which means you're a Founding Member. Early access, in-app badge, and locked-in best pricing forever.
+    ? `You're one of the first 1,000 — which means you're a Founding Member. Early access, an in-app badge, and special Founding Member pricing when paid features arrive.
 
 `
     : ""
@@ -208,7 +209,7 @@ hello@petbindr.com
 Instagram: https://instagram.com/petbindr
 TikTok: https://tiktok.com/@petbindr
 
-Don't want these emails? Unsubscribe: ${unsubscribeUrl}`;
+Don't want these emails? Unsubscribe: ${unsubscribeUrl}${mailingAddressLine() ? `\n${mailingAddressLine()}` : ""}`;
 
     await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
@@ -252,7 +253,7 @@ async function noticeAlreadyOnList(
     if (!token) return;
     const unsubscribeUrl = unsubscribePageUrl(email, token);
     const founding = prev.foundingMember === true
-      ? " And you're a Founding Member: early access, an in-app badge, and locked-in best pricing." : "";
+      ? " And you're a Founding Member: early access, an in-app badge, and special Founding Member pricing when paid features arrive." : "";
     await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: email,
@@ -266,15 +267,15 @@ If that wasn't you, you can ignore this email.
 — The PetBindr team
 hello@petbindr.com
 
-Don't want these emails? Unsubscribe: ${unsubscribeUrl}`,
+Don't want these emails? Unsubscribe: ${unsubscribeUrl}${mailingAddressLine() ? `\n${mailingAddressLine()}` : ""}`,
       html: `<!DOCTYPE html><html lang="en"><body style="margin:0;padding:40px 20px;background-color:#FBF8F3;font-family:Inter,Helvetica,Arial,sans-serif;">
 <table width="100%" style="max-width:560px;margin:0 auto;background-color:#FFFFFF;border-radius:16px;padding:40px;border:1px solid #E8ECEF;"><tr><td>
 <img src="https://petbindr.com/logo.png" alt="PetBindr" width="140" style="display:block;margin:0 0 28px;" />
 <h1 style="margin:0 0 16px;font-size:26px;color:#1F3C5F;font-family:Georgia,serif;">You&rsquo;re already on the list.</h1>
-<p style="margin:0 0 16px;font-size:16px;color:#1A1F2E;line-height:1.6;">Someone (probably you) just tried to join the PetBindr waitlist with this address. You&rsquo;re already on it, so there&rsquo;s nothing to do. We&rsquo;ll email you when we launch on iOS.${founding ? ` You&rsquo;re a <strong style="color:#1F3C5F;">Founding Member</strong>: early access, an in-app badge, and locked-in best pricing.` : ""}</p>
+<p style="margin:0 0 16px;font-size:16px;color:#1A1F2E;line-height:1.6;">Someone (probably you) just tried to join the PetBindr waitlist with this address. You&rsquo;re already on it, so there&rsquo;s nothing to do. We&rsquo;ll email you when we launch on iOS.${founding ? ` You&rsquo;re a <strong style="color:#1F3C5F;">Founding Member</strong>: early access, an in-app badge, and special Founding Member pricing when paid features arrive.` : ""}</p>
 <p style="margin:0;font-size:14px;color:#6B7785;line-height:1.6;">If that wasn&rsquo;t you, you can ignore this email.</p>
 </td></tr></table>
-<p style="margin:20px 0 0;font-size:12px;color:#6B7785;text-align:center;">&copy; PetBindr LLC 2026 &bull; <a href="${unsubscribeUrl}" style="color:#6B7785;">Unsubscribe</a></p>
+<p style="margin:20px 0 0;font-size:12px;color:#6B7785;text-align:center;">&copy; PetBindr LLC 2026 &bull; <a href="${unsubscribeUrl}" style="color:#6B7785;">Unsubscribe</a>${mailingAddressLine() ? `<br />${mailingAddressLine()}` : ""}</p>
 </body></html>`,
       headers: unsubscribeHeaders(email, token),
     });

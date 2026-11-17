@@ -20,3 +20,13 @@ export function getResend(): Resend {
   }
   return _resend;
 }
+
+// Marketing email (the waitlist) must show a postal address (US CAN-SPAM Act).
+// A street address or a P.O. box registered to PetBindr LLC. Empty until set,
+// and then the footer leaves the line out.
+export const MAILING_ADDRESS = "";
+
+/** "PetBindr LLC, <address>" for email footers, or "" until an address is set */
+export function mailingAddressLine(): string {
+  return MAILING_ADDRESS ? `PetBindr LLC, ${MAILING_ADDRESS}` : "";
+}

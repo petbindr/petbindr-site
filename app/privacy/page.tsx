@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 // PetBindr/PetBindr/PrivacyInfo.xcprivacy. Every statement must be true of the
 // app and website as they ship. Not legal advice: have it reviewed before launch.
 
-const LAST_UPDATED = "November 8, 2026";
+const LAST_UPDATED = "November 16, 2026";
 
 const link = "text-[var(--bindr-navy)] underline";
 
@@ -31,7 +31,8 @@ const sections: { title: string; body: React.ReactNode }[] = [
     body: (
       <p>
         PetBindr is run by PetBindr LLC, a Kentucky company (&ldquo;PetBindr&rdquo;, &ldquo;we&rdquo;,
-        &ldquo;us&rdquo;). This policy covers the PetBindr iOS app and the petbindr.com website.
+        &ldquo;us&rdquo;). This policy covers the PetBindr iOS app, PetBindr in a web browser at petbindr.com/app,
+        the pages that PetBindr links open, and the rest of the petbindr.com website.
       </p>
     ),
   },
@@ -39,7 +40,12 @@ const sections: { title: string; body: React.ReactNode }[] = [
     title: "What we collect",
     body: (
       <>
-        <p><strong>Your account.</strong> Your name, email address, and password (stored by our sign-in provider; we never see it). Optionally, a profile photo.</p>
+        <p><strong>Your account.</strong> Your name, email address, and password (stored by our sign-in provider; we never see it). Optionally, a profile photo, and your phone number if you add it so a sitter can reach you. Your name and photo are shown to people you share pets with. The same account works in the app and at petbindr.com/app.</p>
+        <p>
+          <strong>&ldquo;Try it first&rdquo; trials.</strong> If you try PetBindr without signing up,
+          we create an anonymous account with no name or email. If you don&rsquo;t save it by
+          signing up, it and everything in it are deleted after 30 days without use.
+        </p>
         <p>
           <strong>What you add about your pets and home.</strong> Pet profiles and photos, feeding
           and medication schedules, health records, vet and groomer details, notes, diary entries,
@@ -50,13 +56,24 @@ const sections: { title: string; body: React.ReactNode }[] = [
         <p>
           <strong>Sharing and sits.</strong> Who you&rsquo;ve invited (their email address), what
           you&rsquo;ve allowed them to see, dates, check-offs (&ldquo;fed&rdquo;, &ldquo;medication
-          given&rdquo;), and updates or photos sitters post.
+          given&rdquo;), and updates, photos, and visit reports sitters post. If you invite someone to
+          co-own a pet or hand a pet to a new owner, their email address and any note you add. We
+          email people you invite, including people who don&rsquo;t have a PetBindr account yet.
+        </p>
+        <p>
+          <strong>Links.</strong> When you make a sitter or helper link: the name you give it, its
+          dates, which pets it covers, and your phone number if you choose to show it. When someone
+          opens a link, we record when it was opened and the kind of device (for example
+          &ldquo;iPhone&rdquo; or &ldquo;Android phone&rdquo;) so you can see it&rsquo;s been used,
+          plus the check-offs made on it. We don&rsquo;t ask people using a link for an account,
+          name, or email, and we don&rsquo;t store anything else about them. Like any website, our
+          hosting providers keep short-lived technical request logs.
         </p>
         <p>
           <strong>Technical information.</strong> An account ID; app and device identifiers used for
           analytics, crash reports, and notifications; a notification token if you allow
-          notifications; and your time zone, so reminders and missed-dose alerts arrive at the right
-          time.
+          notifications; and your time zone, so missed-dose and missed-feeding alerts arrive at the
+          right time. Reminders when a feeding or dose is due are scheduled on your phone itself.
         </p>
         <p>
           <strong>How the app is used.</strong> A small set of events, such as &ldquo;signed
@@ -130,7 +147,10 @@ const sections: { title: string; body: React.ReactNode }[] = [
         ask us by email instead, we&rsquo;ll delete it within 30 days. Our database is backed up
         daily and each backup is kept for 14 days, so deleted information is fully gone from backups
         within 14 days. We keep something longer only where the law requires it. Waitlist emails are
-        kept until you unsubscribe or ask us to remove them.
+        kept until you unsubscribe or ask us to remove them. Unsaved &ldquo;Try it first&rdquo;
+        trials are deleted after 30 days without use. A link stops working when it ends or you turn
+        it off; its record of opens and check-offs stays with your pets until you delete them or
+        your account.
       </p>
     ),
   },
@@ -160,8 +180,13 @@ const sections: { title: string; body: React.ReactNode }[] = [
     title: "Children",
     body: (
       <p>
-        PetBindr isn&rsquo;t meant for children under 13, and we don&rsquo;t knowingly collect their
-        information. If you think a child has signed up, email us and we&rsquo;ll delete the account.
+        PetBindr accounts are for people 13 and older, and we don&rsquo;t knowingly collect
+        information from children under 13. A helper link lets someone in your household, such as a
+        child, check off feedings in a web browser without an account. It&rsquo;s made and
+        controlled by the account holder, shows only feedings and allergies, and the only things we
+        keep from it are the name you gave the link, its check-offs, and when and on what kind of
+        device it was opened. If you think a child under 13 has signed up for an account, email us
+        and we&rsquo;ll delete it.
       </p>
     ),
   },
