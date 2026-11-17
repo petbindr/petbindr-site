@@ -11,7 +11,8 @@ const REFRESH_MS = 5 * 60 * 1000;
 // and whether this link made the check-off, so it can change the amount
 type Amount = "some" | "none" | null;
 // skipped: the owner marked this dose "Not given" (nothing to give)
-type Done = { by: string; at: string; amount?: Amount; canChange?: boolean; skipped?: boolean } | null;
+// undoUntil: this link's own check-off, which it can undo until then (5 minutes)
+type Done = { by: string; at: string; amount?: Amount; canChange?: boolean; skipped?: boolean; undoUntil?: string } | null;
 // Medications also carry how to give it and the owner's photo, for the "Give it now" panel
 type TodayItem = {
   kind: "feeding" | "medication"; id: string; title: string; detail: string | null; due: string; done: Done;
@@ -282,6 +283,8 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
         </Card>
       )}
 
+      <SendUpdateCard data={data} token={token} owner={owner} />
+
       {(emergencyVets.length > 0 || contacts.length > 0) && (
         <Card title="In an emergency" tone="alert">
           <ul className="space-y-3">
@@ -322,6 +325,167 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
   );
 }
 
+// ---------- Send an update (note + photos) ----------
+
+const MAX_UPDATE_PHOTOS = 4;
+const MAX_NOTE = 1000;
+
+/** A photo from the phone, shrunk to a JPEG data URL (at most 1600px on its long side) */
+async function shrinkPhoto(file: File): Promise<string> {
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    throw new Error("That photo couldn't be opened. Try a different one.");
+  }
+  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("That photo couldn't be opened. Try a different one.");
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  let url = canvas.toDataURL("image/jpeg", 0.8);
+  if (url.length > 2_800_000) url = canvas.toDataURL("image/jpeg", 0.6);
+  return url;
+}
+
+function SendUpdateCard({ data, token, owner }: { data: Extract<LinkData, { state: "active" }>; token: string; owner: string }) {
+  const [note, setNote] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [petIds, setPetIds] = useState<string[]>(() => data.pets.map((p) => p.id));
+  const [busy, setBusy] = useState<"photos" | "sending" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  async function addPhotos(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setError(null);
+    setSent(false);
+    const room = MAX_UPDATE_PHOTOS - photos.length;
+    if (files.length > room) setError(`You can send up to ${MAX_UPDATE_PHOTOS} photos at a time.`);
+    setBusy("photos");
+    try {
+      const added: string[] = [];
+      for (const file of Array.from(files).slice(0, Math.max(0, room))) added.push(await shrinkPhoto(file));
+      setPhotos((p) => [...p, ...added].slice(0, MAX_UPDATE_PHOTOS));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(null);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  }
+
+  async function send() {
+    setError(null);
+    setBusy("sending");
+    try {
+      await callFunction("sitterLinkSendUpdate", { link: token, note, photos, petIds });
+      setNote("");
+      setPhotos([]);
+      setSent(true);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const togglePet = (id: string) =>
+    setPetIds((ids) => (ids.includes(id) ? (ids.length > 1 ? ids.filter((x) => x !== id) : ids) : [...ids, id]));
+  const canSend = (note.trim().length > 0 || photos.length > 0) && petIds.length > 0 && !busy;
+
+  return (
+    <Card title={`Send ${owner} an update`}>
+      <div className="space-y-3">
+        <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+          A note and photos go straight to {owner} in PetBindr, with what you&rsquo;ve checked off today.
+        </p>
+        {data.pets.length > 1 && (
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Which pets is this about?">
+            {data.pets.map((p) => {
+              const on = petIds.includes(p.id);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => togglePet(p.id)}
+                  aria-pressed={on}
+                  className="font-inter rounded-full"
+                  style={{
+                    fontSize: "15px", padding: "6px 14px", minHeight: 36,
+                    border: `1.5px solid ${on ? "var(--bindr-navy)" : "var(--mist-gray)"}`,
+                    background: on ? "var(--bindr-navy)" : "white", color: on ? "white" : "var(--charcoal)",
+                  }}
+                >
+                  {on ? "✓ " : ""}{p.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <label className="block">
+          <span className="sr-only">Your note</span>
+          <textarea
+            className="email-input w-full"
+            style={{ minHeight: 96, resize: "vertical", fontSize: "16px" }}
+            maxLength={MAX_NOTE}
+            placeholder={data.helper ? "How did it go?" : `How are things going? e.g. "Long walk, ate everything, napping now."`}
+            value={note}
+            onChange={(e) => { setNote(e.target.value); setSent(false); }}
+          />
+        </label>
+        {photos.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {photos.map((src, i) => (
+              <div key={i} className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt={`Photo ${i + 1}`} className="rounded-xl object-cover" style={{ width: 84, height: 84 }} />
+                <button
+                  type="button"
+                  onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}
+                  className="absolute -top-2 -right-2 rounded-full bg-white font-inter"
+                  style={{ width: 28, height: 28, border: "1.5px solid var(--mist-gray)", fontSize: "14px" }}
+                  aria-label={`Remove photo ${i + 1}`}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => addPhotos(e.target.files)}
+          />
+          {photos.length < MAX_UPDATE_PHOTOS && (
+            <button type="button" className="btn-ghost" style={{ padding: "10px 16px" }} onClick={() => fileInput.current?.click()} disabled={!!busy}>
+              {busy === "photos" ? "Adding…" : photos.length ? "Add another photo" : "Add photos"}
+            </button>
+          )}
+          <button type="button" className="btn-coral" style={{ padding: "10px 18px" }} onClick={send} disabled={!canSend}>
+            {busy === "sending" ? "Sending…" : "Send update"}
+          </button>
+        </div>
+        {sent && (
+          <p className="font-inter" style={{ fontSize: "15px", color: "var(--success-green)" }} role="status">
+            ✓ Sent. {owner} will see it in PetBindr.
+          </p>
+        )}
+        {error && <p className="font-inter" style={{ fontSize: "14px", color: "var(--error-red)" }} role="alert">{error}</p>}
+      </div>
+    </Card>
+  );
+}
+
 const AMOUNT_TEXT: Record<"all" | "some" | "none", string> = { all: "Ate it all", some: "Ate some", none: "Didn't eat" };
 
 function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: Pet; tz: string; token: string; onChanged: () => void }) {
@@ -344,6 +508,34 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
   const overdue = giveNow && dueAt < now - 5 * 60_000;
 
   useEffect(() => setDone(item.done), [item.done]);
+  // Undo for this link's own check-off, for 5 minutes (a tap on the wrong pet or meal)
+  const undoUntil = done?.undoUntil ? Date.parse(done.undoUntil) : 0;
+  const [canUndo, setCanUndo] = useState(false);
+  useEffect(() => {
+    const left = undoUntil - Date.now();
+    setCanUndo(left > 0);
+    if (left <= 0) return;
+    const t = setTimeout(() => setCanUndo(false), left);
+    return () => clearTimeout(t);
+  }, [undoUntil]);
+
+  async function undo() {
+    setSaving(true);
+    setError(null);
+    try {
+      await callFunction("sitterLinkCheckOff", {
+        link: token, petId: pet.id, kind: item.kind, itemId: item.id, due: Date.parse(item.due), undo: true,
+      });
+      setDone(null);
+      setChoosing(false);
+      onChanged();
+    } catch (e) {
+      setError((e as Error).message);
+      onChanged();
+    } finally {
+      setSaving(false);
+    }
+  }
   useEffect(() => {
     if (!confirming) return;
     const t = setTimeout(() => setConfirming(false), 4000);
@@ -425,6 +617,15 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
               {isFeeding && doneAmount !== "all" ? "" : "by "}
               {done.by} at {fmtTime(done.at, tz)}
             </p>
+          )}
+          {done && !skipped && canUndo && !saving && (
+            <button
+              className="block text-left font-inter underline text-[var(--bindr-navy)]"
+              style={{ fontSize: "14px", padding: "4px 0" }}
+              onClick={undo}
+            >
+              Undo
+            </button>
           )}
           {isFeeding && !choosing && !saving && (!done || done.canChange) && (
             <button
