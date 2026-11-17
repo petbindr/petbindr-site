@@ -9,7 +9,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator, createUserWithEmailAndPassword } from "firebase/auth";
 import {
   getFirestore, connectFirestoreEmulator, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField,
-  collection, query, where, serverTimestamp,
+  collection, query, where, serverTimestamp, orderBy, limit,
 } from "firebase/firestore";
 import { feedingLogDoc, medicationLogDoc, tasksFor } from "../app/app/today.ts";
 import { healthRecordDoc, dayFromInput } from "../app/app/records.ts";
@@ -165,6 +165,16 @@ check("owner can list their invites for a pet", mine.size === 1);
 await deleteDoc(doc(odb, "coOwnerInvites/max_coowner_new@example.test"));
 // (checked from the server: reading a deleted invite is refused, since the rule looks at who made it)
 check("owner can cancel it", !(await admin.doc("coOwnerInvites/max_coowner_new@example.test").get()).exists);
+
+// Visit reports (app/app/VisitReports.tsx): the same query the page makes
+await admin.doc("visitReports/r1").set({ sitterId: "link_abc", sitterName: "Jess", ownerIds: ["owner", uid], petIds: ["rex"], petNames: ["Rex"],
+  note: "Great walk", items: [], photoPaths: [], createdAt: new Date() });
+await admin.doc("visitReports/r2").set({ sitterId: "s", sitterName: "Sam", ownerIds: ["stranger"], petIds: ["other"], petNames: ["Nope"],
+  note: "", items: [], photoPaths: [], createdAt: new Date() });
+const reports = await getDocs(query(collection(db, "visitReports"), where("ownerIds", "array-contains", uid), orderBy("createdAt", "desc"), limit(5)));
+check("Visit reports: a co-owner sees reports sent to them", reports.size === 1 && reports.docs[0].data().sitterName === "Jess");
+await denied("Visit reports: can't read someone else's report", getDoc(doc(db, "visitReports/r2")));
+await denied("Visit reports: can't list everyone's reports", getDocs(query(collection(db, "visitReports"), limit(5))));
 
 console.log(`\n${ok} ok, ${bad} wrong`);
 process.exit(bad ? 1 : 0);

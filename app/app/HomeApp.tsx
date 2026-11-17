@@ -21,6 +21,7 @@ import { httpsCallable } from "firebase/functions";
 import { firebase, webAppConfigured } from "./firebase";
 import PetPage from "./PetPage";
 import SitterLinkMaker from "./SitterLinkMaker";
+import VisitReports from "./VisitReports";
 import {
   tasksFor, startOfDay, feedingLogDoc, medicationLogDoc,
   type PetDay, type TodayTask, type FeedingAmount, type MedicationSchedule,
@@ -337,6 +338,8 @@ function SignedIn({ user }: { user: User }) {
           </Card>
         </>
       )}
+      {ready && pets.length > 0 && <VisitReports uid={user.uid} />}
+
       {ready && pets.filter((p) => !p.isDeceased).length > 0 && (
         <SitterLinkMaker uid={user.uid} pets={linkPets} />
       )}
