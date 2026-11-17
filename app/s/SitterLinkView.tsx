@@ -201,7 +201,7 @@ export default function SitterLinkView() {
       {loadError && (
         // A refresh failed: what's shown may be out of date (it used to say nothing)
         <p className="font-inter text-center rounded-xl p-2 mb-3" role="status"
-          style={{ fontSize: "14px", background: "#FFF4E5", color: "#7A4A00" }}>
+          style={{ fontSize: "0.875rem", background: "#FFF4E5", color: "#7A4A00" }}>
           Couldn&rsquo;t refresh{lastLoaded ? `, showing what was here at ${new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(lastLoaded)}` : ""}.{" "}
           <button className="underline" onClick={() => token && load(token)}>Try again</button>
         </p>
@@ -235,15 +235,15 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
             <PetPhoto key={p.id} pet={p} size={72} />
           ))}
         </div>
-        <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "clamp(26px, 6vw, 34px)" }}>
+        <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "clamp(1.625rem, 6vw, 2.125rem)" }}>
           {data.helper ? (data.sitterName?.trim() ? `Hi ${data.sitterName.trim()}!` : "Hi!") : <>Caring for {namesText}</>}
         </h1>
         {data.helper ? (
-          <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "16px" }}>
+          <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "1rem" }}>
             Here are today&apos;s chores for {namesText}. Tap each one when it&apos;s done, so {owner} knows.
           </p>
         ) : (
-          <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "16px" }}>
+          <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "1rem" }}>
             {data.sitterName?.trim() ? `Hi ${data.sitterName.trim()}! ` : "Hi! "}{owner} shared everything you need here
             {data.endDate ? <>, through <strong>{fmtDay(data.endDate, tz)}</strong></> : null}.
           </p>
@@ -257,10 +257,10 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
 
       {data.notes && (
         <Card title="This time" tone="note">
-          <p className="font-inter text-[var(--charcoal)] whitespace-pre-line" style={{ fontSize: "16px" }}>
+          <p className="font-inter text-[var(--charcoal)] whitespace-pre-line" style={{ fontSize: "1rem" }}>
             {data.notes}
           </p>
-          <p className="font-inter text-[var(--slate-gray)] mt-2" style={{ fontSize: "14px" }}>
+          <p className="font-inter text-[var(--slate-gray)] mt-2" style={{ fontSize: "0.875rem" }}>
             From {owner}
           </p>
         </Card>
@@ -309,13 +309,13 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
       ))}
 
       <footer className="text-center space-y-3 pt-2 pb-6">
-        <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+        <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
           Shared with PetBindr. Only {owner} can change what you see here.
         </p>
         {/* "Get the PetBindr app…" went to a waitlist for an app that isn't
             out yet (review panel 2026-11-14): say what it is honestly */}
         {!data.helper && (
-          <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+          <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
             Have a pet of your own? PetBindr for iPhone is coming soon.{" "}
             <a href="https://www.petbindr.com/#get-notified" className="text-[var(--bindr-navy)] underline">Get notified</a>
           </p>
@@ -401,7 +401,7 @@ function SendUpdateCard({ data, token, owner }: { data: Extract<LinkData, { stat
   return (
     <Card title={`Send ${owner} an update`}>
       <div className="space-y-3">
-        <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+        <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
           A note and photos go straight to {owner} in PetBindr, with what you&rsquo;ve checked off today.
         </p>
         {data.pets.length > 1 && (
@@ -416,7 +416,7 @@ function SendUpdateCard({ data, token, owner }: { data: Extract<LinkData, { stat
                   aria-pressed={on}
                   className="font-inter rounded-full"
                   style={{
-                    fontSize: "15px", padding: "6px 14px", minHeight: 36,
+                    fontSize: "0.9375rem", padding: "6px 14px", minHeight: 36,
                     border: `1.5px solid ${on ? "var(--bindr-navy)" : "var(--mist-gray)"}`,
                     background: on ? "var(--bindr-navy)" : "white", color: on ? "white" : "var(--charcoal)",
                   }}
@@ -431,7 +431,7 @@ function SendUpdateCard({ data, token, owner }: { data: Extract<LinkData, { stat
           <span className="sr-only">Your note</span>
           <textarea
             className="email-input w-full"
-            style={{ minHeight: 96, resize: "vertical", fontSize: "16px" }}
+            style={{ minHeight: 96, resize: "vertical", fontSize: "1rem" }}
             maxLength={MAX_NOTE}
             placeholder={data.helper ? "How did it go?" : `How are things going? e.g. "Long walk, ate everything, napping now."`}
             value={note}
@@ -448,7 +448,7 @@ function SendUpdateCard({ data, token, owner }: { data: Extract<LinkData, { stat
                   type="button"
                   onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}
                   className="absolute -top-2 -right-2 rounded-full bg-white font-inter"
-                  style={{ width: 28, height: 28, border: "1.5px solid var(--mist-gray)", fontSize: "14px" }}
+                  style={{ width: 28, height: 28, border: "1.5px solid var(--mist-gray)", fontSize: "0.875rem" }}
                   aria-label={`Remove photo ${i + 1}`}
                 >
                   ✕
@@ -476,11 +476,11 @@ function SendUpdateCard({ data, token, owner }: { data: Extract<LinkData, { stat
           </button>
         </div>
         {sent && (
-          <p className="font-inter" style={{ fontSize: "15px", color: "var(--success-green)" }} role="status">
+          <p className="font-inter" style={{ fontSize: "0.9375rem", color: "var(--success-green)" }} role="status">
             ✓ Sent. {owner} will see it in PetBindr.
           </p>
         )}
-        {error && <p className="font-inter" style={{ fontSize: "14px", color: "var(--error-red)" }} role="alert">{error}</p>}
+        {error && <p className="font-inter" style={{ fontSize: "0.875rem", color: "var(--error-red)" }} role="alert">{error}</p>}
       </div>
     </Card>
   );
@@ -588,31 +588,32 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
       style={giveNow ? { border: `2px solid ${overdue ? "var(--error-red)" : "var(--bindr-teal)"}`, background: "white" } : undefined}
     >
       {giveNow && (
-        <p className="font-inter font-semibold mb-1" style={{ fontSize: "14px", color: overdue ? "var(--error-red)" : "var(--bindr-navy)" }}>
+        <p className="font-inter font-semibold mb-1" style={{ fontSize: "0.875rem", color: overdue ? "var(--error-red)" : "var(--bindr-navy)" }}>
           {overdue ? `Overdue since ${fmtTime(item.due, tz)}: give it now` : `Time to give ${pet.name} this`}
         </p>
       )}
-      <div className="flex items-center gap-3">
-        <div className="w-16 shrink-0 font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+      {/* Wraps when the phone's text is big: time, then what, then Done, one per line */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="w-16 shrink-0 font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
           {fmtTime(item.due, tz)}
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-[8rem]">
           <p className="font-inter font-semibold text-[var(--charcoal)]">
             {item.kind === "medication" ? "💊 " : "🍽️ "}
             {item.title}
           </p>
           {item.detail && (
-            <p className="font-inter" style={giveNow ? { fontSize: "18px", fontWeight: 600, color: "var(--charcoal)" } : { fontSize: "14px", color: "var(--slate-gray)" }}>
+            <p className="font-inter" style={giveNow ? { fontSize: "1.125rem", fontWeight: 600, color: "var(--charcoal)" } : { fontSize: "0.875rem", color: "var(--slate-gray)" }}>
               {item.detail}
             </p>
           )}
           {skipped && done && (
-            <p className="font-inter" style={{ fontSize: "14px", color: "var(--slate-gray)" }}>
+            <p className="font-inter" style={{ fontSize: "0.875rem", color: "var(--slate-gray)" }}>
               Skipped: {done.by} marked this dose as not given. Don&rsquo;t give it.
             </p>
           )}
           {done && !skipped && (
-            <p className="font-inter" style={{ fontSize: "14px", color: doneColor }}>
+            <p className="font-inter" style={{ fontSize: "0.875rem", color: doneColor }}>
               {doneMark} {isFeeding && doneAmount !== "all" ? `${AMOUNT_TEXT[doneAmount]} · ` : "Done "}
               {isFeeding && doneAmount !== "all" ? "" : "by "}
               {done.by} at {fmtTime(done.at, tz)}
@@ -621,7 +622,7 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
           {done && !skipped && canUndo && !saving && (
             <button
               className="block text-left font-inter underline text-[var(--bindr-navy)]"
-              style={{ fontSize: "14px", padding: "4px 0" }}
+              style={{ fontSize: "0.875rem", padding: "4px 0" }}
               onClick={undo}
             >
               Undo
@@ -630,18 +631,18 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
           {isFeeding && !choosing && !saving && (!done || done.canChange) && (
             <button
               className="block text-left font-inter underline text-[var(--bindr-navy)]"
-              style={{ fontSize: "14px", padding: "4px 0" }}
+              style={{ fontSize: "0.875rem", padding: "4px 0" }}
               onClick={() => setChoosing(true)}
             >
               {done ? "Change how much" : "Ate some or didn't eat?"}
             </button>
           )}
-          {error && <p className="font-inter" style={{ fontSize: "14px", color: "var(--error-red)" }} role="alert">{error}</p>}
+          {error && <p className="font-inter" style={{ fontSize: "0.875rem", color: "var(--error-red)" }} role="alert">{error}</p>}
         </div>
         {!done && (
           <button
             className="btn-coral shrink-0"
-            style={{ padding: "10px 16px", minWidth: 92, ...(confirming ? { backgroundColor: "var(--bindr-navy)" } : {}) }}
+            style={{ padding: "10px 16px", minWidth: "5.75rem", ...(confirming ? { backgroundColor: "var(--bindr-navy)" } : {}) }}
             onClick={markDone}
             disabled={saving}
             aria-label={isFeeding ? `${item.title}: done, ate it all` : undefined}
@@ -653,7 +654,7 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
       {giveNow && (item.howTo || photo) && (
         <div className="mt-2 space-y-2">
           {item.howTo && (
-            <p className="font-inter text-[var(--charcoal)] whitespace-pre-line" style={{ fontSize: "16px" }}>{item.howTo}</p>
+            <p className="font-inter text-[var(--charcoal)] whitespace-pre-line" style={{ fontSize: "1rem" }}>{item.howTo}</p>
           )}
           {photo && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -667,7 +668,7 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
             <button
               key={a}
               className="btn-ghost"
-              style={{ padding: "8px 14px", fontSize: "15px" }}
+              style={{ padding: "8px 14px", fontSize: "0.9375rem" }}
               onClick={() => save(a, !!done)}
               disabled={saving}
             >
@@ -676,7 +677,7 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
           ))}
           <button
             className="font-inter text-[var(--slate-gray)]"
-            style={{ fontSize: "14px", padding: "8px 6px" }}
+            style={{ fontSize: "0.875rem", padding: "8px 6px" }}
             onClick={() => setChoosing(false)}
             disabled={saving}
           >
@@ -693,10 +694,10 @@ function PetCard({ pet }: { pet: Pet }) {
   const routineEntries = Object.entries(pet.routines || {}).filter(([, v]) => v);
   return (
     <Card>
-      <div className="flex items-center gap-4 mb-5">
+      <div className="flex flex-wrap items-center gap-4 mb-5">
         <PetPhoto pet={pet} size={64} />
-        <div>
-          <h2 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "24px" }}>{pet.name}</h2>
+        <div className="min-w-0">
+          <h2 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "1.5rem" }}>{pet.name}</h2>
           {about && <p className="font-inter text-[var(--slate-gray)]">{about}</p>}
         </div>
       </div>
@@ -740,7 +741,7 @@ function PetCard({ pet }: { pet: Pet }) {
                 <li key={m.id}>
                   <strong>{m.name}</strong>{m.dosage ? `, ${m.dosage}` : ""}
                   {m.times.length > 0 && <span className="text-[var(--slate-gray)]"> · {m.times.join(", ")}</span>}
-                  {m.notes && <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{m.notes}</p>}
+                  {m.notes && <p className="text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>{m.notes}</p>}
                 </li>
               ))}
             </ul>
@@ -783,7 +784,7 @@ function Card({ title, tone, children }: { title?: string; tone?: "alert" | "not
       {title && (
         <h2
           className="font-fraunces font-semibold mb-3"
-          style={{ fontSize: "20px", color: tone === "alert" ? "var(--error-red)" : "var(--bindr-navy)" }}
+          style={{ fontSize: "1.25rem", color: tone === "alert" ? "var(--error-red)" : "var(--bindr-navy)" }}
         >
           {title}
         </h2>
@@ -795,7 +796,7 @@ function Card({ title, tone, children }: { title?: string; tone?: "alert" | "not
 
 function Section({ title, alert, children }: { title: string; alert?: boolean; children: React.ReactNode }) {
   return (
-    <div className="font-inter text-[var(--charcoal)] leading-relaxed" style={{ fontSize: "16px" }}>
+    <div className="font-inter text-[var(--charcoal)] leading-relaxed" style={{ fontSize: "1rem" }}>
       <h3 className="font-semibold mb-1" style={{ color: alert ? "var(--error-red)" : "var(--bindr-navy)" }}>{title}</h3>
       {children}
     </div>
@@ -814,16 +815,16 @@ function Detail({ label, value }: { label: string; value: string | null | undefi
 
 function ContactRow({ title, subtitle, phone }: { title: string; subtitle?: string | null; phone: string | null }) {
   return (
-    <li className="flex items-center gap-3 font-inter">
-      <div className="flex-1 min-w-0">
+    <li className="flex flex-wrap items-center gap-3 font-inter">
+      <div className="flex-1 min-w-[8rem]">
         <p className="font-semibold text-[var(--charcoal)]">{title}</p>
-        {subtitle && <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{subtitle}</p>}
+        {subtitle && <p className="text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>{subtitle}</p>}
       </div>
       {phone && (
         <a
           href={telHref(phone)}
           className="shrink-0 rounded-full px-4 py-2 font-semibold"
-          style={{ background: "var(--bindr-navy)", color: "#fff", fontSize: "14px", textDecoration: "none" }}
+          style={{ background: "var(--bindr-navy)", color: "#fff", fontSize: "0.875rem", textDecoration: "none" }}
         >
           Call
         </a>
@@ -852,13 +853,13 @@ function PetPhoto({ pet, size }: { pet: Pet; size: number }) {
 function Message({ heading, text, children }: { heading: string; text: string; children?: React.ReactNode }) {
   return (
     <div className="text-center py-16 space-y-4">
-      <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "clamp(24px, 6vw, 32px)" }}>
+      <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "clamp(1.5rem, 6vw, 2rem)" }}>
         {heading}
       </h1>
-      <p className="font-inter text-[var(--charcoal)] leading-relaxed" style={{ fontSize: "16px" }}>{text}</p>
+      <p className="font-inter text-[var(--charcoal)] leading-relaxed" style={{ fontSize: "1rem" }}>{text}</p>
       {children}
       <p className="pt-6">
-        <a href="https://petbindr.com" className="font-inter text-[var(--slate-gray)] underline" style={{ fontSize: "14px" }}>
+        <a href="https://petbindr.com" className="font-inter text-[var(--slate-gray)] underline" style={{ fontSize: "0.875rem" }}>
           What is PetBindr?
         </a>
       </p>

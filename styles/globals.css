@@ -32,6 +32,25 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ─── Sitter link page: follow the phone's Text Size (2026-11-17) ───────────
+   Fixed-pixel text ignores the iPhone's Text Size setting in Safari, so a sitter
+   with big text on got small text here. On iOS only (on a Mac this keyword is
+   13px), the page's base size follows the setting and its rem sizes scale with
+   it. The buttons' 16px becomes 1rem for the same reason. */
+@supports (font: -apple-system-body) and (-webkit-touch-callout: none) {
+  html:has(.follows-text-size) {
+    font: -apple-system-body;
+  }
+}
+.follows-text-size .btn-coral,
+.follows-text-size .btn-ghost {
+  font-size: 1rem;
+  /* (the site's buttons don't wrap; at the biggest sizes "Tap to confirm" would
+     run off the screen) */
+  white-space: normal;
+  max-width: 100%;
+}
+
 /* ─── Typography helpers ──────────────────────────────────────────────────── */
 .font-fraunces { font-family: "Fraunces", serif; }
 .font-inter    { font-family: "Inter", sans-serif; }
