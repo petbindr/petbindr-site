@@ -488,9 +488,16 @@ function SendUpdateCard({ data, token, owner }: { data: Extract<LinkData, { stat
 
 const AMOUNT_TEXT: Record<"all" | "some" | "none", string> = { all: "Ate it all", some: "Ate some", none: "Didn't eat" };
 
+/** A dose tapped more than this long before it's due asks "Give it now?" first */
+const EARLY_DOSE_MS = 2 * 60 * 60_000;
+
 function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: Pet; tz: string; token: string; onChanged: () => void }) {
   const [done, setDone] = useState<Done>(item.done);
   const [confirming, setConfirming] = useState(false);
+  // The dose being confirmed is more than EARLY_DOSE_MS away (2026-11-17, review:
+  // any of today's doses could be marked given in the morning, and the evening
+  // sitter then saw "Done" and skipped tonight's)
+  const [early, setEarly] = useState(false);
   // Feeding: showing the Ate some / Didn't eat choices (before or after checking off)
   const [choosing, setChoosing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -538,9 +545,10 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
   }
   useEffect(() => {
     if (!confirming) return;
-    const t = setTimeout(() => setConfirming(false), 4000);
+    // Longer to read the early-dose warning
+    const t = setTimeout(() => setConfirming(false), early ? 15000 : 4000);
     return () => clearTimeout(t);
-  }, [confirming]);
+  }, [confirming, early]);
 
   async function save(amount?: "all" | "some" | "none", change = false) {
     setConfirming(false);
@@ -566,6 +574,7 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
   function markDone() {
     // A medication is easy to tap by accident and matters more: ask once more
     if (item.kind === "medication" && !confirming) {
+      setEarly(dueAt - Date.now() > EARLY_DOSE_MS);
       setConfirming(true);
       return;
     }
@@ -637,6 +646,11 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
               {done ? "Change how much" : "Ate some or didn't eat?"}
             </button>
           )}
+          {confirming && early && !done && (
+            <p className="font-inter font-semibold" style={{ fontSize: "0.875rem", color: "var(--error-red)" }} role="alert">
+              This dose is for {fmtTime(item.due, tz)}, not now. Only tap Give it now if you&rsquo;re giving it early on purpose.
+            </p>
+          )}
           {error && <p className="font-inter" style={{ fontSize: "0.875rem", color: "var(--error-red)" }} role="alert">{error}</p>}
         </div>
         {!done && (
@@ -647,7 +661,7 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
             disabled={saving}
             aria-label={isFeeding ? `${item.title}: done, ate it all` : undefined}
           >
-            {saving ? "Saving…" : confirming ? "Tap to confirm" : "Done"}
+            {saving ? "Saving…" : confirming ? (early ? "Give it now" : "Tap to confirm") : "Done"}
           </button>
         )}
       </div>
