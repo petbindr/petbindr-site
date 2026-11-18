@@ -8,6 +8,8 @@ check("a Firestore path", redactEmails("ALREADY_EXISTS: Document already exists:
   "ALREADY_EXISTS: Document already exists: projects/p/databases/(default)/documents/waitlist/[email]");
 check("an address in angle brackets", redactEmails("PetBindr <hello@petbindr.com>") === "PetBindr <[email]>");
 check("text with no address is unchanged", redactEmails("Service unavailable") === "Service unavailable");
+check("an apostrophe in the address", redactEmails("failed for o'brien@example.com") === "failed for [email]");
+check("an address in single quotes", redactEmails("to 'sam@example.com'") === "to [email]'");
 
 const lines: string[] = [];
 const real = console.error;

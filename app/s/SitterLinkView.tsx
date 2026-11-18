@@ -94,6 +94,16 @@ function fmtTime(iso: string, timeZone: string) {
 function fmtDay(iso: string, timeZone?: string) {
   return new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short", month: "short", day: "numeric" }).format(new Date(iso));
 }
+/** "The sit starts …", and when the early look opens if that's still ahead (in
+ * a rare case, such as the pet changing owners, the page stays closed after it) */
+function notStartedText(startDate: string | null, timeZone?: string) {
+  if (!startDate) return "It starts soon. Check back then.";
+  const lookFrom = Date.parse(startDate) - 7 * 86400000;
+  const starts = `The sit starts ${fmtDay(startDate, timeZone)}.`;
+  return lookFrom > Date.now()
+    ? `${starts} You can see the routine here from ${fmtDay(new Date(lookFrom).toISOString(), timeZone)}.`
+    : `${starts} Check back then.`;
+}
 function ageText(birthday: string | null) {
   if (!birthday) return null;
   const b = new Date(birthday);
@@ -193,9 +203,7 @@ export default function SitterLinkView() {
       notFound: ["This link isn't working", "It may be incomplete. Try opening it again from the original message, or ask the person who sent it for a new one."],
       turnedOff: ["This link was turned off", `${owner} turned off this link. If you still need the info, ask ${owner} for a new one.`],
       expired: ["This link has ended", `The sit is over, so this link no longer works. Thanks for taking care of things! Ask ${owner} if you need it again.`],
-      notStarted: ["This link isn't active yet", data.startDate
-        ? `The sit starts ${fmtDay(data.startDate, data.timeZone || undefined)}. You can see the routine here from ${fmtDay(new Date(Date.parse(data.startDate) - 7 * 86400000).toISOString(), data.timeZone || undefined)}.`
-        : "It starts soon. Check back then."],
+      notStarted: ["This link isn't active yet", notStartedText(data.startDate, data.timeZone || undefined)],
     } as const;
     const [heading, text] = texts[data.state];
     return <Message heading={heading} text={text} />;
@@ -244,9 +252,12 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
           {data.helper ? (data.sitterName?.trim() ? `Hi ${data.sitterName.trim()}!` : "Hi!") : <>Caring for {namesText}</>}
         </h1>
         {data.helper ? (
-          <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "1rem" }}>
-            Here are today&apos;s chores for {namesText}. Tap each one when it&apos;s done, so {owner} knows.
-          </p>
+          // (Not before the start: there are no chores to tap yet, 2026-11-18 review)
+          !startsAt && (
+            <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "1rem" }}>
+              Here are today&apos;s chores for {namesText}. Tap each one when it&apos;s done, so {owner} knows.
+            </p>
+          )
         ) : (
           <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "1rem" }}>
             {data.sitterName?.trim() ? `Hi ${data.sitterName.trim()}! ` : "Hi! "}{owner} shared everything you need here
@@ -263,8 +274,10 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
       {startsAt && (
         <Card title={`Starts ${fmtDay(startsAt, tz)}`} tone="note">
           <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "1rem" }}>
-            Here&rsquo;s an early look at the routine so you can get ready. Checking off meals and doses, and
-            sending {owner} updates, start {fmtDay(startsAt, tz)}.
+            {data.helper
+              ? <>Here&rsquo;s an early look at the chores for {namesText}. You can tap them off from {fmtDay(startsAt, tz)}.</>
+              : <>Here&rsquo;s an early look at the routine so you can get ready. Checking off meals and doses, and
+                sending {owner} updates, start {fmtDay(startsAt, tz)}.</>}
           </p>
         </Card>
       )}
@@ -312,7 +325,7 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
         </Card>
       )}
 
-      {data.helper && !data.pets.some((p) => p.today.length > 0) && (
+      {data.helper && !startsAt && !data.pets.some((p) => p.today.length > 0) && (
         <Card title={`Today's chores, ${fmtDay(data.now, tz)}`}>
           <p className="font-inter text-[var(--charcoal)]">Nothing to do today.</p>
         </Card>

@@ -127,6 +127,7 @@ console.error = realError;
 check("email refused: the signup still succeeds", bounced.status === 200);
 check("email refused: it's logged", logged.some((l) => l.startsWith("Resend error") && l.includes("422")));
 check("email refused: no address in the log", logged.every((l) => !l.includes("bounce@example.test")));
+check("email refused: hello@ still hears about the signup", sent.some((m) => m.to === "hello@petbindr.com" && m.subject.includes("bounce@example.test")));
 
 console.log(`\n${ok} passed, ${bad} wrong`);
 process.exit(bad ? 1 : 0);

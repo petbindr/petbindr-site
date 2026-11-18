@@ -228,14 +228,19 @@ TikTok: https://tiktok.com/@petbindr
 
 Don't want these emails? Unsubscribe: ${unsubscribeUrl}${mailingAddressLine() ? `\n${mailingAddressLine()}` : ""}`;
 
-    sentOrThrow(await getResend().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: email,
-      subject: "You're on the list.",
-      text: textBody,
-      html: htmlBody,
-      headers: unsubscribeHeaders(email, unsubscribeToken),
-    }));
+    // On its own: a refused welcome email mustn't stop the notice below (2026-11-18 review)
+    try {
+      sentOrThrow(await getResend().emails.send({
+        from: `${FROM_NAME} <${FROM_EMAIL}>`,
+        to: email,
+        subject: "You're on the list.",
+        text: textBody,
+        html: htmlBody,
+        headers: unsubscribeHeaders(email, unsubscribeToken),
+      }));
+    } catch (welcomeErr) {
+      logError("Resend error (welcome)", welcomeErr);
+    }
 
     sentOrThrow(await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,

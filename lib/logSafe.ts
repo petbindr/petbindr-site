@@ -5,7 +5,8 @@
 // name, code and message with any address masked, never as the whole object.
 
 export function redactEmails(text: unknown): string {
-  return String(text ?? "").replace(/[^\s@/"'<>(),;:]+@[^\s@/"'<>(),;:]+\.[a-z]{2,}/gi, "[email]");
+  // (An apostrophe can be part of an address, as in o'brien@…, so it isn't a boundary before the @)
+  return String(text ?? "").replace(/[^\s@/"<>(),;:]+@[^\s@/"'<>(),;:]+\.[a-z]{2,}/gi, "[email]");
 }
 
 export function logError(label: string, err: unknown): void {
