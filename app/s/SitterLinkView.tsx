@@ -310,7 +310,9 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
         </Card>
       )}
 
-      {!startsAt && <SendUpdateCard data={data} token={token} owner={owner} />}
+      {/* Not on helper links: they're often for kids, and the privacy policy says
+          they collect only check-offs (2026-11-18 review, item 18) */}
+      {!startsAt && !data.helper && <SendUpdateCard data={data} token={token} owner={owner} />}
 
       {(emergencyVets.length > 0 || contacts.length > 0) && (
         <Card title="In an emergency" tone="alert">
@@ -919,7 +921,7 @@ function Message({ heading, text, children }: { heading: string; text: string; c
       <p className="font-inter text-[var(--charcoal)] leading-relaxed" style={{ fontSize: "1rem" }}>{text}</p>
       {children}
       <p className="pt-6">
-        <a href="https://petbindr.com" className="font-inter text-[var(--slate-gray)] underline" style={{ fontSize: "0.875rem" }}>
+        <a href="https://www.petbindr.com" className="font-inter text-[var(--slate-gray)] underline" style={{ fontSize: "0.875rem" }}>
           What is PetBindr?
         </a>
       </p>

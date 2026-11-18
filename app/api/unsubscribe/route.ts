@@ -8,11 +8,19 @@ import { logError } from "@/lib/logSafe";
 // GET is deliberately not supported, so link scanners can't unsubscribe people.
 
 async function unsubscribe(email: string, token: string): Promise<boolean> {
-  if (!email || !token) return false;
+  if (!token || token.length < 20) return false;
   const { db } = getFirebaseAdmin();
-  const ref = db.collection("waitlist").doc(email.toLowerCase().trim());
-  const snap = await ref.get();
-  if (!snap.exists || snap.data()?.unsubscribeToken !== token) return false;
+  let ref;
+  if (email) {
+    // Links sent before 2026-11-18 carry the email too
+    ref = db.collection("waitlist").doc(email.toLowerCase().trim());
+    const snap = await ref.get();
+    if (!snap.exists || snap.data()?.unsubscribeToken !== token) return false;
+  } else {
+    const found = await db.collection("waitlist").where("unsubscribeToken", "==", token).limit(1).get();
+    if (found.empty) return false;
+    ref = found.docs[0].ref;
+  }
   await ref.update({ unsubscribed: true, unsubscribedAt: FieldValue.serverTimestamp() });
   return true;
 }

@@ -3,8 +3,12 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "How We Protect Your Info — PetBindr",
-  description:
-    "Who can see your pet's info and your home access codes in PetBindr, how sharing ends, and how to turn it off.",
+  description: "Who can see your pet's info and your home access codes in PetBindr, how sharing ends, and how to turn it off.",
+  // Its own link preview and address (shared links showed the homepage's;
+  // 2026-11-18 review, item 21)
+  alternates: { canonical: "/security" },
+  openGraph: { title: "How We Protect Your Info — PetBindr", description: "Who can see your pet's info and your home access codes in PetBindr, how sharing ends, and how to turn it off.", url: "/security", siteName: "PetBindr", type: "article", images: ["/opengraph-image"] },
+  twitter: { card: "summary_large_image", title: "How We Protect Your Info — PetBindr", description: "Who can see your pet's info and your home access codes in PetBindr, how sharing ends, and how to turn it off." , images: ["/opengraph-image"] },
 };
 
 // Keep every statement here true of the app as it ships today.

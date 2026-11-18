@@ -32,8 +32,9 @@ export default function BuildInPublicSection() {
             className="text-[var(--charcoal)] font-inter leading-relaxed mx-auto mb-10"
             style={{ fontSize: "clamp(16px, 1.8vw, 18px)", maxWidth: "700px" }}
           >
+            {/* "Vote on features" was promised here, and there's no voting (2026-11-18 review, item 24) */}
             PetBindr is in active development for iOS. Join the waitlist for
-            founding member access, vote on features in development, and follow
+            founding member access, tell us what you&rsquo;d like next, and follow
             along as we build.
           </p>
         </FadeIn>

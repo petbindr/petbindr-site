@@ -40,11 +40,19 @@ export const metadata: Metadata = {
     description,
   },
   metadataBase: new URL("https://www.petbindr.com"),
+  alternates: { canonical: "/" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
+    // suppressHydrationWarning: the script below adds "js" to <html> first
+    <html lang="en" className={`${fraunces.variable} ${inter.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Scroll fade-ins (components/FadeIn.tsx): reveals sections as they come into
+            view. Inline so it runs before the page's scripts load; without it,
+            nothing is hidden. */}
+        <script dangerouslySetInnerHTML={{ __html: "(function(){var d=document.documentElement;d.classList.add('js');if(!('IntersectionObserver'in window)){d.classList.remove('js');return;}var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -60px 0px'});function scan(){document.querySelectorAll('.fade-in:not([data-fo])').forEach(function(el){el.setAttribute('data-fo','');io.observe(el);});}document.addEventListener('DOMContentLoaded',scan);new MutationObserver(scan).observe(d,{childList:true,subtree:true});})();" }} />
+      </head>
       <body>
         {children}
         <SiteAnalytics />

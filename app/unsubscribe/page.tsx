@@ -14,11 +14,12 @@ export default async function UnsubscribePage({ searchParams }: Props) {
   let heading = "Unsubscribe from PetBindr emails";
   let message: React.ReactNode = (
     <>
-      Stop launch and product update emails to <strong>{e}</strong>? You&rsquo;ll still get
+      Stop launch and product update emails{e ? <> to <strong>{e}</strong></> : null}? You&rsquo;ll still get
       emails you need for your account, like password resets and pet sharing invites.
     </>
   );
-  let showButton = Boolean(e && t);
+  // The token alone is enough (newer links leave the email out)
+  let showButton = Boolean(t);
 
   if (status === "done") {
     heading = "You're unsubscribed";

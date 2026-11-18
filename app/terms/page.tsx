@@ -4,6 +4,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms of Service — PetBindr",
   description: "The rules for using PetBindr: your account, sharing with sitters, what PetBindr is and isn't, and our responsibilities.",
+  // Its own link preview and address (shared links showed the homepage's;
+  // 2026-11-18 review, item 21)
+  alternates: { canonical: "/terms" },
+  openGraph: { title: "Terms of Service — PetBindr", description: "The rules for using PetBindr: your account, sharing with sitters, what PetBindr is and isn't, and our responsibilities.", url: "/terms", siteName: "PetBindr", type: "article", images: ["/opengraph-image"] },
+  twitter: { card: "summary_large_image", title: "Terms of Service — PetBindr", description: "The rules for using PetBindr: your account, sharing with sitters, what PetBindr is and isn't, and our responsibilities." , images: ["/opengraph-image"] },
 };
 
 // Plain-English terms for the PetBindr iOS app and petbindr.com. Every statement
@@ -53,7 +58,7 @@ const sections: { title: string; body: React.ReactNode }[] = [
         <li>You must be at least 13 years old to use PetBindr.</li>
         <li>Give us an email address you can receive mail at, and keep your password to yourself. You&rsquo;re responsible for what happens in your account.</li>
         <li>If you think someone else has gotten into your account, change your password and email <a href="mailto:hello@petbindr.com" className={link}>hello@petbindr.com</a>.</li>
-        <li>You can delete your account at any time in the app (Account &rarr; Delete Account). That deletes your pets, records, photos, and home information, and ends the access of everyone you shared with.</li>
+        <li>You can delete your account at any time in the app or at petbindr.com/app (Account &rarr; Delete Account; &ldquo;Your account&rdquo; on the web). That deletes your pets, records, photos, and home information, and ends the access of everyone you shared with.</li>
       </ul>
     ),
   },
@@ -216,7 +221,7 @@ const sections: { title: string; body: React.ReactNode }[] = [
         You can stop using PetBindr and delete your account at any time. We may suspend or end
         accounts that break these terms, and we may change or stop parts of PetBindr. If we ever
         shut PetBindr down, we&rsquo;ll give you notice and a way to export your information first
-        (Account &rarr; Export My Data in the app).
+        (Account &rarr; Export My Data in the app, or Download My Data at petbindr.com/app).
       </p>
     ),
   },

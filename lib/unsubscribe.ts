@@ -1,19 +1,23 @@
 // Unsubscribe links for waitlist / marketing emails.
 //
-// Each waitlist doc gets a random `unsubscribeToken` at signup. Links carry the
-// email + token; nothing else is needed to verify them, so no extra secret has
-// to be configured on Vercel.
+// Each waitlist doc gets a random `unsubscribeToken` at signup. Links carry only
+// the token (2026-11-18 review, item 22: the email address was in the link, so
+// it ended up in browser history and server logs). Links sent before that also
+// carry the email, and still work.
+//
+// www, not the bare domain: it redirects, and some mail apps' one-click
+// unsubscribe doesn't follow redirects (item 23).
 
 import { randomUUID } from "crypto";
 
-export const SITE_URL = "https://petbindr.com";
+export const SITE_URL = "https://www.petbindr.com";
 
 export function newUnsubscribeToken(): string {
   return randomUUID();
 }
 
-function query(email: string, token: string): string {
-  return `e=${encodeURIComponent(email)}&t=${encodeURIComponent(token)}`;
+function query(_email: string, token: string): string {
+  return `t=${encodeURIComponent(token)}`;
 }
 
 /** Page with an "Unsubscribe" button (safe from link scanners that open URLs). */

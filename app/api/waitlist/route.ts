@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
               <p style="margin:0 0 32px;font-size:16px;color:#1A1F2E;line-height:1.6;">
                 If you have a friend who&rsquo;s ever had to leave a 13-page binder for a
                 pet sitter, send them our way:
-                <a href="https://petbindr.com" style="color:#1F3C5F;font-weight:600;">petbindr.com</a>
+                <a href="https://www.petbindr.com" style="color:#1F3C5F;font-weight:600;">petbindr.com</a>
               </p>
               <hr style="border:none;border-top:1px solid #E8ECEF;margin:0 0 28px;" />
               <p style="margin:0;font-size:14px;color:#6B7785;line-height:1.8;text-align:center;">

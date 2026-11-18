@@ -43,9 +43,13 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
     }
   }
 
+  // On the navy section the usual green and red were unreadable (2.2 to 2.5:1);
+  // lighter shades there (7.9:1 and 6.6:1). 2026-11-18 review, item 19.
+  const dark = variant === "dark";
   if (status === "success") {
     return (
-      <div role="status" className="rounded-xl border border-[var(--success-green)] bg-[#2E7D561F] px-7 py-5 max-w-lg text-[var(--success-green)] font-semibold text-base font-inter">
+      <div role="status" className={`rounded-xl border px-7 py-5 max-w-lg font-semibold text-base font-inter ${
+        dark ? "border-[#A8E6C4] bg-[#A8E6C41F] text-[#A8E6C4]" : "border-[var(--success-green)] bg-[#2E7D561F] text-[var(--success-green)]"}`}>
         {/* True for everyone (new or already signed up), so it says nothing about the address */}
         Thanks! That address is on the list. We&rsquo;ll email you when we launch.
       </div>
@@ -74,6 +78,8 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
             onChange={(e) => setEmail(e.target.value)}
             required
             aria-label="Email address"
+            aria-invalid={status === "error"}
+            aria-describedby={status === "error" ? `waitlist-error-${variant ?? "light"}` : undefined}
             style={{ flexBasis: "240px" }}
           />
           <button
@@ -85,7 +91,9 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
           </button>
         </div>
         {status === "error" && (
-          <p className="mt-2 text-sm text-[var(--error-red)] font-inter">{errorMsg}</p>
+          // role="alert": read out when it appears (it was silent for screen readers)
+          <p id={`waitlist-error-${variant ?? "light"}`} role="alert"
+            className={`mt-2 text-sm font-inter ${dark ? "text-[#FFB4A8]" : "text-[var(--error-red)]"}`}>{errorMsg}</p>
         )}
       </form>
       <p

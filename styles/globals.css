@@ -12,7 +12,7 @@
   --coral-cta:     #C8432F;
   --coral-cta-hover: #A93827;
   --charcoal:      #1A1F2E;
-  --slate-gray:    #6B7785;
+  --slate-gray:    #636E7C; /* was #6B7785 (4.3:1 on cream, under 4.5); now 4.9:1 */
   --mist-gray:     #E8ECEF;
   --success-green: #2E7D56; /* was #4FAE7C (2.7:1 on white); now 5.0:1 */
   --alert-amber:   #E5A547;
@@ -132,3 +132,23 @@ body {
 }
 
 
+
+/* Scroll fade-ins (components/FadeIn.tsx; 2026-11-18 review, item 17).
+   Hidden only once the inline script in app/layout.tsx has marked the page
+   (html.js), so the page is never blank without scripts; shown after 2.5s
+   whatever happens; no movement at all with Reduce Motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .fade-in {
+    transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1), transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  html.js .fade-in:not(.in) {
+    opacity: 0;
+    animation: fade-in-fallback 0s 2.5s forwards;
+  }
+  html.js .fade-up:not(.in) {
+    transform: translateY(24px);
+  }
+}
+@keyframes fade-in-fallback {
+  to { opacity: 1; transform: none; }
+}

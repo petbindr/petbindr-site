@@ -170,6 +170,7 @@ export default function ActionHandler() {
             type={showPassword ? "text" : "password"}
             className="email-input w-full"
             placeholder="New password"
+            aria-label="New password"
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -179,6 +180,7 @@ export default function ActionHandler() {
             type={showPassword ? "text" : "password"}
             className="email-input w-full"
             placeholder="Confirm new password"
+            aria-label="Confirm new password"
             autoComplete="new-password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}

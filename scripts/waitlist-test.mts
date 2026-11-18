@@ -33,7 +33,7 @@ initializeApp({ projectId: "demo-petbindr" }); // the route reuses this app
 const db = getFirestore();
 
 // Capture emails instead of sending them
-const sent: { to: string; subject: string }[] = [];
+const sent: { to: string; subject: string; text?: string; headers?: Record<string, string> }[] = [];
 const realFetch = globalThis.fetch;
 globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
   if (String(url).includes("api.resend.com")) {
@@ -43,7 +43,7 @@ globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
       return new Response(JSON.stringify({ name: "validation_error", statusCode: 422, message: `Can't send to ${body.to}` }),
         { status: 422, headers: { "content-type": "application/json" } });
     }
-    sent.push({ to: Array.isArray(body.to) ? body.to[0] : body.to, subject: body.subject });
+    sent.push({ to: Array.isArray(body.to) ? body.to[0] : body.to, subject: body.subject, text: body.text, headers: body.headers });
     return new Response(JSON.stringify({ id: "test" }), { status: 200, headers: { "content-type": "application/json" } });
   }
   return realFetch(url, init);
@@ -117,6 +117,21 @@ check("source: an overlong tag is refused", tooLong.status === 400);
 // A bad address still says what's wrong
 const badAddr = await join("not-an-email");
 check("invalid address: error message", badAddr.status === 400 && typeof badAddr.body.error === "string");
+
+// Unsubscribe links carry only the token now (2026-11-18 review, item 22); old ones have the email too
+const unsub = await import(pathToFileURL(resolve(site, "app/api/unsubscribe/route.ts")).href);
+await db.doc("waitlist/tokenonly@example.test").set({ email: "tokenonly@example.test", unsubscribeToken: "tok-0123456789abcdef-xyz", createdAt: Timestamp.now() });
+await db.doc("waitlist/oldlink@example.test").set({ email: "oldlink@example.test", unsubscribeToken: "tok-old-0123456789abcdef", createdAt: Timestamp.now() });
+const post = (q: string) => unsub.POST(new NextRequest(`https://www.petbindr.com/api/unsubscribe?${q}`, { method: "POST" }));
+await post("t=tok-0123456789abcdef-xyz");
+check("unsubscribe by token alone", (await db.doc("waitlist/tokenonly@example.test").get()).data()?.unsubscribed === true);
+await post("e=oldlink%40example.test&t=tok-old-0123456789abcdef");
+check("an older link with the email still works", (await db.doc("waitlist/oldlink@example.test").get()).data()?.unsubscribed === true);
+await db.doc("waitlist/safe@example.test").set({ email: "safe@example.test", unsubscribeToken: "tok-safe-0123456789abcdef", createdAt: Timestamp.now() });
+await post("t=wrong-token-0123456789abcdef");
+check("a wrong token unsubscribes nobody", !(await db.doc("waitlist/safe@example.test").get()).data()?.unsubscribed);
+check("links sent now are token-only, on www", sent.some((m) => /www\.petbindr\.com\/unsubscribe\?t=/.test(m.text || ""))
+  && !sent.some((m) => /unsubscribe\?[^\s"]*e=/.test(JSON.stringify(m))));
 
 // A failed email is logged (it used to be dropped without a word), without the address
 const logged: string[] = [];

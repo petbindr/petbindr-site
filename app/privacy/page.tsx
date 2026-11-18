@@ -4,6 +4,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacy Policy — PetBindr",
   description: "What PetBindr collects, why, who it's shared with, and your choices.",
+  // Its own link preview and address (shared links showed the homepage's;
+  // 2026-11-18 review, item 21)
+  alternates: { canonical: "/privacy" },
+  openGraph: { title: "Privacy Policy — PetBindr", description: "What PetBindr collects, why, who it's shared with, and your choices.", url: "/privacy", siteName: "PetBindr", type: "article", images: ["/opengraph-image"] },
+  twitter: { card: "summary_large_image", title: "Privacy Policy — PetBindr", description: "What PetBindr collects, why, who it's shared with, and your choices." , images: ["/opengraph-image"] },
 };
 
 // Keep in sync with PetBindr/APP_PRIVACY.md (App Store answers) and
@@ -164,7 +169,7 @@ const sections: { title: string; body: React.ReactNode }[] = [
       <ul className="list-disc pl-5 space-y-2">
         <li><strong>Sharing:</strong> change or remove anyone&rsquo;s access at any time in Sharing &amp; Sits, and turn home access off for anyone on the pet&rsquo;s Home Access screen.</li>
         <li><strong>Notifications:</strong> turn them off in the app&rsquo;s Notification Settings or in iPhone Settings.</li>
-        <li><strong>Your information:</strong> view and edit it in the app. To get a copy, use Account &rarr; Export My Data. To delete everything, use Account &rarr; Delete Account: it deletes your account, pets, records, photos, home information, and reminders, and ends access for everyone you shared with. Check-offs and updates you made on other people&rsquo;s pets stay with those pets. You can also email <a href="mailto:hello@petbindr.com" className={link}>hello@petbindr.com</a> for either.</li>
+        <li><strong>Your information:</strong> view and edit it in the app. To get a copy, use Account &rarr; Export My Data in the app, or Download My Data at petbindr.com/app. To delete everything, use Account &rarr; Delete Account in the app, or Delete Account at petbindr.com/app: it deletes your account, pets, records, photos, home information, and reminders, and ends access for everyone you shared with. Check-offs and updates you made on other people&rsquo;s pets stay with those pets. You can also email <a href="mailto:hello@petbindr.com" className={link}>hello@petbindr.com</a> for either.</li>
         <li>Depending on where you live, you may have additional rights to access, correct, or delete your information, or to object to how it&rsquo;s used. Email us and we&rsquo;ll help.</li>
       </ul>
     ),
