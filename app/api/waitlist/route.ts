@@ -5,6 +5,13 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getFirebaseAdmin } from "@/lib/firebase-admin";
 import { getResend, FROM_EMAIL, FROM_NAME, mailingAddressLine } from "@/lib/resend";
 import { newUnsubscribeToken, unsubscribePageUrl, unsubscribeHeaders } from "@/lib/unsubscribe";
+import { logError } from "@/lib/logSafe";
+
+// Resend reports a failed send in its reply instead of throwing, so these
+// failures were never logged (2026-11-18)
+function sentOrThrow(result: { error?: unknown } | null | undefined) {
+  if (result?.error) throw result.error;
+}
 
 // trim before checking: " a@b.com" (a pasted space) was rejected as invalid
 const schema = z.object({
@@ -79,7 +86,7 @@ export async function POST(req: NextRequest) {
   try {
     ({ db } = getFirebaseAdmin());
   } catch (err) {
-    console.error("Firebase Admin init error:", err);
+    logError("Firebase Admin init error", err);
     return NextResponse.json(
       { error: "Service temporarily unavailable. Please try again." },
       { status: 503 }
@@ -133,7 +140,7 @@ export async function POST(req: NextRequest) {
       }
     }
   } catch (err) {
-    console.error("Waitlist save error:", err);
+    logError("Waitlist save error", err);
     return NextResponse.json({ error: "Service temporarily unavailable. Please try again." }, { status: 503 });
   }
 
@@ -221,24 +228,24 @@ TikTok: https://tiktok.com/@petbindr
 
 Don't want these emails? Unsubscribe: ${unsubscribeUrl}${mailingAddressLine() ? `\n${mailingAddressLine()}` : ""}`;
 
-    await getResend().emails.send({
+    sentOrThrow(await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: email,
       subject: "You're on the list.",
       text: textBody,
       html: htmlBody,
       headers: unsubscribeHeaders(email, unsubscribeToken),
-    });
+    }));
 
-    await getResend().emails.send({
+    sentOrThrow(await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: "hello@petbindr.com",
       subject: `New waitlist signup: ${email}`,
       text: `${email} just joined the waitlist.${isFoundingMember ? " Founding member." : ""}`,
-    });
+    }));
   } catch (emailErr) {
     // Don't fail the request if email sending fails — signup is saved
-    console.error("Resend error:", emailErr);
+    logError("Resend error", emailErr);
   }
 
   return NextResponse.json(SAME_REPLY, { status: 200 });
@@ -264,7 +271,7 @@ async function noticeAlreadyOnList(
     const unsubscribeUrl = unsubscribePageUrl(email, token);
     const founding = prev.foundingMember === true
       ? " And you're a Founding Member: early access, an in-app badge, and special Founding Member pricing when paid features arrive." : "";
-    await getResend().emails.send({
+    sentOrThrow(await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: email,
       subject: "You're already on the list.",
@@ -288,9 +295,9 @@ Don't want these emails? Unsubscribe: ${unsubscribeUrl}${mailingAddressLine() ? 
 <p style="margin:20px 0 0;font-size:12px;color:#6B7785;text-align:center;">&copy; PetBindr LLC 2026 &bull; <a href="${unsubscribeUrl}" style="color:#6B7785;">Unsubscribe</a>${mailingAddressLine() ? `<br />${mailingAddressLine()}` : ""}</p>
 </body></html>`,
       headers: unsubscribeHeaders(email, token),
-    });
+    }));
   } catch (err) {
     // The reply is the same either way; a failed notice only loses the email
-    console.error("Already-on-list notice error:", err);
+    logError("Already-on-list notice error", err);
   }
 }

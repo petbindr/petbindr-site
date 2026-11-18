@@ -38,6 +38,11 @@ const realFetch = globalThis.fetch;
 globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
   if (String(url).includes("api.resend.com")) {
     const body = JSON.parse(String(init?.body || "{}"));
+    // The email service turning an address down (it repeats the address)
+    if (String(body.to).startsWith("bounce")) {
+      return new Response(JSON.stringify({ name: "validation_error", statusCode: 422, message: `Can't send to ${body.to}` }),
+        { status: 422, headers: { "content-type": "application/json" } });
+    }
     sent.push({ to: Array.isArray(body.to) ? body.to[0] : body.to, subject: body.subject });
     return new Response(JSON.stringify({ id: "test" }), { status: 200, headers: { "content-type": "application/json" } });
   }
@@ -112,6 +117,16 @@ check("source: an overlong tag is refused", tooLong.status === 400);
 // A bad address still says what's wrong
 const badAddr = await join("not-an-email");
 check("invalid address: error message", badAddr.status === 400 && typeof badAddr.body.error === "string");
+
+// A failed email is logged (it used to be dropped without a word), without the address
+const logged: string[] = [];
+const realError = console.error;
+console.error = (...a: unknown[]) => { logged.push(a.map(String).join(" ")); };
+const bounced = await join("bounce@example.test");
+console.error = realError;
+check("email refused: the signup still succeeds", bounced.status === 200);
+check("email refused: it's logged", logged.some((l) => l.startsWith("Resend error") && l.includes("422")));
+check("email refused: no address in the log", logged.every((l) => !l.includes("bounce@example.test")));
 
 console.log(`\n${ok} passed, ${bad} wrong`);
 process.exit(bad ? 1 : 0);

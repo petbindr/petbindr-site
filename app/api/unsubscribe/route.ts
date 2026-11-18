@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getFirebaseAdmin } from "@/lib/firebase-admin";
+import { logError } from "@/lib/logSafe";
 
 // POST only: from the button on /unsubscribe (form post) or from a mail app's
 // one-click unsubscribe (RFC 8058, email + token in the query string).
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
   try {
     ok = await unsubscribe(email, token);
   } catch (err) {
-    console.error("Unsubscribe error:", err);
+    logError("Unsubscribe error", err);
   }
 
   // Button on /unsubscribe → show the result page. Mail-app one-click → plain status.
