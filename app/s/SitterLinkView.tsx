@@ -47,6 +47,8 @@ type LinkData =
       state: "active"; sitterName: string; ownerName: string; ownerPhone: string | null; timeZone: string;
       helper?: boolean; // a household helper's chores page ("Emma feeds the hamster"): feedings only, no end date
       notes?: string | null; // "What's different this time", from the owner's trip setup
+      // The week before the sit: a read-only look at the routine (no check-offs or updates yet)
+      startsAt?: string | null;
       endDate: string | null; now: string; pets: Pet[];
       emergencyContacts: { name: string; relationship: string | null; phone: string }[] | null;
     }
@@ -191,7 +193,9 @@ export default function SitterLinkView() {
       notFound: ["This link isn't working", "It may be incomplete. Try opening it again from the original message, or ask the person who sent it for a new one."],
       turnedOff: ["This link was turned off", `${owner} turned off this link. If you still need the info, ask ${owner} for a new one.`],
       expired: ["This link has ended", `The sit is over, so this link no longer works. Thanks for taking care of things! Ask ${owner} if you need it again.`],
-      notStarted: ["This link isn't active yet", `It starts ${data.startDate ? fmtDay(data.startDate, data.timeZone || undefined) : "soon"}. Check back then.`],
+      notStarted: ["This link isn't active yet", data.startDate
+        ? `The sit starts ${fmtDay(data.startDate, data.timeZone || undefined)}. You can see the routine here from ${fmtDay(new Date(Date.parse(data.startDate) - 7 * 86400000).toISOString(), data.timeZone || undefined)}.`
+        : "It starts soon. Check back then."],
     } as const;
     const [heading, text] = texts[data.state];
     return <Message heading={heading} text={text} />;
@@ -226,6 +230,7 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
     if (!emergencyVets.some((v) => v.name === vet.name && v.phone === vet.phone)) emergencyVets.push(vet);
   }
   const contacts = data.emergencyContacts || [];
+  const startsAt = data.startsAt || null;
 
   return (
     <div className="space-y-6">
@@ -255,6 +260,15 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
         )}
       </header>
 
+      {startsAt && (
+        <Card title={`Starts ${fmtDay(startsAt, tz)}`} tone="note">
+          <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "1rem" }}>
+            Here&rsquo;s an early look at the routine so you can get ready. Checking off meals and doses, and
+            sending {owner} updates, start {fmtDay(startsAt, tz)}.
+          </p>
+        </Card>
+      )}
+
       {data.notes && (
         <Card title="This time" tone="note">
           <p className="font-inter text-[var(--charcoal)] whitespace-pre-line" style={{ fontSize: "1rem" }}>
@@ -283,7 +297,7 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
         </Card>
       )}
 
-      <SendUpdateCard data={data} token={token} owner={owner} />
+      {!startsAt && <SendUpdateCard data={data} token={token} owner={owner} />}
 
       {(emergencyVets.length > 0 || contacts.length > 0) && (
         <Card title="In an emergency" tone="alert">
