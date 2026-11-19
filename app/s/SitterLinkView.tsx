@@ -55,6 +55,8 @@ type LinkData =
   | {
       state: "notFound" | "turnedOff" | "expired" | "notStarted"; ownerName: string | null; sitterName: string | null;
       startDate: string | null; timeZone?: string | null;
+      // Why it was turned off, when it wasn't simply the sender's choice
+      reason?: "noLongerOwner" | null;
     };
 
 const OFFLINE_MESSAGE = "Couldn't reach PetBindr. Check your connection and try again.";
@@ -205,7 +207,12 @@ export default function SitterLinkView() {
       expired: ["This link has ended", `The sit is over, so this link no longer works. Thanks for taking care of things! Ask ${owner} if you need it again.`],
       notStarted: ["This link isn't active yet", notStartedText(data.startDate, data.timeZone || undefined)],
     } as const;
-    const [heading, text] = texts[data.state];
+    // Whoever sent it is no longer one of the pet's owners (removed as a
+    // co-owner, or the pet was handed over): they didn't turn it off and can't
+    // send a new one, so don't say so (2026-11-18)
+    const [heading, text] = data.state === "turnedOff" && data.reason === "noLongerOwner"
+      ? ["This link no longer works", `${data.ownerName ? owner : "The person who sent it"} is no longer one of the pet's owners, so the link they sent stopped working. If you're still caring for the pet, ask its owner for a new link.`]
+      : texts[data.state];
     return <Message heading={heading} text={text} />;
   }
 
