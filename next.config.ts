@@ -6,6 +6,22 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: "/favicon.ico", destination: "/icon" }];
   },
+  // Security headers: no framing (clickjacking), no MIME sniffing, trimmed
+  // referrers. Deliberately no script CSP: it could break Firebase or Vercel
+  // Analytics (2026-11-14 panel review).
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
