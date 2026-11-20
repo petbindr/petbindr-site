@@ -1,0 +1,36 @@
+# Type-check and the logic tests in scripts/ on each push and pull request.
+# The three tests that need the Firebase emulators and the app's rules
+# (web-app-rules, web-sitter-rules, waitlist) run in the app repo's CI, which
+# clones this site next to it.
+name: Checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Type-check
+        run: npx tsc --noEmit
+      - name: Script tests
+        run: |
+          fails=0
+          for t in scripts/*-test.mts; do
+            case "$(basename "$t")" in web-app-rules-test.mts|web-sitter-rules-test.mts|waitlist-test.mts) continue ;; esac
+            out="$(NODE_NO_WARNINGS=1 node "$t" 2>&1)"; code=$?
+            if [ $code -ne 0 ] || echo "$out" | grep -q '^WRONG'; then
+              echo "FAIL $t"; echo "$out" | grep '^WRONG' | head -10; fails=$((fails+1))
+            else
+              echo "PASS $t $(echo "$out" | grep -E '^[0-9]+ (passed|ok)' | tail -1)"
+            fi
+          done
+          exit $(( fails > 0 ))
