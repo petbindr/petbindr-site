@@ -29,7 +29,7 @@ type Pet = {
   feeding: {
     foodName: string | null; defaultPortion: string | null; specialBowl: string | null; feedingLocation: string | null;
     specialInstructions: string | null; instructions: string | null;
-    times: { id: string; time: string; meal: string; portion: string | null; notes: string | null }[];
+    times: { id: string; time: string; meal: string; portion: string | null; notes: string | null; days?: string | null }[];
   } | null;
   medications: { id: string; name: string; dosage: string | null; frequency: string | null; notes: string | null; times: string[] }[] | null;
   allergies: { name: string; severity: string | null; symptoms: string | null; notes: string | null }[] | null;
@@ -780,7 +780,7 @@ function PetCard({ pet }: { pet: Pet }) {
             {pet.feeding.times.length > 0 && (
               <ul className="mt-1">
                 {pet.feeding.times.map((t) => (
-                  <li key={t.id}>{t.time}: {t.portion || pet.feeding?.defaultPortion || t.meal}{t.notes ? ` (${t.notes})` : ""}</li>
+                  <li key={t.id}>{t.time}{t.days ? ` (${t.days})` : ""}: {t.portion || pet.feeding?.defaultPortion || t.meal}{t.notes ? ` (${t.notes})` : ""}</li>
                 ))}
               </ul>
             )}

@@ -1,5 +1,5 @@
 // Checks for app/app/today.ts (web Today list and check-offs). Run: node scripts/today-test.mts
-import { tasksFor, feedingLogDoc } from "../app/app/today.ts";
+import { tasksFor, feedingLogDoc, mealServedOn, repeatSummary } from "../app/app/today.ts";
 
 let ok = 0, bad = 0;
 const check = (label: string, cond: boolean) => { cond ? ok++ : bad++; console.log(cond ? "ok   " : "WRONG", label); };
@@ -25,6 +25,26 @@ check("skipped dose: done, marked skipped", !!skipped[0]?.done && skipped[0].don
 const given = tasksFor(day([{ id: "l2", scheduleId: "m1", scheduledTime: ts(new Date(2026, 10, 12, 8, 0)), actualTime: ts(new Date(2026, 10, 12, 8, 5)), ownerId: "u1", wasGiven: true, pending: true }]) as never, now, { u1: "Ruth" });
 check("given dose: not skipped", given[0]?.done?.skipped === false);
 check("unsent dose: pending", given[0]?.done?.pending === true);
+
+// Meals that aren't every day (2026-11-20). Nov 12, 2026 is a Thursday (4)
+const feedDay = { petId: "rex", petName: "Rex", feedingLogs: [], medications: [], medicationLogs: [], feeding: { scheduleItems: [
+  { id: "daily", time: ts(new Date(2026, 0, 1, 8, 0)) },
+  { id: "tth", time: ts(new Date(2026, 0, 1, 12, 0)) },
+  { id: "mwf", time: ts(new Date(2026, 0, 1, 13, 0)) },
+  { id: "alt", time: ts(new Date(2026, 0, 1, 18, 0)) },
+  { id: "odd", time: ts(new Date(2026, 0, 1, 19, 0)) },
+], mealDays: { tth: { weekdays: [2, 4] }, mwf: { weekdays: [1, 3, 5] }, alt: { every: 2, start: "2026-11-11" }, odd: { weekdays: "Thu" } } } };
+const ids = tasksFor(feedDay as never, now, {}).map((t) => t.itemId);
+check("daily meal listed", ids.includes("daily"));
+check("meal on its chosen weekday listed", ids.includes("tth"));
+check("meal on its day off left out (weekdays)", !ids.includes("mwf"));
+check("meal on its day off left out (every 2 days)", !ids.includes("alt"));
+check("unreadable rule = every day", ids.includes("odd"));
+check("every 2 days: the next day is on", mealServedOn({ every: 2, start: "2026-11-11" }, new Date(2026, 10, 13, 9)));
+check("every 7 days across the clock change", mealServedOn({ every: 7, start: "2026-10-30" }, new Date(2026, 10, 6, 23, 30)));
+check("summary: Mon, Wed, Fri", repeatSummary({ weekdays: [5, 3, 1] }) === "Mon, Wed, Fri");
+check("summary: every 2 days", repeatSummary({ every: 2, start: "2026-11-11" }) === "Every 2 days");
+check("summary: every day", repeatSummary(undefined) === null);
 
 console.log(`\n${ok} ok, ${bad} wrong`);
 process.exit(bad ? 1 : 0);

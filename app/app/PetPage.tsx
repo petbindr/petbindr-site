@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { collection, doc, onSnapshot } from "firebase/firestore";
 import { getBlob, ref } from "firebase/storage";
 import { firebase } from "./firebase";
-import { toDate, type MedicationSchedule } from "./today";
+import { toDate, repeatSummary, type MedicationSchedule, type MealRepeat } from "./today";
 import AddToRecord from "./AddToRecord";
 import { latestVaccines, weightSummary, newest, fmtDay, fmtWeight, type HealthRecord, type Attachment } from "./health";
 
@@ -28,6 +28,7 @@ type Allergy = { id: string; allergenName?: string; severity?: string; symptoms?
 type Feeding = {
   feedingInfo?: { foodName?: string; defaultPortion?: string; specialBowl?: string; feedingLocation?: string; specialInstructions?: string };
   scheduleItems?: { id: string; time?: Stamp; portion?: string; notes?: string }[];
+  mealDays?: Record<string, MealRepeat>;
 } | null;
 
 export default function PetPage({ petId, onBack }: { petId: string; onBack: () => void }) {
@@ -153,6 +154,7 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
                     <span className="w-20 shrink-0 text-[var(--slate-gray)]" style={{ fontSize: "15px" }}>{fmtTime(toDate(it.time))}</span>
                     <span className="text-[var(--charcoal)]">
                       {it.portion || info?.defaultPortion || "—"}
+                      {repeatSummary(feeding?.mealDays?.[it.id]) && <span className="block text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{repeatSummary(feeding?.mealDays?.[it.id])}</span>}
                       {it.notes && <span className="block text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{it.notes}</span>}
                     </span>
                   </li>

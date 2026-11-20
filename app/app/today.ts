@@ -21,7 +21,7 @@ export type TodayTask = {
 };
 
 // Firestore values arrive as Timestamps; tests pass Dates
-type Stamp = { toDate(): Date } | Date | null | undefined;
+export type Stamp = { toDate(): Date } | Date | null | undefined;
 export function toDate(v: Stamp): Date | null {
   if (!v) return null;
   if (v instanceof Date) return v;
@@ -91,7 +91,57 @@ export function shouldGiveOn(s: MedicationSchedule, now: Date): boolean {
   }
 }
 
-export type FeedingSchedule = { scheduleItems?: { id: string; time?: Stamp; portion?: string }[] } | null;
+/** A meal's days (2026-11-20), in the schedule's `mealDays` keyed by meal id (not on the meal: older
+ *  app versions rewrite the meals when they save): { weekdays: [1, 3, 5] } (0 = Sunday) or { every: 2, start: "2026-11-20" }.
+ *  Missing or unreadable = every day. Same rule as the app (MealRepeat, Models/FeedingModels.swift)
+ *  and the server (functions/feeding-days.js); change all three together. */
+export type MealRepeat = { weekdays?: unknown; every?: unknown; start?: unknown } | null | undefined;
+
+function repeatWeekdays(r: MealRepeat): Set<number> | null {
+  if (!r || !Array.isArray(r.weekdays)) return null;
+  const days = new Set((r.weekdays as unknown[]).filter((d): d is number => Number.isInteger(d) && (d as number) >= 0 && (d as number) <= 6));
+  return days.size ? days : null;
+}
+
+function repeatInterval(r: MealRepeat): { every: number; start: number } | null {
+  if (!r || repeatWeekdays(r)) return null;
+  const every = Number(r.every);
+  const m = typeof r.start === "string" ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(r.start) : null;
+  if (!Number.isInteger(every) || every < 2 || !m) return null;
+  const month = Number(m[2]), day = Number(m[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return { every, start: Date.UTC(Number(m[1]), month - 1, day) };
+}
+
+/** Is a meal served on that day (the browser's calendar day)? */
+export function mealServedOn(r: MealRepeat, date: Date): boolean {
+  const days = repeatWeekdays(r);
+  if (days) return days.has(date.getDay());
+  const iv = repeatInterval(r);
+  if (iv) {
+    const diff = Math.round((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - iv.start) / 86400000);
+    return ((diff % iv.every) + iv.every) % iv.every === 0;
+  }
+  return true;
+}
+
+const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** "Mon, Wed, Fri", "Weekdays", "Every 2 days"; null when it's every day */
+export function repeatSummary(r: MealRepeat): string | null {
+  const days = repeatWeekdays(r);
+  if (days) {
+    const key = [...days].sort().join(",");
+    if (key === "1,2,3,4,5") return "Weekdays";
+    if (key === "0,6") return "Weekends";
+    if (days.size === 7) return null;
+    return [...days].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map((d) => SHORT_DAYS[d]).join(", ");
+  }
+  const iv = repeatInterval(r);
+  return iv ? `Every ${iv.every} days` : null;
+}
+
+export type FeedingSchedule = { scheduleItems?: { id: string; time?: Stamp; portion?: string }[]; mealDays?: Record<string, MealRepeat> } | null;
 export type FeedingLog = { id: string; scheduleItemId?: string; date?: Stamp; completedAt?: Stamp; completedBy?: string; completedByName?: string; amount?: string; pending?: boolean };
 export type MedicationLog = { id: string; scheduleId?: string; scheduledTime?: Stamp; actualTime?: Stamp; ownerId?: string; givenBy?: string; notes?: string; wasGiven?: boolean; pending?: boolean };
 
@@ -113,7 +163,7 @@ export function tasksFor(day: PetDay, now: Date, names: Record<string, string>):
   const tasks: TodayTask[] = [];
   for (const item of day.feeding?.scheduleItems || []) {
     const t = toDate(item.time);
-    if (!t) continue;
+    if (!t || !mealServedOn(day.feeding?.mealDays?.[item.id], now)) continue; // a meal's day off
     const time = todayAt(t, now);
     const log = day.feedingLogs.find((l) => l.scheduleItemId === item.id && toDate(l.date) && sameDay(toDate(l.date)!, now));
     tasks.push({
