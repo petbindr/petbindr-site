@@ -12,6 +12,8 @@ import { getBlob, ref } from "firebase/storage";
 import { firebase } from "./firebase";
 import { toDate, repeatSummary, type MedicationSchedule, type MealRepeat } from "./today";
 import AddToRecord from "./AddToRecord";
+import CareEditor from "./CareEditor";
+import type { Medication, Schedule } from "./care";
 import { latestVaccines, weightSummary, newest, fmtDay, fmtWeight, type HealthRecord, type Attachment } from "./health";
 
 type Stamp = Parameters<typeof toDate>[0];
@@ -223,8 +225,12 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
           lastUnit={(weightSummary(records, new Date())?.latest.unit === "kg" ? "kg" : "lbs")} />
       )}
 
+      {!pet.isDeceased && firebase().auth.currentUser && (
+        <CareEditor petId={petId} petName={name} schedule={feeding as Schedule} meds={meds as unknown as Medication[]} />
+      )}
+
       <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
-        For everything else (vaccines, medications, feeding times), use the PetBindr iPhone app.
+        For everything else (vaccines, allergies, photos), use the PetBindr iPhone app.
       </p>
     </div>
   );

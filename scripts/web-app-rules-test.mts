@@ -14,6 +14,7 @@ import {
 import { feedingLogDoc, medicationLogDoc, tasksFor } from "../app/app/today.ts";
 import { healthRecordDoc, dayFromInput } from "../app/app/records.ts";
 import { dayAt, linkMessage } from "../app/app/links.ts";
+import { feedingChanges, medicationChanges, newMedication, timeAt } from "../app/app/care.ts";
 
 const fns = process.argv[2];
 const require = createRequire(fns + "/index.js");
@@ -58,6 +59,8 @@ check("no pets before being added", (await getDocs(coQuery)).size === 0);
 const now = new Date();
 const feed = feedingLogDoc("rex", "am", uid, "Priya", now, "all");
 await denied("can't check off before being added", setDoc(doc(db, `pets/rex/feedingLogs/${feed.id}`), feed.data));
+await denied("Change care: can't edit feeding times before being added", updateDoc(doc(db, "pets/rex/feedingSchedule/schedule"), { "mealDays.am": { weekdays: [1] } }));
+await denied("Change care: can't edit a medication before being added", updateDoc(doc(db, "pets/rex/medicationSchedules/m1"), { dosage: "50 mg" }));
 
 // The owner adds her in the app (Manage Ownership)
 await admin.doc("pets/rex").update({ coOwnerIds: [uid] });
@@ -138,6 +141,32 @@ const f2 = feedingLogDoc("other", "am", uid, "Priya", now, "all");
 await denied("can't check off someone else's pet", setDoc(doc(db, `pets/other/feedingLogs/${f2.id}`), f2.data));
 
 // Removed as co-owner: access ends
+// Change care (app/app/CareEditor.tsx): feeding times, days and medications, written like the app
+{
+  const ref = doc(db, "pets/rex/feedingSchedule/schedule");
+  const opened = (await getDoc(ref)).data() as never;
+  const mine = { feedingInfo: { foodName: "Kibble" }, mealDays: { am: { weekdays: [1, 3, 5] } },
+    scheduleItems: [{ id: "am", time: timeAt("07:30", new Date(2026, 0, 1, 7))!, portion: "1 cup" }, { id: "NEW1", time: timeAt("18:00")!, portion: "1 cup" }] };
+  const out = feedingChanges(opened, mine, (await getDoc(ref)).data() as never, deleteField);
+  await updateDoc(ref, out.update!);
+  const saved = (await getDoc(ref)).data()!;
+  check("Change care: co-owner saves feeding times", saved.scheduleItems.length === 2 && saved.scheduleItems[0].time.toDate().getMinutes() === 30);
+  check("Change care: co-owner saves a meal's days", JSON.stringify(saved.mealDays.am.weekdays) === "[1,3,5]");
+  const out2 = feedingChanges(saved as never, { ...mine, mealDays: {} }, saved as never, deleteField);
+  await updateDoc(ref, out2.update!);
+  check("Change care: back to every day removes the days", !("am" in ((await getDoc(ref)).data()!.mealDays || {})));
+
+  const medRef = doc(db, "pets/rex/medicationSchedules/m1");
+  const med = { id: "m1", ...(await getDoc(medRef)).data() } as never;
+  await updateDoc(medRef, medicationChanges(med, { ...(med as object), id: "m1", dosage: "5.4 mg" }, med, deleteField));
+  check("Change care: co-owner changes a dose", (await getDoc(medRef)).data()?.dosage === "5.4 mg");
+  const nm = newMedication("rex", { medicationName: "Gabapentin", dosage: "100 mg", frequency: "Twice Daily", scheduledTimes: [timeAt("08:00")!, timeAt("20:00")!], startDate: new Date() });
+  await setDoc(doc(db, `pets/rex/medicationSchedules/${nm.id}`), nm);
+  check("Change care: co-owner adds a medication", (await getDoc(doc(db, `pets/rex/medicationSchedules/${nm.id}`))).data()?.frequency === "Twice Daily");
+  await denied("Change care: can't edit another family's feeding times", setDoc(doc(db, "pets/other/feedingSchedule/schedule"), { mealDays: { x: { weekdays: [1] } } }, { merge: true }));
+  await denied("Change care: can't add a medication to another family's pet", setDoc(doc(db, "pets/other/medicationSchedules/x"), nm));
+}
+
 await admin.doc("pets/rex").update({ coOwnerIds: [] });
 await denied("after removal, can't read Rex", getDoc(doc(db, "pets/rex")));
 
