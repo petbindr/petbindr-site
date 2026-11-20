@@ -23,6 +23,8 @@ import PetPage from "./PetPage";
 import SitterLinkMaker from "./SitterLinkMaker";
 import VisitReports from "./VisitReports";
 import AccountCard from "./AccountCard";
+import { SitInvites, MyClients, type PetView } from "./SitterMode";
+import { toSit, isLive, isUpcoming, clientsFrom, sitsByPet, may, doneToday, type Sit, type ShareDoc } from "./sitter";
 import {
   tasksFor, startOfDay, feedingLogDoc, medicationLogDoc,
   type PetDay, type TodayTask, type FeedingAmount, type MedicationSchedule,
@@ -157,6 +159,10 @@ function SignedIn({ user }: { user: User }) {
   const [myName, setMyName] = useState(user.displayName || "");
   const [now, setNow] = useState(() => new Date());
   const [verified, setVerified] = useState(user.emailVerified);
+  // Sitter mode: shares made out to this account, and the server's copy of each shared pet
+  const [sits, setSits] = useState<Sit[]>([]);
+  const [sitsLoaded, setSitsLoaded] = useState(false);
+  const [views, setViews] = useState<Record<string, PetView>>({});
   // A pet's page is "#pet/<id>", so the browser's Back button returns to Today
   const [openPetId, setOpenPetId] = useState<string | null>(null);
   useEffect(() => {
@@ -207,8 +213,58 @@ function SignedIn({ user }: { user: User }) {
       setCoPets(s.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Pet, "id">) })));
       setLoaded((l) => ({ ...l, co: true }));
     }, () => setLoaded((l) => ({ ...l, co: true })));
-    return () => { me(); own(); co(); };
+    // Shares made out to me (any status: invites to accept, sits now and coming up)
+    // An invite just accepted here counts once the server has it: listening to the
+    // pet's schedule before then was refused, and the listener stopped for good
+    const shared = onSnapshot(query(collection(db, "petShares"), where("sharedWithUserId", "==", user.uid)), { includeMetadataChanges: true }, (s) => {
+      setSits(s.docs.map((d) => toSit({ ...(d.data() as Omit<ShareDoc, "id">), id: d.id, ...(d.metadata.hasPendingWrites ? { status: "accepting" } : {}) })).filter((x): x is Sit => !!x));
+      setSitsLoaded(true);
+    }, () => setSitsLoaded(true));
+    return () => { me(); own(); co(); shared(); };
   }, [db, user.uid]);
+
+  // Email invites to sit wait until the email is confirmed; the app claims them
+  // on Home, so do the same here (they then show as invites to accept)
+  useEffect(() => {
+    if (!verified) return;
+    (async () => {
+      try {
+        await user.getIdToken(true);
+        await httpsCallable(firebase().functions, "claimMyPendingShares")();
+      } catch { /* they show on the next visit */ }
+    })();
+  }, [user, verified]);
+
+  // Sits now or within a week, one per pet; the pet's details come from the
+  // copy the server keeps with only what the share allows (sitterPetViews)
+  const ownIds = new Set([...ownPets, ...coPets].map((p) => p.id));
+  const sitPets = [...sitsByPet(sits, now).values()].filter((s) => !ownIds.has(s.petId));
+  const sitKey = sitPets.map((s) => `${s.petId}:${isLive(s, now) ? 1 : 0}`).join(",");
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      let refreshed = false;
+      for (const s of sitPets) {
+        const read = () => getDoc(doc(db, "sitterPetViews", user.uid, "sharedPets", s.petId));
+        try {
+          let snap = await read();
+          // Shared before the copies existed: ask the server to make them, once
+          if (!snap.exists() && !refreshed) {
+            refreshed = true;
+            try { await httpsCallable(firebase().functions, "refreshMySharedPets")(); snap = await read(); } catch { /* shown from the share */ }
+          }
+          if (!snap.exists() || cancelled) continue;
+          const d = snap.data();
+          setViews((v) => ({ ...v, [s.petId]: {
+            name: (d.name as string) || s.petName, ownerId: d.ownerId as string, coOwnerIds: (d.coOwnerIds as string[]) || [],
+            species: d.species as string | undefined, breed: d.breed as string | undefined, isDeceased: d.isDeceased === true,
+          } }));
+        } catch { /* not open to me (yet): left out */ }
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [db, user.uid, sitKey]);
 
   const pets = useMemo(() => {
     const seen = new Set<string>();
@@ -222,28 +278,40 @@ function SignedIn({ user }: { user: User }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [petKey, pets.map((p) => p.name).join("|")]);
 
+  // Pets on Today: my own, and pets I'm sitting for right now, with only what
+  // the share allows (feeding and medications have their own switches)
+  const livePets = sitPets.filter((s) => isLive(s, now) && !views[s.petId]?.isDeceased);
+  const taskPets: { id: string; name: string; feeding: boolean; meds: boolean }[] = [
+    ...pets.map((p) => ({ id: p.id, name: p.name, feeding: true, meds: true })),
+    ...livePets.map((s) => ({ id: s.petId, name: views[s.petId]?.name || s.petName, feeding: may(s, "canViewFoodInstructions"), meds: may(s, "canViewMedications") })),
+  ];
+  const taskKey = taskPets.map((p) => `${p.id}:${p.feeding ? 1 : 0}${p.meds ? 1 : 0}`).join(",");
+
   // Each pet's schedules and the last two days of check-offs, live
   useEffect(() => {
     const since = Timestamp.fromDate(new Date(startOfDay(new Date()).getTime() - 86400000));
     const stops: (() => void)[] = [];
-    for (const pet of pets) {
+    setDays({});
+    for (const pet of taskPets) {
       const set = (patch: Partial<PetDay>) =>
         setDays((d) => ({ ...d, [pet.id]: { ...d[pet.id], petId: pet.id, petName: pet.name, ...patch } }));
       const base = `pets/${pet.id}`;
-      stops.push(onSnapshot(doc(db, `${base}/feedingSchedule/schedule`),
+      if (!pet.feeding) set({ feeding: null, feedingLogs: [] });
+      if (!pet.meds) set({ medications: [], medicationLogs: [] });
+      if (pet.feeding) stops.push(onSnapshot(doc(db, `${base}/feedingSchedule/schedule`),
         (s) => set({ feeding: s.exists() ? (s.data() as FeedingSchedule) : null }), () => set({ feeding: null })));
       // With metadata changes: a check-off saved here with no signal shows "Not sent yet"
       // (it looked done; closing the tab then lost it and the owner gave the dose again)
-      stops.push(onSnapshot(query(collection(db, `${base}/feedingLogs`), where("date", ">=", since)), { includeMetadataChanges: true },
+      if (pet.feeding) stops.push(onSnapshot(query(collection(db, `${base}/feedingLogs`), where("date", ">=", since)), { includeMetadataChanges: true },
         (s) => set({ feedingLogs: s.docs.map((d) => ({ ...(d.data() as FeedingLog), id: d.id, pending: d.metadata.hasPendingWrites })) }), () => set({ feedingLogs: [] })));
-      stops.push(onSnapshot(collection(db, `${base}/medicationSchedules`),
+      if (pet.meds) stops.push(onSnapshot(collection(db, `${base}/medicationSchedules`),
         (s) => set({ medications: s.docs.map((d) => ({ ...(d.data() as MedicationSchedule), id: d.id })) }), () => set({ medications: [] })));
-      stops.push(onSnapshot(query(collection(db, `${base}/medicationLogs`), where("actualTime", ">=", since)), { includeMetadataChanges: true },
+      if (pet.meds) stops.push(onSnapshot(query(collection(db, `${base}/medicationLogs`), where("actualTime", ">=", since)), { includeMetadataChanges: true },
         (s) => set({ medicationLogs: s.docs.map((d) => ({ ...(d.data() as MedicationLog), id: d.id, pending: d.metadata.hasPendingWrites })) }), () => set({ medicationLogs: [] })));
     }
     return () => stops.forEach((s) => s());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [db, petKey]);
+  }, [db, taskKey]);
 
   // Names for doses (the log keeps only the user's ID)
   const doseUserIds = Object.values(days).flatMap((d) => (d.medicationLogs || []).map((l) => l.givenBy || l.ownerId || "")).filter(Boolean);
@@ -258,22 +326,35 @@ function SignedIn({ user }: { user: User }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doseUserIds.join(",")]);
 
-  const tasks: TodayTask[] = pets.flatMap((pet) => {
+  const tasks: TodayTask[] = taskPets.flatMap((pet) => {
     const d = days[pet.id];
     if (!d) return [];
     return tasksFor({
       petId: pet.id, petName: pet.name, feeding: d.feeding ?? null, feedingLogs: d.feedingLogs || [],
       medications: d.medications || [], medicationLogs: d.medicationLogs || [],
-    }, now, { ...names, [user.uid]: myName || "You" });
+    }, now, { ...names, [user.uid]: myName || "You" })
+      // A sitter's day: only from the sit's start to its end (a sit starting at
+      // 5 PM doesn't owe this morning's breakfast)
+      .filter((t) => {
+        const sit = livePets.find((s) => s.petId === pet.id);
+        return !sit || ((!sit.start || t.time >= sit.start) && (!sit.end || t.time < sit.end));
+      });
   }).sort((a, b) => a.time.getTime() - b.time.getTime());
+  const clients = clientsFrom(sits.filter((s) => !ownIds.has(s.petId)), now);
+  const reportItems = (petIds: string[]) => doneToday(tasks, petIds, user.uid, days);
 
   if (openPetId) {
     // Back to Today, not "history.back()": opened from a link or after a reload, that left petbindr.com
+    // A pet I'm sitting for: read-only, from the server's copy and the share's switches
+    const sit = !ownIds.has(openPetId) ? sitPets.find((s) => s.petId === openPetId) : undefined;
+    if (sit) return <PetPage petId={openPetId} sitter={{ uid: user.uid, live: isLive(sit, now), ownerName: sit.ownerName }} onBack={() => { window.location.hash = ""; }} />;
+    if (!loaded.own || !loaded.co || !sitsLoaded) return <p className="font-inter text-[var(--slate-gray)]">Loading…</p>;
     return <PetPage petId={openPetId} onBack={() => { window.location.hash = ""; }} />;
   }
 
   const doneCount = tasks.filter((t) => t.done).length;
-  const ready = loaded.own && loaded.co;
+  const ready = loaded.own && loaded.co && sitsLoaded;
+  const sitting = clients.length > 0;
   const first = (myName || "").split(" ")[0];
 
   return (
@@ -300,13 +381,22 @@ function SignedIn({ user }: { user: User }) {
 
       {verified && <CoOwnerInviteOffers user={user} />}
       {verified && <TransferOffers user={user} />}
+      <SitInvites sits={sits.filter((s) => !ownIds.has(s.petId))} now={now} />
 
       {!ready ? (
         <p className="font-inter text-[var(--slate-gray)]">Loading your pets…</p>
-      ) : pets.length === 0 ? (
+      ) : pets.length === 0 && !sitting ? (
         <Card title="No pets yet">
           <p className="font-inter text-[var(--charcoal)]">
-            Ask the pet&apos;s owner to invite you as a co-owner in the PetBindr app (the pet&apos;s page, then Manage Ownership), using <strong>{user.email}</strong>.{verified ? " The invite shows up here to accept." : " Confirm your email first."}
+            Pets show up here when someone shares them with <strong>{user.email}</strong>:
+          </p>
+          <ul className="font-inter text-[var(--charcoal)] list-disc pl-5 mt-2 space-y-1">
+            <li><strong>Sitting for someone?</strong> Ask them to share their pet with you in the PetBindr app (Invite a Sitter, then PetBindr app). Your clients, their pets and today&apos;s feedings and medications all show here.</li>
+            <li><strong>Family or a partner?</strong> Ask the owner to invite you as a co-owner (the pet&apos;s page, then Manage Ownership).</li>
+            <li><strong>A pet being given to you?</strong> The owner hands it over in the app.</li>
+          </ul>
+          <p className="font-inter text-[var(--slate-gray)] mt-2" style={{ fontSize: "15px" }}>
+            {verified ? "Invites show up here to accept." : "Confirm your email first, so invites can reach you."}
           </p>
         </Card>
       ) : (
@@ -317,12 +407,12 @@ function SignedIn({ user }: { user: User }) {
             ) : (
               <ul className="divide-y divide-[var(--mist-gray)]">
                 {tasks.map((t) => (
-                  <TaskRow key={t.key} task={t} showPet={pets.length > 1} uid={user.uid} myName={myName || user.email || "Someone"} />
+                  <TaskRow key={t.key} task={t} showPet={taskPets.length > 1} uid={user.uid} myName={myName || user.email || "Someone"} />
                 ))}
               </ul>
             )}
           </Card>
-          <Card title={pets.length === 1 ? "Your pet" : "Your pets"}>
+          {pets.length > 0 && <Card title={pets.length === 1 ? "Your pet" : "Your pets"}>
             <ul className="space-y-2">
               {pets.map((p) => (
                 <li key={p.id} className="font-inter">
@@ -336,7 +426,9 @@ function SignedIn({ user }: { user: User }) {
                 </li>
               ))}
             </ul>
-          </Card>
+          </Card>}
+          <MyClients clients={clients} tasks={tasks.map((t) => ({ petId: t.petId, done: !!t.done, time: t.time, title: t.title, petName: t.petName }))}
+            views={views} uid={user.uid} sitterName={myName || "Your sitter"} reportItems={reportItems} />
         </>
       )}
       {ready && pets.length > 0 && <VisitReports uid={user.uid} />}

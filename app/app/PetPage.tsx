@@ -33,7 +33,11 @@ type Feeding = {
   mealDays?: Record<string, MealRepeat>;
 } | null;
 
-export default function PetPage({ petId, onBack }: { petId: string; onBack: () => void }) {
+/** Sitter mode: a pet someone shared with me. Read from the server's copy with
+ *  only what my share allows (sitterPetViews); the rules decide the rest. */
+export type SitterView = { uid: string; live: boolean; ownerName: string };
+
+export default function PetPage({ petId, onBack, sitter }: { petId: string; onBack: () => void; sitter?: SitterView }) {
   const { db, storage } = firebase();
   const [pet, setPet] = useState<PetData | null | undefined>(undefined);
   const [allergies, setAllergies] = useState<Allergy[]>([]);
@@ -44,15 +48,19 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
 
   useEffect(() => {
     const base = `pets/${petId}`;
+    // Start empty, and empty again when a read is refused: going from one pet to
+    // another kept the first pet's lists where the second's were refused (a
+    // sitter whose share hides medications saw the previous pet's medications)
+    setPet(undefined); setAllergies([]); setMeds([]); setFeeding(null); setRecords([]);
     const stops = [
-      onSnapshot(doc(db, base), (s) => setPet(s.exists() ? (s.data() as PetData) : null), () => setPet(null)),
-      onSnapshot(collection(db, `${base}/allergies`), (s) => setAllergies(s.docs.map((d) => ({ ...(d.data() as Allergy), id: d.id }))), () => {}),
-      onSnapshot(collection(db, `${base}/medicationSchedules`), (s) => setMeds(s.docs.map((d) => ({ ...(d.data() as MedicationSchedule), id: d.id }))), () => {}),
-      onSnapshot(doc(db, `${base}/feedingSchedule/schedule`), (s) => setFeeding(s.exists() ? (s.data() as Feeding) : null), () => {}),
-      onSnapshot(collection(db, `${base}/healthRecords`), (s) => setRecords(s.docs.map((d) => ({ ...(d.data() as HealthRecord), id: d.id }))), () => {}),
+      onSnapshot(sitter ? doc(db, "sitterPetViews", sitter.uid, "sharedPets", petId) : doc(db, base), (s) => setPet(s.exists() ? (s.data() as PetData) : null), () => setPet(null)),
+      onSnapshot(collection(db, `${base}/allergies`), (s) => setAllergies(s.docs.map((d) => ({ ...(d.data() as Allergy), id: d.id }))), () => setAllergies([])),
+      onSnapshot(collection(db, `${base}/medicationSchedules`), (s) => setMeds(s.docs.map((d) => ({ ...(d.data() as MedicationSchedule), id: d.id }))), () => setMeds([])),
+      onSnapshot(doc(db, `${base}/feedingSchedule/schedule`), (s) => setFeeding(s.exists() ? (s.data() as Feeding) : null), () => setFeeding(null)),
+      onSnapshot(collection(db, `${base}/healthRecords`), (s) => setRecords(s.docs.map((d) => ({ ...(d.data() as HealthRecord), id: d.id }))), () => setRecords([])),
     ];
     return () => stops.forEach((s) => s());
-  }, [db, petId]);
+  }, [db, petId, sitter?.uid]);
 
   // Photos load through Storage, so storage.rules decide (the files have no
   // public link: the access keys were removed on purpose).
@@ -75,7 +83,13 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
     return (
       <div className="space-y-4">
         <BackButton onBack={onBack} />
-        <Card title="Not available"><p className="font-inter">This pet isn&apos;t shared with you anymore.</p></Card>
+        <Card title="Not available">
+          <p className="font-inter">
+            {sitter
+              ? "This pet's details aren't ready yet. Go back and open it again in a minute."
+              : "This pet isn't shared with you anymore."}
+          </p>
+        </Card>
       </div>
     );
   }
@@ -113,6 +127,14 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
           {details(pet) && <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "15px" }}>{details(pet)}</p>}
         </div>
       </header>
+
+      {sitter && (
+        <p className="font-inter rounded-xl px-4 py-3 text-[var(--charcoal)]" style={{ background: "var(--pure-white)", border: "1px solid var(--mist-gray)", fontSize: "15px" }}>
+          {sitter.live
+            ? `Shared with you by ${sitter.ownerName || "the owner"}. Check things off on Today.`
+            : `Your sit hasn't started yet. You can read ${name}'s routine now; check-offs open when it starts.`}
+        </p>
+      )}
 
       {activeAllergies.length > 0 && (
         <Card title="Allergies" tone={activeAllergies.some((a) => a.severity === "Life-Threatening") ? "alert" : undefined}>
@@ -219,18 +241,20 @@ export default function PetPage({ petId, onBack }: { petId: string; onBack: () =
 
       {pet.notes && <Card title="Notes"><p className="font-inter text-[var(--charcoal)] whitespace-pre-line">{pet.notes}</p></Card>}
 
-      {!pet.isDeceased && firebase().auth.currentUser && (
+      {!sitter && !pet.isDeceased && firebase().auth.currentUser && (
         <AddToRecord petId={petId} petName={name} uid={firebase().auth.currentUser!.uid}
           regularVet={pet.primaryVetClinic?.name || ""} notes={pet.notes || ""}
           lastUnit={(weightSummary(records, new Date())?.latest.unit === "kg" ? "kg" : "lbs")} />
       )}
 
-      {!pet.isDeceased && firebase().auth.currentUser && (
+      {!sitter && !pet.isDeceased && firebase().auth.currentUser && (
         <CareEditor petId={petId} petName={name} schedule={feeding as Schedule} meds={meds as unknown as Medication[]} />
       )}
 
       <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
-        For everything else (vaccines, allergies, photos), use the PetBindr iPhone app.
+        {sitter
+          ? `You see what ${sitter.ownerName || "the owner"} chose to share. Something missing? Ask them to change what you can see.`
+          : "For everything else (vaccines, allergies, photos), use the PetBindr iPhone app."}
       </p>
     </div>
   );
