@@ -250,6 +250,10 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
   return (
     <div className="space-y-6">
       <header className="text-center space-y-3">
+        <a href="https://www.petbindr.com" className="inline-block" aria-label="PetBindr">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="PetBindr" width={120} height={36} style={{ height: "auto", width: 120 }} />
+        </a>
         <div className="flex justify-center -space-x-3">
           {data.pets.map((p) => (
             <PetPhoto key={p.id} pet={p} size={72} />
@@ -348,14 +352,19 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
         <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
           Shared with PetBindr. Only {owner} can change what you see here.
         </p>
-        {/* "Get the PetBindr app…" went to a waitlist for an app that isn't
-            out yet (review panel 2026-11-14): say what it is honestly */}
-        {!data.helper && (
-          <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
-            Have a pet of your own? PetBindr for iPhone is coming soon.{" "}
-            <a href="https://www.petbindr.com/#get-notified" className="text-[var(--bindr-navy)] underline">Get notified</a>
+        {/* Every page a sitter sees is a way in (2026-11-20). The web app at
+            /app takes sign-ups now, so this goes there, not to the waitlist. */}
+        <div className="rounded-2xl bg-white p-5 space-y-2 shadow-sm">
+          <p className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "1.25rem" }}>
+            Have a pet of your own?
           </p>
-        )}
+          <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
+            Keep their feeding, meds and vet info in one place, and hand it off the way {owner} just did.
+          </p>
+          <a href="https://www.petbindr.com/app" className="btn-coral inline-block" style={{ padding: "12px 20px", textDecoration: "none" }}>
+            Make a free binder for your pet
+          </a>
+        </div>
       </footer>
     </div>
   );
