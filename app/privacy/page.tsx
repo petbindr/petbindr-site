@@ -189,13 +189,16 @@ const sections: { title: string; body: React.ReactNode }[] = [
     title: "Children",
     body: (
       <p>
-        PetBindr accounts are for people 13 and older, and we don&rsquo;t knowingly collect
-        information from children under 13. A helper link lets someone in your household, such as a
-        child, check off feedings in a web browser without an account. It&rsquo;s made and
-        controlled by the account holder, shows only feedings and allergies, and the only things we
-        keep from it are the name you gave the link, its check-offs, and when and on what kind of
-        device it was opened. If you think a child under 13 has signed up for an account, email us
-        and we&rsquo;ll delete it.
+        You must be 13 or older to create a PetBindr account, and we don&rsquo;t knowingly create
+        accounts for children under 13. A helper link is different: it&rsquo;s meant for people in
+        your household, including children, to check off feedings in a web browser with no account.
+        It&rsquo;s made and controlled by the account holder, and shows only feedings and allergies.
+        We don&rsquo;t ask the person using a link for a name, email, photo, or anything else, and
+        we collect no personal information from them. The only things kept are the label the account
+        holder typed when making the link (which appears next to its check-offs), the check-offs
+        themselves, and when and on what kind of device (for example &ldquo;iPhone&rdquo;) the link
+        was opened. If you think a child under 13 has signed up for an account, email us and
+        we&rsquo;ll delete it.
       </p>
     ),
   },
