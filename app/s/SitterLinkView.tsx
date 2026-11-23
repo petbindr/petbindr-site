@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { glucoseUnitFor, glucoseText, parseGlucose, unitLabel, type GlucoseUnit } from "./glucose";
 
 // Cloud Functions base (override for local testing against the emulator)
 const FUNCTIONS_URL =
@@ -12,11 +13,14 @@ const REFRESH_MS = 5 * 60 * 1000;
 type Amount = "some" | "none" | null;
 // skipped: the owner marked this dose "Not given" (nothing to give)
 // undoUntil: this link's own check-off, which it can undo until then (5 minutes)
-type Done = { by: string; at: string; amount?: Amount; canChange?: boolean; skipped?: boolean; undoUntil?: string } | null;
+// glucose: the blood glucose reading saved with a dose, in mg/dL
+type Done = { by: string; at: string; amount?: Amount; canChange?: boolean; skipped?: boolean; undoUntil?: string; glucose?: number } | null;
 // Medications also carry how to give it and the owner's photo, for the "Give it now" panel
 type TodayItem = {
   kind: "feeding" | "medication"; id: string; title: string; detail: string | null; due: string; done: Done;
   howTo?: string | null; photo?: string | null;
+  // Someone takes blood glucose readings with this medication (insulin): offer one with the check-off
+  tracksGlucose?: boolean;
 };
 type Vet = { role: string; name: string; vetName: string | null; phone: string | null; address: string | null };
 type Pet = {
@@ -45,6 +49,7 @@ type Pet = {
 type LinkData =
   | {
       state: "active"; sitterName: string; ownerName: string; ownerPhone: string | null; timeZone: string;
+      glucoseUnit?: GlucoseUnit | null; // the owner's unit, from their app (older links: null)
       helper?: boolean; // a household helper's chores page ("Emma feeds the hamster"): feedings only, no end date
       notes?: string | null; // "What's different this time", from the owner's trip setup
       // The week before the sit: a read-only look at the routine (no check-offs or updates yet)
@@ -234,6 +239,7 @@ export default function SitterLinkView() {
 function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { state: "active" }>; token: string; onChanged: () => void }) {
   const owner = firstName(data.ownerName);
   const tz = data.timeZone;
+  const glucoseUnit = glucoseUnitFor(data.glucoseUnit, typeof navigator === "undefined" ? undefined : navigator.language);
   const petNames = data.pets.map((p) => p.name);
   const namesText = petNames.length <= 2 ? petNames.join(" and ") : `${petNames.slice(0, -1).join(", ")}, and ${petNames.at(-1)}`;
 
@@ -312,7 +318,8 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
                 {data.pets.length > 1 && <p className="font-inter font-semibold text-[var(--bindr-navy)] mb-2">{pet.name}</p>}
                 <ul className="divide-y divide-[var(--mist-gray)]">
                   {pet.today.map((item) => (
-                    <TodayRow key={`${item.kind}-${item.id}-${item.due}`} item={item} pet={pet} tz={tz} token={token} onChanged={onChanged} />
+                    <TodayRow key={`${item.kind}-${item.id}-${item.due}`} item={item} pet={pet} tz={tz} token={token} onChanged={onChanged}
+                      glucoseUnit={glucoseUnit} />
                   ))}
                 </ul>
               </div>
@@ -536,8 +543,13 @@ const AMOUNT_TEXT: Record<"all" | "some" | "none", string> = { all: "Ate it all"
 /** A dose tapped more than this long before it's due asks "Give it now?" first */
 const EARLY_DOSE_MS = 2 * 60 * 60_000;
 
-function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: Pet; tz: string; token: string; onChanged: () => void }) {
+function TodayRow({ item, pet, tz, token, onChanged, glucoseUnit }: {
+  item: TodayItem; pet: Pet; tz: string; token: string; onChanged: () => void; glucoseUnit: GlucoseUnit;
+}) {
   const [done, setDone] = useState<Done>(item.done);
+  // Optional reading typed with the dose (only for a medication with readings)
+  const [glucoseInput, setGlucoseInput] = useState("");
+  const reading = item.tracksGlucose ? parseGlucose(glucoseInput, glucoseUnit) : ({ kind: "empty" } as const);
   const [confirming, setConfirming] = useState(false);
   // The dose being confirmed is more than EARLY_DOSE_MS away (2026-11-17, review:
   // any of today's doses could be marked given in the morning, and the evening
@@ -600,11 +612,19 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
     setSaving(true);
     setError(null);
     try {
-      const result = await callFunction<{ done: Done }>("sitterLinkCheckOff", {
+      const glucose = !isFeeding && reading.kind === "valid" ? reading.mgdL : null;
+      const result = await callFunction<{ done: Done; already?: boolean }>("sitterLinkCheckOff", {
         link: token, petId: pet.id, kind: item.kind, itemId: item.id, due: Date.parse(item.due),
         ...(amount ? { amount } : {}), ...(change ? { change: true } : {}),
+        ...(glucose !== null ? { glucose } : {}),
       });
       setDone(result.done);
+      // Someone else gave it first: their check-off stands, and the reading wasn't saved
+      if (result.already && glucose !== null) {
+        setError(`${result.done?.by || "Someone"} already gave this dose, so the reading wasn't saved. Send it to the owner in an update instead.`);
+      } else {
+        setGlucoseInput("");
+      }
       setChoosing(false);
       onChanged();
     } catch (e) {
@@ -671,6 +691,7 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
               {doneMark} {isFeeding && doneAmount !== "all" ? `${AMOUNT_TEXT[doneAmount]} · ` : "Done "}
               {isFeeding && doneAmount !== "all" ? "" : "by "}
               {done.by} at {fmtTime(done.at, tz)}
+              {typeof done.glucose === "number" ? ` · Glucose ${glucoseText(done.glucose, glucoseUnit)}` : ""}
             </p>
           )}
           {done && !skipped && canUndo && !saving && (
@@ -703,13 +724,39 @@ function TodayRow({ item, pet, tz, token, onChanged }: { item: TodayItem; pet: P
             className="btn-coral shrink-0"
             style={{ padding: "10px 16px", minWidth: "5.75rem", ...(confirming ? { backgroundColor: "var(--bindr-navy)" } : {}) }}
             onClick={markDone}
-            disabled={saving}
+            disabled={saving || reading.kind === "invalid"}
             aria-label={isFeeding ? `${item.title}: done, ate it all` : undefined}
           >
             {saving ? "Saving…" : confirming ? (early ? "Give it now" : "Tap to confirm") : "Done"}
           </button>
         )}
       </div>
+      {item.tracksGlucose && !done && (giveNow || confirming || glucoseInput !== "") && (
+        <div className="mt-2">
+          <label className="flex items-center gap-2 font-inter text-[var(--charcoal)]" style={{ fontSize: "0.9375rem" }}>
+            <span>Blood glucose <span className="text-[var(--slate-gray)]">(optional)</span></span>
+            <input
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              value={glucoseInput}
+              onChange={(e) => setGlucoseInput(e.target.value)}
+              disabled={saving}
+              className="rounded-lg border border-[var(--mist-gray)] px-2 py-1"
+              style={{ width: "5.5rem", fontSize: "1rem" }}
+              aria-label={`Blood glucose in ${unitLabel(glucoseUnit)} (optional)`}
+              aria-invalid={reading.kind === "invalid"}
+              aria-describedby={reading.kind === "invalid" ? `glucose-${item.id}-${item.due}` : undefined}
+            />
+            <span className="text-[var(--slate-gray)]">{unitLabel(glucoseUnit)}</span>
+          </label>
+          {reading.kind === "invalid" && (
+            <p id={`glucose-${item.id}-${item.due}`} className="font-inter" style={{ fontSize: "0.875rem", color: "var(--error-red)" }} role="alert">
+              That doesn&rsquo;t look like a reading. Check the number and the unit.
+            </p>
+          )}
+        </div>
+      )}
       {giveNow && (item.howTo || photo) && (
         <div className="mt-2 space-y-2">
           {item.howTo && (
