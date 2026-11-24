@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 const title = "Pet sitter instructions template (free, printable) — PetBindr";
-const description = "A free pet sitter instructions template: what to write down before you leave, from feeding and medications to the vet and house details. Copy it, or send your sitter a live link.";
+const description = "A free pet sitter instructions template: what to write down before you leave, from feeding and meds to the vet and house details. Copy it, or send a live link.";
 
 export const metadata: Metadata = {
   title,

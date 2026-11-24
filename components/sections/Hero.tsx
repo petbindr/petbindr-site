@@ -14,7 +14,7 @@ export default function Hero() {
           src="/logo.png"
           alt="PetBindr"
           width={320}
-          height={96}
+          height={103}
           priority
           className="w-[120px] md:w-[160px] h-auto"
         />
@@ -23,14 +23,16 @@ export default function Hero() {
       {/* Hero content */}
       <div className="flex-1 flex items-center justify-center px-6 md:px-12 pb-20 pt-8">
         <div className="max-w-3xl w-full text-center flex flex-col items-center">
-          <FadeIn delay={0}>
+          {/* No fade-in on the headline: it is the largest paint, and fading it in
+              held it back ~1 s (Lighthouse LCP 2.9 s, 2026-11-24) */}
+          <div>
             <h1
               className="font-fraunces font-semibold text-[var(--bindr-navy)] leading-tight tracking-tight mb-6"
               style={{ fontSize: "clamp(36px, 6vw, 72px)", letterSpacing: "-0.03em" }}
             >
               Our pet binder was 13 pages. So we built this instead.
             </h1>
-          </FadeIn>
+          </div>
 
           <FadeIn delay={0.1}>
             <p

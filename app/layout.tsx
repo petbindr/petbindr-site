@@ -21,7 +21,7 @@ const inter = Inter({
 // icon.tsx and apple-icon.tsx (made at build time from the logo). One address,
 // www: petbindr.com redirects there.
 const description =
-  "A live, shareable care plan for your pet: feeding, medications, the vet and your home. Your sitter just opens a link, no app needed. Join the iOS waitlist.";
+  "A live, shareable care plan for your pet: feeding, medications, the vet and your home. Your sitter opens a link, no app needed. Join the iOS waitlist.";
 
 export const metadata: Metadata = {
   title: "PetBindr: a shareable pet care plan for sitters and vets",
