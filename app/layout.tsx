@@ -24,7 +24,7 @@ const description =
   "A live, shareable care plan for your pet: feeding, medications, the vet and your home. Your sitter just opens a link, no app needed. Join the iOS waitlist.";
 
 export const metadata: Metadata = {
-  title: "PetBindr: the pet care app for sitters, vets and everyone who watches your pet",
+  title: "PetBindr: a shareable pet care plan for sitters and vets",
   description,
   openGraph: {
     title: "PetBindr: your pet's whole life, in one binder you can share",

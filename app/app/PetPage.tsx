@@ -310,7 +310,7 @@ function details(pet: PetData): string {
 
 /** As the app's Health Summary: "Dog, Beagle • Male, neutered • 7 years old" */
 function summaryIdentity(pet: PetData): string {
-  const parts = [[pet.species, pet.breed].filter((x) => x && x.trim()).join(", ")];
+  const parts = [[pet.species, pet.breed].filter((x, i, a) => x && x.trim() && !(i === 1 && x.trim().toLowerCase() === (a[0] || "").trim().toLowerCase())).join(", ")];
   if (pet.gender && pet.gender !== "Unknown") {
     let g = pet.gender;
     const fixable = !["Reptile", "Fish", "Bird"].includes(pet.species || "");

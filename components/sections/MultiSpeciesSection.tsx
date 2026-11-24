@@ -1,4 +1,4 @@
-import { Dog, Cat, Bird, Fish, Bug, Rabbit } from "lucide-react";
+import { Dog, Cat, Bird, Fish, Turtle, Rabbit } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
 
 const petIcons = [
@@ -6,7 +6,7 @@ const petIcons = [
   { icon: Cat,    label: "Cat" },
   { icon: Bird,   label: "Bird" },
   { icon: Fish,   label: "Fish" },
-  { icon: Bug,    label: "Reptile" },
+  { icon: Turtle, label: "Reptile" },
   { icon: Rabbit, label: "Rabbit" },
 ];
 

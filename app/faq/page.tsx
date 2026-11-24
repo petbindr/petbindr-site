@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { JsonLd, textOf } from "@/lib/jsonld";
 
 const description = "Answers to common questions about PetBindr: sharing with a sitter, sitter links, reminders, printing, your account and getting help.";
 
@@ -145,6 +146,15 @@ const faqs: { q: string; a: React.ReactNode }[] = [
 export default function FaqPage() {
   return (
     <main style={{ background: "var(--warm-cream)", minHeight: "100vh" }} className="px-6 md:px-12 py-16">
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: textOf(f.a).replace(/\s+/g, " ").trim() },
+        })),
+      }} />
       <div className="max-w-2xl mx-auto">
         <Link
           href="/"

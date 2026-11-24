@@ -449,7 +449,7 @@ function SignedIn({ user }: { user: User }) {
                   <a href={`#pet/${p.id}`} className="flex items-center justify-between gap-3 py-1" style={{ textDecoration: "none" }}>
                     <span>
                       <span className="font-semibold text-[var(--bindr-navy)] underline">{p.name}</span>
-                      <span className="text-[var(--slate-gray)]"> · {[p.species, p.breed].filter(Boolean).join(" · ")}</span>
+                      <span className="text-[var(--slate-gray)]"> · {[p.species, p.breed].filter((x, i, a) => x && !(i === 1 && x.trim().toLowerCase() === (a[0] || "").trim().toLowerCase())).join(" · ")}</span>
                     </span>
                     <span className="text-[var(--slate-gray)]" aria-hidden>›</span>
                   </a>
@@ -457,6 +457,7 @@ function SignedIn({ user }: { user: User }) {
               ))}
             </ul>
           </Card>}
+          {pets.length > 0 && <AddAnotherPet uid={user.uid} />}
           <MyClients clients={clients} tasks={tasks.map((t) => ({ petId: t.petId, done: !!t.done, time: t.time, title: t.title, petName: t.petName }))}
             views={views} uid={user.uid} sitterName={myName || "Your sitter"} reportItems={reportItems} />
         </>
@@ -493,7 +494,7 @@ const SPECIES = ["Dog", "Cat", "Rabbit", "Guinea Pig", "Hamster", "Ferret", "Bir
 // (PetStore.addPet: every field Pet.swift requires, no co-owners), then the
 // feeding schedule the way the feeding editor does (care.ts). Everything else
 // (vets, meds, records, more meals) is on the pet's page or in the app.
-function AddFirstPet({ uid }: { uid: string }) {
+function AddFirstPet({ uid, more = false, onDone }: { uid: string; more?: boolean; onDone?: () => void }) {
   const [name, setName] = useState("");
   const [species, setSpecies] = useState<string>("Dog");
   const [birthday, setBirthday] = useState("");
@@ -532,6 +533,7 @@ function AddFirstPet({ uid }: { uid: string }) {
         if (out.create) await setDoc(doc(db, `pets/${id}/feedingSchedule/schedule`), out.create);
       }
       // The pet shows under "Your pet" by itself (the listener on pets)
+      setName(""); setBirthday(""); setMealTime(""); setPortion(""); setBusy(false); onDone?.();
     } catch (err) {
       const code = (err as { code?: string }).code || "";
       setError(code.includes("permission-denied") ? "Couldn't save your pet. Sign out and back in, then try again." : "Couldn't save that. Check your connection and try again.");
@@ -543,10 +545,10 @@ function AddFirstPet({ uid }: { uid: string }) {
   const inputStyle = { border: "1px solid var(--mist-gray)", background: "var(--warm-cream)", fontSize: "16px" };
   const label = "block mb-1 text-[var(--charcoal)] font-semibold";
   return (
-    <Card title="Add your pet">
-      <p className="font-inter text-[var(--charcoal)] mb-4">
+    <Card title={more ? "Add another pet" : "Add your pet"}>
+      {!more && <p className="font-inter text-[var(--charcoal)] mb-4">
         Start a free binder: feedings, medications, vets and records in one place, ready to share with family or a sitter.
-      </p>
+      </p>}
       <form onSubmit={save} className="space-y-4 font-inter">
         <div>
           <label className={label} htmlFor="new-pet-name" style={{ fontSize: "15px" }}>Pet&apos;s name</label>
@@ -588,6 +590,16 @@ function AddFirstPet({ uid }: { uid: string }) {
       </form>
     </Card>
   );
+}
+
+// A second (and further) pet: a button that opens the same form. The rules
+// already let an owner create any number of pets.
+function AddAnotherPet({ uid }: { uid: string }) {
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return <button type="button" className="btn-coral w-full" onClick={() => setOpen(true)}>Add another pet</button>;
+  }
+  return <AddFirstPet uid={uid} more onDone={() => setOpen(false)} />;
 }
 
 // MARK: - A row on Today

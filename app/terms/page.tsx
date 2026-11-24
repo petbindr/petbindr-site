@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 // the privacy page). Not legal advice: have it reviewed before launch, and add
 // subscription terms (price, renewal, cancellation) before any paid feature ships.
 
-const LAST_UPDATED = "November 16, 2026";
+const LAST_UPDATED = "November 24, 2026";
 
 const link = "text-[var(--bindr-navy)] underline";
 
@@ -116,6 +116,13 @@ const sections: { title: string; body: React.ReactNode }[] = [
           and home, keep it private, and don&rsquo;t copy or pass it on. When your access ends,
           stop using any details you remember or wrote down, like door codes. Check-offs, updates,
           and photos you add are shared with the owner.
+        </p>
+        <p>
+          <strong>If you hand a pet to a new owner:</strong> the new owner receives the pet with all of
+          its records and becomes its owner once they accept. You leave the pet, or stay as a co-owner
+          if you chose that, and every other co-owner, sitter share, and sitter link for that pet ends.
+          From then on the pet&rsquo;s data belongs to the new owner&rsquo;s account, and you can&rsquo;t
+          get it back unless they hand it back.
         </p>
       </>
     ),

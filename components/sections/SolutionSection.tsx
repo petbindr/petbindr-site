@@ -10,12 +10,12 @@ const features = [
   },
   {
     heading: "Watch it happen.",
-    body: "Sitters check off feedings and medication doses as they go. You see who did what, when, with timestamps. No more \u201cdid anyone feed her?\u201d group texts.",
+    body: "Sitters check off feedings and medication doses as they go. You see who did what, when, with timestamps. If a dose or meal is missed, you get an alert, so nothing slips. No more \u201cdid anyone feed her?\u201d group texts.",
     screenshot: { src: "/screenshots/track.jpg", alt: "Biscuit's feeding in PetBindr: breakfast checked off, \"Fed by Sam at 7:04 AM\", dinner still to do" },
     imageRight: true,
   },
   {
-    heading: "The Quick Reference Card.",
+    heading: "Quick Reference.",
     body: "One screen with everything an emergency sitter needs: photo, microchip, meds, allergies, vet, emergency contacts. Tap-to-call built in.",
     screenshot: { src: "/screenshots/quickref.jpg", alt: "Biscuit's Quick Reference in PetBindr: microchip number, behavior notes, feeding times and medications on one screen" },
     imageRight: false,
