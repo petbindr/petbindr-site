@@ -679,7 +679,7 @@ function TodayRow({ item, pet, tz, token, onChanged, glucoseUnit }: {
   return (
     <li
       className={giveNow ? "my-2 rounded-2xl p-3" : "py-3"}
-      style={giveNow ? { border: `2px solid ${overdue ? "var(--error-red)" : "var(--bindr-teal)"}`, background: "white" } : undefined}
+      style={giveNow ? { border: `2px solid ${overdue ? "var(--error-red)" : "var(--bindr-teal)"}`, background: "var(--pure-white)" } : undefined}
     >
       {giveNow && (
         <p className="font-inter font-semibold mb-1" style={{ fontSize: "0.875rem", color: overdue ? "var(--error-red)" : "var(--bindr-navy)" }}>
