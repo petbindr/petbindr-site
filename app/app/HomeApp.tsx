@@ -19,6 +19,8 @@ import {
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { firebase, webAppConfigured } from "./firebase";
+import { signupSource } from "@/lib/signupSource";
+import { feedingChanges, newId, timeAt } from "./care";
 import PetPage from "./PetPage";
 import SitterLinkMaker from "./SitterLinkMaker";
 import VisitReports from "./VisitReports";
@@ -52,8 +54,28 @@ export default function HomeApp() {
 
 // MARK: - Signed out
 
+// Where this visit came from, for the new account's profile. A link into /app
+// (the sitter page's "Make a free binder") carries utm_source; otherwise the
+// visit's landing page (lib/signupSource), which for a sitter was the sitter page.
+function arrivalSource(): Record<string, string> {
+  const out: Record<string, string> = {};
+  try {
+    const q = new URLSearchParams(window.location.search);
+    const here = { source: q.get("utm_source"), medium: q.get("utm_medium"), campaign: q.get("utm_campaign") };
+    const found = here.source ? here : signupSource();
+    for (const [k, v] of Object.entries(found)) if (v) out[k] = String(v).trim().slice(0, 100);
+  } catch { /* no source */ }
+  return out;
+}
+
+/** Arrived from a sitter page's "Make a free binder": someone starting their own */
+function fromSitterLink(): boolean {
+  try { return new URLSearchParams(window.location.search).get("utm_source") === "sitterlink"; } catch { return false; }
+}
+
 function SignedOut() {
-  const [mode, setMode] = useState<"in" | "up" | "reset">("in");
+  const [newOwner] = useState(fromSitterLink);
+  const [mode, setMode] = useState<"in" | "up" | "reset">(newOwner ? "up" : "in");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,10 +98,13 @@ function SignedOut() {
         if (!displayName) throw new Error("Add your name, so people know who checked things off.");
         const result = await createUserWithEmailAndPassword(auth, cleanEmail, password);
         await updateProfile(result.user, { displayName });
-        // The same profile the app makes at sign-up (UserProfile.swift)
+        // The same profile the app makes at sign-up (UserProfile.swift), plus
+        // where the sign-up came from (the app ignores fields it doesn't know)
+        const source = arrivalSource();
         await setDoc(doc(db, "users", result.user.uid), {
           id: result.user.uid, email: result.user.email || cleanEmail, displayName,
           createdAt: serverTimestamp(), showOverdueReminders: false, overdueReminderPetIds: [],
+          ...(Object.keys(source).length ? { signupSource: { ...source, via: "web" } } : {}),
         });
         try { await httpsCallable(functions, "sendVerificationEmail")(); } catch { /* the app nudges later */ }
       } else {
@@ -97,14 +122,16 @@ function SignedOut() {
     }
   }
 
-  const title = mode === "in" ? "Sign in to PetBindr" : mode === "up" ? "Create your PetBindr account" : "Reset your password";
+  const title = mode === "in" ? "Sign in to PetBindr" : mode === "up" ? (newOwner ? "Start a free binder for your pet" : "Create your PetBindr account") : "Reset your password";
   return (
     <div className="space-y-6">
       <header className="text-center space-y-2">
         <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "clamp(26px, 6vw, 34px)" }}>{title}</h1>
         <p className="font-inter text-[var(--charcoal)]">
           {mode === "up"
-            ? "Use the email the pet's owner will add you with. Works on any phone or computer."
+            ? (newOwner
+              ? "Create your free account, then add your pet: feedings, meds and vet info in one place. Works on any phone or computer."
+              : "Add your own pet, or use the email a pet's owner will invite you with. Works on any phone or computer.")
             : "The same account as the PetBindr iPhone app."}
         </p>
       </header>
@@ -369,7 +396,7 @@ function SignedIn({ user }: { user: User }) {
       {!verified && (
         <Card title="Confirm your email">
           <p className="font-inter text-[var(--charcoal)]">
-            We sent a link to <strong>{user.email}</strong>. Open it to confirm your email; invites to co-own a pet, or pets handed over to you, show up after that.
+            We sent a link to <strong>{user.email}</strong>. Open it to confirm your email; invites to co-own a pet, or pets handed over to you, show up after that. You can add your own pet right away.
           </p>
           {verifyNote && <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--slate-gray)" }} role="status">{verifyNote}</p>}
           <div className="flex flex-wrap gap-2 mt-3">
@@ -386,9 +413,11 @@ function SignedIn({ user }: { user: User }) {
       {!ready ? (
         <p className="font-inter text-[var(--slate-gray)]">Loading your pets…</p>
       ) : pets.length === 0 && !sitting ? (
-        <Card title="No pets yet">
+        <>
+        <AddFirstPet uid={user.uid} />
+        <Card title="Caring for someone else's pet?">
           <p className="font-inter text-[var(--charcoal)]">
-            Pets show up here when someone shares them with <strong>{user.email}</strong>:
+            Their pets show up here when they share them with <strong>{user.email}</strong>:
           </p>
           <ul className="font-inter text-[var(--charcoal)] list-disc pl-5 mt-2 space-y-1">
             <li><strong>Sitting for someone?</strong> Ask them to share their pet with you in the PetBindr app (Invite a Sitter, then PetBindr app). Your clients, their pets and today&apos;s feedings and medications all show here.</li>
@@ -399,6 +428,7 @@ function SignedIn({ user }: { user: User }) {
             {verified ? "Invites show up here to accept." : "Confirm your email first, so invites can reach you."}
           </p>
         </Card>
+        </>
       ) : (
         <>
           <Card title={`Today${tasks.length ? ` · ${doneCount === tasks.length ? "All done" : `${doneCount} of ${tasks.length} done`}` : ""}`}>
@@ -448,6 +478,115 @@ function SignedIn({ user }: { user: User }) {
         <a href="mailto:hello@petbindr.com?subject=PetBindr%20feedback%20(web)" className="text-[var(--bindr-navy)] underline">Send feedback</a>
       </p>
     </div>
+  );
+}
+
+// MARK: - Add a first pet
+
+// The iPhone app's species (Species raw values in Pet.swift); anything else won't load there
+const SPECIES = ["Dog", "Cat", "Rabbit", "Guinea Pig", "Hamster", "Ferret", "Bird", "Reptile", "Fish", "Small Animal", "Other"] as const;
+
+// A new owner on the web (Android, a computer, or no app yet) adds their first
+// pet: name, species, optional birthday and one feeding time (2026-11-23,
+// review: the sitter page's "Make a free binder" led to an account that could
+// only wait to be shared a pet). Saved the way the app saves a new pet
+// (PetStore.addPet: every field Pet.swift requires, no co-owners), then the
+// feeding schedule the way the feeding editor does (care.ts). Everything else
+// (vets, meds, records, more meals) is on the pet's page or in the app.
+function AddFirstPet({ uid }: { uid: string }) {
+  const [name, setName] = useState("");
+  const [species, setSpecies] = useState<string>("Dog");
+  const [birthday, setBirthday] = useState("");
+  const [mealTime, setMealTime] = useState("");
+  const [portion, setPortion] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const today = new Date();
+  const maxDay = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    const petName = name.trim();
+    if (!petName) { setError("Add your pet's name."); return; }
+    const meal = mealTime ? timeAt(mealTime) : null;
+    if (mealTime && !meal) { setError("That feeding time doesn't look right."); return; }
+    // Noon on that day, so the date reads the same in any time zone nearby
+    const born = birthday ? (() => { const [y, m, d] = birthday.split("-").map(Number); return new Date(y, m - 1, d, 12); })() : null;
+    if (born && (isNaN(born.getTime()) || born > today)) { setError("The birthday can't be in the future."); return; }
+    setBusy(true);
+    setError(null);
+    try {
+      const { db } = firebase();
+      const id = newId();
+      await setDoc(doc(db, "pets", id), {
+        id, ownerId: uid, coOwnerIds: [], name: petName.slice(0, 100), species, breed: "",
+        ...(born ? { birthday: Timestamp.fromDate(born) } : {}),
+        allergies: [], medications: [], foodInstructions: "", quirks: "", notes: "",
+        additionalVets: [], additionalGroomers: [], isDeceased: false, licenses: [],
+      });
+      if (meal) {
+        const out = feedingChanges(null, {
+          feedingInfo: { foodName: "", defaultPortion: portion.trim() },
+          scheduleItems: [{ id: newId(), time: meal, portion: portion.trim() }],
+        }, null, deleteField);
+        if (out.create) await setDoc(doc(db, `pets/${id}/feedingSchedule/schedule`), out.create);
+      }
+      // The pet shows under "Your pet" by itself (the listener on pets)
+    } catch (err) {
+      const code = (err as { code?: string }).code || "";
+      setError(code.includes("permission-denied") ? "Couldn't save your pet. Sign out and back in, then try again." : "Couldn't save that. Check your connection and try again.");
+      setBusy(false);
+    }
+  }
+
+  const input = "w-full rounded-xl px-4 py-3 text-[var(--charcoal)]";
+  const inputStyle = { border: "1px solid var(--mist-gray)", background: "var(--warm-cream)", fontSize: "16px" };
+  const label = "block mb-1 text-[var(--charcoal)] font-semibold";
+  return (
+    <Card title="Add your pet">
+      <p className="font-inter text-[var(--charcoal)] mb-4">
+        Start a free binder: feedings, medications, vets and records in one place, ready to share with family or a sitter.
+      </p>
+      <form onSubmit={save} className="space-y-4 font-inter">
+        <div>
+          <label className={label} htmlFor="new-pet-name" style={{ fontSize: "15px" }}>Pet&apos;s name</label>
+          <input id="new-pet-name" className={input} style={inputStyle} value={name} maxLength={100} required
+            onChange={(e) => setName(e.target.value)} autoComplete="off" />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className={label} htmlFor="new-pet-species" style={{ fontSize: "15px" }}>Species</label>
+            <select id="new-pet-species" className={input} style={inputStyle} value={species} onChange={(e) => setSpecies(e.target.value)}>
+              {SPECIES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={label} htmlFor="new-pet-birthday" style={{ fontSize: "15px" }}>Birthday <span className="font-normal text-[var(--slate-gray)]">(optional)</span></label>
+            <input id="new-pet-birthday" type="date" className={input} style={inputStyle} value={birthday} max={maxDay}
+              onChange={(e) => setBirthday(e.target.value)} />
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className={label} htmlFor="new-pet-meal" style={{ fontSize: "15px" }}>A feeding time <span className="font-normal text-[var(--slate-gray)]">(optional)</span></label>
+            <input id="new-pet-meal" type="time" className={input} style={inputStyle} value={mealTime}
+              onChange={(e) => setMealTime(e.target.value)} />
+          </div>
+          {mealTime && (
+            <div>
+              <label className={label} htmlFor="new-pet-portion" style={{ fontSize: "15px" }}>Portion <span className="font-normal text-[var(--slate-gray)]">(optional)</span></label>
+              <input id="new-pet-portion" className={input} style={inputStyle} value={portion} maxLength={200} placeholder="e.g. 1 cup"
+                onChange={(e) => setPortion(e.target.value)} />
+            </div>
+          )}
+        </div>
+        <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+          You can add more meals, medications and the vet on your pet&apos;s page afterwards.
+        </p>
+        {error && <p style={{ color: "var(--error-red)" }} role="alert">{error}</p>}
+        <button className="btn-coral w-full" type="submit" disabled={busy}>{busy ? "Saving…" : "Add Pet"}</button>
+      </form>
+    </Card>
   );
 }
 

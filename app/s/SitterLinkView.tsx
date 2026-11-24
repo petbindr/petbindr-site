@@ -218,7 +218,24 @@ export default function SitterLinkView() {
     const [heading, text] = data.state === "turnedOff" && data.reason === "noLongerOwner"
       ? ["This link no longer works", `${data.ownerName ? owner : "The person who sent it"} is no longer one of the pet's owners, so the link they sent stopped working. If you're still caring for the pet, ask its owner for a new link.`]
       : texts[data.state];
-    return <Message heading={heading} text={text} />;
+    // The sit is over: the moment to offer them a binder of their own (STRATEGY E4)
+    return (
+      <Message heading={heading} text={text}>
+        {data.state === "expired" && (
+          <div className="rounded-2xl bg-white p-5 space-y-2 shadow-sm text-center">
+            <p className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "1.25rem" }}>
+              Have a pet of your own?
+            </p>
+            <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
+              Keep their feeding, meds and vet info in one place, and hand it off to a sitter the same way.
+            </p>
+            <a href={NEW_OWNER_LINK("ended-page")} className="btn-coral inline-block" style={{ padding: "12px 20px", textDecoration: "none" }}>
+              Make a free binder for your pet
+            </a>
+          </div>
+        )}
+      </Message>
+    );
   }
 
   return (
@@ -359,8 +376,10 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
         <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
           Shared with PetBindr. Only {owner} can change what you see here.
         </p>
-        {/* Every page a sitter sees is a way in (2026-11-20). The web app at
-            /app takes sign-ups now, so this goes there, not to the waitlist. */}
+        {/* Every page a sitter sees is a way in (2026-11-20). It opens /app on
+            Create Account for a new owner, who can add their own pet there
+            (2026-11-23: it opened on Sign In, and a new account could only wait
+            to be shared a pet). Tagged so sign-ups from sitter pages count. */}
         <div className="rounded-2xl bg-white p-5 space-y-2 shadow-sm">
           <p className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "1.25rem" }}>
             Have a pet of your own?
@@ -368,7 +387,7 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
           <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
             Keep their feeding, meds and vet info in one place, and hand it off the way {owner} just did.
           </p>
-          <a href="https://www.petbindr.com/app" className="btn-coral inline-block" style={{ padding: "12px 20px", textDecoration: "none" }}>
+          <a href={NEW_OWNER_LINK("sitter-page")} className="btn-coral inline-block" style={{ padding: "12px 20px", textDecoration: "none" }}>
             Make a free binder for your pet
           </a>
         </div>
@@ -974,6 +993,10 @@ function PetPhoto({ pet, size }: { pet: Pet; size: number }) {
     </div>
   );
 }
+
+// /app opened on Create Account, with wording for someone starting their own
+// binder (HomeApp reads utm_source=sitterlink); utm_* survive the analytics cleanup
+const NEW_OWNER_LINK = (medium: string) => `/app?utm_source=sitterlink&utm_medium=${medium}`;
 
 function Message({ heading, text, children }: { heading: string; text: string; children?: React.ReactNode }) {
   return (
