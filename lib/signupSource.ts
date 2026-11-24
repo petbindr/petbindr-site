@@ -2,9 +2,10 @@
 // never recorded; the API looked for utm_source on its own address, which never
 // has one). The first page someone lands on is read once per visit: the
 // utm_source / utm_medium / utm_campaign in its address, and the site that
-// linked here. Kept in sessionStorage (this tab only), then sent with the signup.
+// linked here, and a friend's referral code (?ref=). Kept in sessionStorage
+// (this tab only), then sent with the signup.
 
-export type SignupSource = { source?: string; medium?: string; campaign?: string; referrer?: string };
+export type SignupSource = { source?: string; medium?: string; campaign?: string; referrer?: string; ref?: string };
 
 const KEY = "pb_signup_source";
 
@@ -25,6 +26,8 @@ export function rememberSignupSource() {
       medium: clean(params.get("utm_medium")),
       campaign: clean(params.get("utm_campaign")),
       referrer,
+      // A friend's referral link (?ref=<code>); the server checks the code
+      ref: (() => { const r = clean(params.get("ref"))?.toUpperCase(); return r && /^[A-Z0-9]{8}$/.test(r) ? r : undefined; })(),
     };
     sessionStorage.setItem(KEY, JSON.stringify(found));
   } catch { /* storage blocked: no source, the signup still works */ }

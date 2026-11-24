@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 // PetBindr/PetBindr/PrivacyInfo.xcprivacy. Every statement must be true of the
 // app and website as they ship. Not legal advice: have it reviewed before launch.
 
-const LAST_UPDATED = "November 16, 2026";
+const LAST_UPDATED = "November 24, 2026";
 
 const link = "text-[var(--bindr-navy)] underline";
 
@@ -90,7 +90,9 @@ const sections: { title: string; body: React.ReactNode }[] = [
         <p>
           <strong>Website and waitlist.</strong> If you join the waitlist, your email address, and
           where your visit came from if we can tell (a campaign tag in the link you followed, or
-          the name of the site that linked to us). We count visits to petbindr.com with Vercel Web
+          the name of the site that linked to us). Each signup gets a personal share link; if
+          you joined through a friend&rsquo;s link, we note whose link it was and add one to that
+          person&rsquo;s private count of signups (it isn&rsquo;t shown to anyone). We count visits to petbindr.com with Vercel Web
           Analytics, which uses no cookies and doesn&rsquo;t identify you: which pages were viewed,
           the referring site, the country, and the kind of device and browser.
         </p>
