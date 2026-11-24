@@ -64,6 +64,14 @@ async function join(email: string, extra: Record<string, string> = {}) {
   return { status: res.status, body: await res.json() };
 }
 const mailTo = (email: string) => sent.filter((m) => m.to === email);
+// Every reply carries a share link with a random-looking code (2026-11-24): compare
+// replies with the code masked, and check the link's format on its own
+const SHARE_RE = /^https:\/\/petbindr\.com\/\?ref=[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{8}$/;
+const shape = (body: Record<string, unknown>) =>
+  JSON.stringify({ ...body, ...(typeof body.shareUrl === "string" ? { shareUrl: body.shareUrl.replace(/ref=.*/, "ref=CODE") } : {}) });
+const sameReply = (a: { body: Record<string, unknown> }, b: { body: Record<string, unknown> }) =>
+  shape(a.body) === shape(b.body) && SHARE_RE.test(String(a.body.shareUrl)) && SHARE_RE.test(String(b.body.shareUrl));
+const codeOf = (r: { body: Record<string, unknown> }) => String(r.body.shareUrl).split("ref=")[1];
 
 // A new address
 const fresh = await join("new@example.test");
@@ -72,7 +80,12 @@ await db.doc("waitlist/old@example.test").set({ email: "old@example.test", unsub
 const again = await join("old@example.test");
 
 check("new address: success", fresh.status === 200 && fresh.body.success === true);
-check("already on the list: the very same reply", again.status === 200 && JSON.stringify(again.body) === JSON.stringify(fresh.body));
+check("already on the list: the very same reply", again.status === 200 && sameReply(again, fresh));
+check("new address: the reply's code is its saved code", await db.doc("waitlist/new@example.test").get().then((d) => d.data()?.referralCode === codeOf(fresh)));
+check("already on the list: the reply doesn't give away its saved code",
+  await db.doc("waitlist/old@example.test").get().then((d) => typeof d.data()?.referralCode === "string" && d.data()?.referralCode !== codeOf(again)));
+check("already on the list: the email has its real link",
+  await db.doc("waitlist/old@example.test").get().then((d) => mailTo("old@example.test").some((m) => JSON.stringify(m).includes(`ref=${d.data()?.referralCode}`))));
 check("reply doesn't say founding member (only new signups got it)", !("foundingMember" in fresh.body) && !("alreadyExists" in again.body));
 check("new address gets the confirmation email", mailTo("new@example.test").some((m) => m.subject === "You're on the list."));
 check("address already on the list gets 'already on the list' by email", mailTo("old@example.test").some((m) => m.subject === "You're already on the list."));
@@ -81,24 +94,24 @@ check("the list entry wasn't changed (still founding, same token)", await db.doc
 // Submitting again the same day: same reply, no second email
 const before = mailTo("old@example.test").length;
 const third = await join("old@example.test");
-check("again the same day: same reply", JSON.stringify(third.body) === JSON.stringify(fresh.body));
+check("again the same day: same reply", sameReply(third, fresh));
 check("again the same day: no second email", mailTo("old@example.test").length === before);
 
 // Two submits of an address already on the list at the same moment: one email
 await db.doc("waitlist/twice@example.test").set({ email: "twice@example.test", unsubscribeToken: "t3", createdAt: Timestamp.now() });
 const both = await Promise.all([join("twice@example.test"), join("twice@example.test")]);
-check("two at once: same reply both times", both.every((r) => JSON.stringify(r.body) === JSON.stringify(fresh.body)));
+check("two at once: same reply both times", both.every((r) => sameReply(r, fresh)));
 check("two at once: one 'already on the list' email", mailTo("twice@example.test").length === 1);
 
 // After unsubscribing, joining again puts them back on, with the normal email
 await db.doc("waitlist/gone@example.test").set({ email: "gone@example.test", unsubscribeToken: "t2", unsubscribed: true, createdAt: Timestamp.now() });
 const back = await join("gone@example.test");
-check("rejoin after unsubscribing: same reply", JSON.stringify(back.body) === JSON.stringify(fresh.body));
+check("rejoin after unsubscribing: same reply", sameReply(back, fresh));
 check("rejoin: back on the list", await db.doc("waitlist/gone@example.test").get().then((d) => !d.data()?.unsubscribed));
 
 // The bot field: same reply, nothing saved or sent
 const bot = await join("bot@example.test", { website: "http://spam" });
-check("bot field filled: same reply", JSON.stringify(bot.body) === JSON.stringify(fresh.body));
+check("bot field filled: same reply", sameReply(bot, fresh));
 check("bot field filled: nothing saved or sent", !(await db.doc("waitlist/bot@example.test").get()).exists && mailTo("bot@example.test").length === 0);
 
 // Where the signup came from (sent by the form from the landing page)

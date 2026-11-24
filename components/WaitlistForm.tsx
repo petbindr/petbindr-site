@@ -84,7 +84,7 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
           <div className={`mt-4 pt-4 border-t font-normal ${dark ? "border-[#A8E6C455]" : "border-[#2E7D5640]"}`}>
             <p className={`font-semibold ${dark ? "text-white" : "text-[var(--bindr-navy)]"}`}>Know someone who&rsquo;d use this?</p>
             <p className={`mt-1 text-sm ${dark ? "text-[var(--soft-teal)]" : "text-[var(--slate-gray)]"}`}>
-              Send them your link. It&rsquo;s also in your confirmation email.
+              Send them this link to PetBindr. Your email has your personal link too.
             </p>
             <p className={`mt-2 text-sm break-all select-all ${dark ? "text-white" : "text-[var(--bindr-navy)]"}`}>{shareUrl}</p>
             <div className="mt-3 flex flex-wrap gap-2">

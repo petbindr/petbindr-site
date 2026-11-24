@@ -33,10 +33,13 @@ const FOUNDING_MEMBER_LIMIT = 1000;
 // address was already on the list: "You're already on the list" (and the
 // founding-member flag, which only new signups got) let anyone check whether
 // someone's email is signed up (2026-11-13). The person finds out by email.
-// The reply also carries the address's share link (?ref=<code>) for the success
-// page. An address already on the list gets its own link back too, so the reply
-// still can't tell the two apart (anyone typing the address could at most share
-// a link that credits its owner; counts are never shown).
+// The reply also carries a share link (?ref=<code>) for the success page, the
+// same shape every time. Only a brand-new signup gets its own code back; every
+// other case (already on the list, rejoining, two submits at once, the bot field)
+// gets a random code of the same format that is never saved. Returning an existing
+// entry's real code would let anyone who knows a publicly shared link type an
+// email and check whether that link (and so a place on the list) is theirs.
+// Those people get their real link by email instead. 2026-11-24.
 const reply = (code: string) =>
   NextResponse.json({ success: true, shareUrl: referralShareUrl(code) }, { status: 200 });
 // An address already on the list gets a short "you're already on it" email,
@@ -106,6 +109,7 @@ export async function POST(req: NextRequest) {
   let unsubscribeToken: string;
   let isFoundingMember: boolean;
   let referralCode: string;
+  let isNewSignup = false;
   try {
     if (!(await allowedFromIp(db, req))) {
       return NextResponse.json({ error: "Too many signups from here. Please try again in an hour." }, { status: 429 });
@@ -119,7 +123,7 @@ export async function POST(req: NextRequest) {
       referralCode = await ensureReferralCode(db, docRef);
       if (!prev.unsubscribed) {
         await noticeAlreadyOnList(docRef, email, prev, referralCode);
-        return reply(referralCode);
+        return reply(newReferralCode()); // not their real code (see reply)
       }
       // Signed up again after unsubscribing: back on the list (they said "already on
       // the list" but stayed unsubscribed, so they'd never hear about launch).
@@ -170,9 +174,10 @@ export async function POST(req: NextRequest) {
       });
       if (!result.created) {
         // Another submit of the same address got there first; it sends the email
-        return reply(result.code ?? (await ensureReferralCode(db, docRef)));
+        return reply(newReferralCode()); // not the entry's real code (see reply)
       }
       referralCode = result.code as string; // set when created
+      isNewSignup = true;
     }
   } catch (err) {
     logError("Waitlist save error", err);
@@ -289,7 +294,8 @@ Don't want these emails? Unsubscribe: ${unsubscribeUrl}${mailingAddressLine() ? 
     logError("Resend error", emailErr);
   }
 
-  return reply(referralCode);
+  // Rejoining after unsubscribing: their real link is in the email, not the reply
+  return reply(isNewSignup ? referralCode : newReferralCode());
 }
 
 /** A code no waitlist entry has yet (8 characters from 31: a clash is very unlikely, but checked). */
