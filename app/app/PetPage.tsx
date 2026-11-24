@@ -254,7 +254,7 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
       <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
         {sitter
           ? `You see what ${sitter.ownerName || "the owner"} chose to share. Something missing? Ask them to change what you can see.`
-          : "For everything else (vaccines, allergies, photos), use the PetBindr iPhone app."}
+          : "For everything else (vaccines, allergies, photos), use the PetBindr iPhone app or ask the owner to change it."}
       </p>
     </div>
   );

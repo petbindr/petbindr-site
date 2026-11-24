@@ -894,7 +894,7 @@ function TransferOffers({ user }: { user: User }) {
             {o.note && <p className="font-inter italic mt-2 text-[var(--charcoal)]">“{o.note}”</p>}
             {o.keepAsCoOwner && (
               <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--slate-gray)" }}>
-                {o.fromName} will stay on as a co-owner. You can remove them in the iPhone app.
+                {o.fromName} will stay on as a co-owner. If you'd rather not share, ask them or email hello@petbindr.com.
               </p>
             )}
             {error && <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--error-red)" }} role="alert">{error}</p>}

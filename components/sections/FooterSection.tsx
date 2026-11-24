@@ -45,6 +45,9 @@ export default function FooterSection() {
           <Link href="/terms" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
             Terms
           </Link>
+          <a href="/app?utm_source=home&utm_medium=footer" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+            Sign in
+          </a>
           <Link href="/faq" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
             Help
           </Link>

@@ -273,7 +273,7 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
   return (
     <div className="space-y-6">
       <header className="text-center space-y-3">
-        <a href="https://www.petbindr.com" className="inline-block" aria-label="PetBindr">
+        <a href="https://www.petbindr.com/?utm_source=sitterlink&utm_medium=sitter-page-logo" className="inline-block" aria-label="PetBindr">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="PetBindr" width={120} height={36} style={{ height: "auto", width: 120 }} />
         </a>
@@ -1007,7 +1007,7 @@ function Message({ heading, text, children }: { heading: string; text: string; c
       <p className="font-inter text-[var(--charcoal)] leading-relaxed" style={{ fontSize: "1rem" }}>{text}</p>
       {children}
       <p className="pt-6">
-        <a href="https://www.petbindr.com" className="font-inter text-[var(--slate-gray)] underline" style={{ fontSize: "0.875rem" }}>
+        <a href="https://www.petbindr.com/?utm_source=sitterlink&utm_medium=sitter-page-footer" className="font-inter text-[var(--slate-gray)] underline" style={{ fontSize: "0.875rem" }}>
           What is PetBindr?
         </a>
       </p>

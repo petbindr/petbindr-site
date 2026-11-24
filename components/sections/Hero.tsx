@@ -46,6 +46,19 @@ export default function Hero() {
           <FadeIn delay={0.2}>
             <WaitlistForm variant="light" />
           </FadeIn>
+
+          <FadeIn delay={0.3}>
+            <p className="font-inter text-[var(--slate-gray)] mt-6" style={{ fontSize: "15px", lineHeight: "1.6" }}>
+              Already have an account, or on Android?{" "}
+              <a
+                href="/app?utm_source=home&utm_medium=hero"
+                className="underline text-[var(--bindr-navy)]"
+              >
+                Sign in at petbindr.com/app
+              </a>
+              . It works in any phone&rsquo;s browser.
+            </p>
+          </FadeIn>
         </div>
       </div>
     </section>
