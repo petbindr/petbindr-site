@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { track } from "@vercel/analytics";
 import { glucoseUnitFor, glucoseText, parseGlucose, unitLabel, type GlucoseUnit } from "./glucose";
 
 // Cloud Functions base (override for local testing against the emulator)
@@ -229,7 +230,7 @@ export default function SitterLinkView() {
             <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
               Keep their feeding, meds and vet info in one place, and hand it off to a sitter the same way.
             </p>
-            <a href={NEW_OWNER_LINK("ended-page")} className="btn-coral inline-block" style={{ padding: "12px 20px", textDecoration: "none" }}>
+            <a href={NEW_OWNER_LINK("ended-page")} onClick={() => track("sitter_page_cta", { placement: "ended-page" })} className="btn-coral inline-block" style={{ padding: "12px 20px", textDecoration: "none" }}>
               Make a free binder for your pet
             </a>
           </div>
@@ -243,7 +244,7 @@ export default function SitterLinkView() {
       {loadError && (
         // A refresh failed: what's shown may be out of date (it used to say nothing)
         <p className="font-inter text-center rounded-xl p-2 mb-3" role="status"
-          style={{ fontSize: "0.875rem", background: "#FFF4E5", color: "#7A4A00" }}>
+          style={{ fontSize: "0.875rem", background: "var(--tone-warn-bg, #FFF4E5)", color: "var(--tone-warn-text, #7A4A00)" }}>
           Couldn&rsquo;t refresh{lastLoaded ? `, showing what was here at ${new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(lastLoaded)}` : ""}.{" "}
           <button className="underline" onClick={() => token && load(token)}>Try again</button>
         </p>
@@ -387,7 +388,7 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
           <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "0.875rem" }}>
             Keep their feeding, meds and vet info in one place, and hand it off the way {owner} just did.
           </p>
-          <a href={NEW_OWNER_LINK("sitter-page")} className="btn-coral inline-block" style={{ padding: "12px 20px", textDecoration: "none" }}>
+          <a href={NEW_OWNER_LINK("sitter-page")} onClick={() => track("sitter_page_cta", { placement: "sitter-page" })} className="btn-coral inline-block" style={{ padding: "12px 20px", textDecoration: "none" }}>
             Make a free binder for your pet
           </a>
         </div>
@@ -489,7 +490,7 @@ function SendUpdateCard({ data, token, owner }: { data: Extract<LinkData, { stat
                   style={{
                     fontSize: "0.9375rem", padding: "6px 14px", minHeight: 36,
                     border: `1.5px solid ${on ? "var(--bindr-navy)" : "var(--mist-gray)"}`,
-                    background: on ? "var(--bindr-navy)" : "white", color: on ? "white" : "var(--charcoal)",
+                    background: on ? "var(--navy-fill)" : "var(--input-bg, white)", color: on ? "#fff" : "var(--charcoal)",
                   }}
                 >
                   {on ? "✓ " : ""}{p.name}
@@ -670,7 +671,7 @@ function TodayRow({ item, pet, tz, token, onChanged, glucoseUnit }: {
   const doneAmount: "all" | "some" | "none" = done?.amount || "all";
   // ✓ ate it all (and every medication), ◐ ate some, ✕ didn't eat
   // Darker than --alert-amber so the text is readable on white
-  const doneColor = isFeeding && doneAmount !== "all" ? "#9C5F0E" : "var(--success-green)";
+  const doneColor = isFeeding && doneAmount !== "all" ? "var(--amber-text, #9C5F0E)" : "var(--success-green)";
   const doneMark = !isFeeding || doneAmount === "all" ? "✓" : doneAmount === "some" ? "◐" : "✕";
   // Before checking off: the two that aren't plain Done. After: the other two.
   const choices = (done ? (["all", "some", "none"] as const).filter((a) => a !== doneAmount) : (["some", "none"] as const));
@@ -741,7 +742,7 @@ function TodayRow({ item, pet, tz, token, onChanged, glucoseUnit }: {
         {!done && (
           <button
             className="btn-coral shrink-0"
-            style={{ padding: "10px 16px", minWidth: "5.75rem", ...(confirming ? { backgroundColor: "var(--bindr-navy)" } : {}) }}
+            style={{ padding: "10px 16px", minWidth: "5.75rem", ...(confirming ? { backgroundColor: "var(--navy-fill)" } : {}) }}
             onClick={markDone}
             disabled={saving || reading.kind === "invalid"}
             aria-label={isFeeding ? `${item.title}: done, ate it all` : undefined}
@@ -921,7 +922,7 @@ function Card({ title, tone, children }: { title?: string; tone?: "alert" | "not
     <section
       className="rounded-2xl p-5 md:p-6"
       style={{
-        background: tone === "alert" ? "#FDECEA" : tone === "note" ? "#E8F4F3" : "var(--pure-white)",
+        background: tone === "alert" ? "var(--tone-alert-bg, #FDECEA)" : tone === "note" ? "var(--tone-note-bg, #E8F4F3)" : "var(--pure-white)",
         border: "1px solid var(--mist-gray)",
       }}
     >
@@ -968,7 +969,7 @@ function ContactRow({ title, subtitle, phone }: { title: string; subtitle?: stri
         <a
           href={telHref(phone)}
           className="shrink-0 rounded-full px-4 py-2 font-semibold"
-          style={{ background: "var(--bindr-navy)", color: "#fff", fontSize: "0.875rem", textDecoration: "none" }}
+          style={{ background: "var(--navy-fill)", color: "#fff", fontSize: "0.875rem", textDecoration: "none" }}
         >
           Call
         </a>

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function SitterLinkPage() {
   return (
-    <main style={{ background: "var(--warm-cream)", minHeight: "100vh" }} className="follows-text-size px-4 py-8 md:py-12">
+    <main style={{ background: "var(--warm-cream)", minHeight: "100vh" }} className="theme-auto follows-text-size px-4 py-8 md:py-12">
       <div className="max-w-xl mx-auto">
         <SitterLinkView />
       </div>

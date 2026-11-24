@@ -17,6 +17,44 @@
   --success-green: #2E7D56; /* was #4FAE7C (2.7:1 on white); now 5.0:1 */
   --alert-amber:   #E5A547;
   --error-red:     #D14545;
+  /* Solid navy fills (selected chips, confirm buttons); white text sits on them */
+  --navy-fill:     #1F3C5F;
+}
+
+/* ─── Dark mode: the sitter page (/s) and /app only (2026-11-24) ─────────────
+   Those two are opened on phones at night (a late-evening dose check); the
+   marketing pages stay light. Pages opt in with the .theme-auto class on <main>;
+   the variables are redefined there, so components keep using var(--...).
+   Hard-coded tints were turned into --tone-* variables with the old values as
+   fallbacks. Text sizes on these pages are unchanged. */
+:root {
+  --input-bg: #FFFFFF;
+}
+@media (prefers-color-scheme: dark) {
+  .theme-auto {
+    color-scheme: dark;
+    --bindr-navy:    #A9C6EA; /* headings and links: 8:1 on --warm-cream */
+    --bindr-teal:    #74C4CD;
+    --soft-teal:     #2C4A52;
+    --warm-cream:    #10151D;
+    --pure-white:    #1B2330; /* cards */
+    --charcoal:      #E8ECEF;
+    --slate-gray:    #A3AEBC; /* 7:1 on cards */
+    --mist-gray:     #333D4C;
+    --success-green: #6FD09C;
+    --error-red:     #F08A8A;
+    --navy-fill:     #2F5C93;
+    --input-bg:      #232D3C;
+    --tone-alert-bg: #3A2224;
+    --tone-note-bg:  #1D3236;
+    --tone-warn-bg:  #392D17;
+    --tone-warn-text:#F2C57C;
+    --amber-text:    #F2C57C;
+  }
+  body:has(.theme-auto) { background-color: #10151D; }
+  .theme-auto .bg-white { background-color: var(--pure-white); }
+  .theme-auto .shadow-sm { box-shadow: none; }
+  .theme-auto input::placeholder, .theme-auto textarea::placeholder { color: var(--slate-gray); }
 }
 
 /* ─── Base ────────────────────────────────────────────────────────────────── */

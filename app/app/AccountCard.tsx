@@ -75,7 +75,7 @@ export default function AccountCard({ user }: { user: User }) {
         )}
       </div>
       {confirming && (
-        <form onSubmit={deleteAccount} className="mt-4 space-y-3 rounded-xl p-4" style={{ background: "#FDECEA" }}>
+        <form onSubmit={deleteAccount} className="mt-4 space-y-3 rounded-xl p-4" style={{ background: "var(--tone-alert-bg, #FDECEA)" }}>
           <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "15px" }}>
             This deletes your account, your pets, their records and photos, and your home information, and
             ends access for everyone you shared with. A pet you co-own with someone stays with them.

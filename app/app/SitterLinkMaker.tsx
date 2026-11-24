@@ -133,7 +133,7 @@ export default function SitterLinkMaker({ uid, pets }: { uid: string; pets: PetL
   }
 
   const input = "w-full rounded-lg px-3 py-2 font-inter text-[var(--charcoal)]";
-  const inputStyle = { border: "1px solid var(--mist-gray)", background: "white", fontSize: "16px" };
+  const inputStyle = { border: "1px solid var(--mist-gray)", background: "var(--input-bg, white)", fontSize: "16px" };
   const label = "block font-inter text-[var(--slate-gray)] mb-1";
 
   return (
@@ -144,7 +144,7 @@ export default function SitterLinkMaker({ uid, pets }: { uid: string; pets: PetL
       </p>
 
       {made && (
-        <div className="rounded-xl p-4 mb-3 font-inter" style={{ background: "#EEF8F9", border: "1px solid var(--bindr-teal)" }}>
+        <div className="rounded-xl p-4 mb-3 font-inter" style={{ background: "var(--tone-note-bg, #EEF8F9)", border: "1px solid var(--bindr-teal)" }}>
           <p className="font-semibold text-[var(--charcoal)] mb-1">Link ready. Send it to {name.trim().split(/\s+/)[0]}:</p>
           <p className="text-[var(--charcoal)] whitespace-pre-line break-words" style={{ fontSize: "15px" }}>{made.message}</p>
           <div className="flex flex-wrap gap-2 mt-3">

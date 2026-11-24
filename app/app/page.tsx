@@ -21,7 +21,7 @@ const footerLink = "font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-
 
 export default function AppPage() {
   return (
-    <main style={{ background: "var(--warm-cream)", minHeight: "100vh" }} className="px-4 pb-8 flex flex-col">
+    <main style={{ background: "var(--warm-cream)", minHeight: "100vh" }} className="theme-auto px-4 pb-8 flex flex-col">
       <nav className="max-w-xl w-full mx-auto py-5 md:py-6 print:hidden">
         <Link href="/" aria-label="PetBindr home">
           <Image src="/logo.png" alt="PetBindr" width={320} height={103} priority className="w-[120px] md:w-[140px] h-auto" />

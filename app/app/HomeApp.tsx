@@ -9,6 +9,7 @@
 // alerts and the widget see them like any other.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { track } from "@vercel/analytics";
 import {
   onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   updateProfile, signOut, sendPasswordResetEmail as firebaseResetEmail, type User,
@@ -98,6 +99,7 @@ function SignedOut() {
         if (!displayName) throw new Error("Add your name, so people know who checked things off.");
         const result = await createUserWithEmailAndPassword(auth, cleanEmail, password);
         await updateProfile(result.user, { displayName });
+        track("app_signup");
         // The same profile the app makes at sign-up (UserProfile.swift), plus
         // where the sign-up came from (the app ignores fields it doesn't know)
         const source = arrivalSource();
@@ -666,7 +668,7 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
 
   const done = task.done;
   const amount = done?.amount || "all";
-  const doneColor = isFeeding && amount !== "all" ? "#9C5F0E" : "var(--success-green)";
+  const doneColor = isFeeding && amount !== "all" ? "var(--amber-text, #9C5F0E)" : "var(--success-green)";
   const doneMark = !isFeeding || amount === "all" ? "✓" : amount === "some" ? "◐" : "✕";
   const choices = (done ? (["all", "some", "none"] as const).filter((a) => a !== amount) : (["some", "none"] as const));
 
@@ -690,7 +692,7 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
             </p>
           )}
           {done?.pending && (
-            <p className="font-inter" style={{ fontSize: "14px", color: "#9C5F0E" }} role="status">
+            <p className="font-inter" style={{ fontSize: "14px", color: "var(--amber-text, #9C5F0E)" }} role="status">
               Not sent yet. It&rsquo;ll send when you&rsquo;re back online; keep this page open until then.
             </p>
           )}
@@ -711,7 +713,7 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
         {!done && (
           <button
             className="btn-coral shrink-0"
-            style={{ padding: "10px 16px", minWidth: 92, ...(confirming ? { backgroundColor: "var(--bindr-navy)" } : {}) }}
+            style={{ padding: "10px 16px", minWidth: 92, ...(confirming ? { backgroundColor: "var(--navy-fill)" } : {}) }}
             onClick={() => checkOff()}
             disabled={busy}
           >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@vercel/analytics";
 import { signupSource } from "@/lib/signupSource";
 
 interface WaitlistFormProps {
@@ -33,6 +34,7 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
         // page can't be used to check someone's email); the email says which
         setStatus("success");
         setEmail("");
+        track("waitlist_signup"); // no email or other personal data in the event
       } else {
         setStatus("error");
         setErrorMsg(data.error || "Something went wrong. Please try again.");

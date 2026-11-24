@@ -105,7 +105,7 @@ export default function AddToRecord({ petId, petName, uid, regularVet, lastUnit,
   }
 
   const input = "w-full rounded-lg px-3 py-2 font-inter text-[var(--charcoal)]";
-  const inputStyle = { border: "1px solid var(--mist-gray)", background: "white", fontSize: "16px" };
+  const inputStyle = { border: "1px solid var(--mist-gray)", background: "var(--input-bg, white)", fontSize: "16px" };
   const label = "block font-inter text-[var(--slate-gray)] mb-1";
 
   return (

@@ -19,7 +19,7 @@ import {
 import { toDate, fmtDay, type HealthRecord } from "./health";
 
 const input = "w-full rounded-lg px-3 py-2 font-inter text-[var(--charcoal)]";
-const inputStyle = { border: "1px solid var(--mist-gray)", background: "white", fontSize: "16px" };
+const inputStyle = { border: "1px solid var(--mist-gray)", background: "var(--input-bg, white)", fontSize: "16px" };
 const labelCls = "block font-inter text-[var(--slate-gray)] mb-1";
 const SAVE_ERROR = "Couldn't save that. Check your connection and try again.";
 

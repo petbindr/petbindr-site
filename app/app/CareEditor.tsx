@@ -14,7 +14,7 @@ import {
 } from "./care";
 
 const input = "w-full rounded-lg px-3 py-2 font-inter text-[var(--charcoal)]";
-const inputStyle = { border: "1px solid var(--mist-gray)", background: "white", fontSize: "16px" };
+const inputStyle = { border: "1px solid var(--mist-gray)", background: "var(--input-bg, white)", fontSize: "16px" };
 const label = "block font-inter text-[var(--slate-gray)] mb-1";
 const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -127,7 +127,7 @@ export function FeedingEditor({ petId, schedule, onDone }: { petId: string; sche
                 onChange={(e) => update(i, { every: Number(e.target.value) })}>
                 <option value={1}>Every day</option>
                 <option value={2}>Every other day</option>
-                {[3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>Every {n} days</option>)}
+                {Array.from({ length: 28 }, (_, i) => i + 3).map((n) => <option key={n} value={n}>Every {n} days</option>)}
                 <option value={0}>On chosen days</option>
               </select>
               {r.every >= 2 && (
@@ -143,7 +143,7 @@ export function FeedingEditor({ petId, schedule, onDone }: { petId: string; sche
                   return (
                     <button key={d} type="button" aria-pressed={on} aria-label={DAY_NAMES[d]}
                       className="font-inter rounded-full" style={{ width: "44px", height: "44px", fontWeight: 600,
-                        background: on ? "var(--bindr-navy)" : "var(--mist-gray)", color: on ? "white" : "var(--charcoal)" }}
+                        background: on ? "var(--navy-fill)" : "var(--mist-gray)", color: on ? "#fff" : "var(--charcoal)" }}
                       onClick={() => update(i, { weekdays: on ? r.weekdays.filter((x) => x !== d) : [...r.weekdays, d] })}>
                       {DAY_LETTERS[d]}
                     </button>

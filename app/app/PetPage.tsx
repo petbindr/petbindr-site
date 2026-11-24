@@ -352,7 +352,7 @@ function fmtTime(d: Date | null): string { return d ? d.toLocaleTimeString([], {
 
 const STATUS: Record<string, { text: (d: Date | null) => string; color: string }> = {
   pastDue: { text: (d) => `Past due (${fmtDay(d)})`, color: "var(--error-red)" },
-  dueSoon: { text: (d) => `Due ${fmtDay(d)}`, color: "#9C5F0E" },
+  dueSoon: { text: (d) => `Due ${fmtDay(d)}`, color: "var(--amber-text, #9C5F0E)" },
   upToDate: { text: (d) => `Up to date, next ${fmtDay(d)}`, color: "var(--success-green)" },
   noDate: { text: () => "No due date", color: "var(--slate-gray)" },
 };
@@ -397,7 +397,7 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
               <span className="text-[var(--slate-gray)]"> on {fmtDay(weight.latest.date)}</span>
             </p>
             {weight.change && (
-              <p style={{ fontSize: "15px", color: Math.abs(weight.change.percent) >= 10 ? "#9C5F0E" : "var(--charcoal)" }}>
+              <p style={{ fontSize: "15px", color: Math.abs(weight.change.percent) >= 10 ? "var(--amber-text, #9C5F0E)" : "var(--charcoal)" }}>
                 {weight.change.amount === 0 ? "No change" : `${weight.change.amount > 0 ? "+" : "−"}${fmtWeight(Math.abs(weight.change.amount), weight.latest.unit)} (${Math.abs(weight.change.percent).toFixed(0)}%)`} since {fmtDay(weight.change.since)}
               </p>
             )}
@@ -572,7 +572,7 @@ function Labeled({ label, value }: { label: string; value: string }) {
 function Card({ title, tone, children }: { title: string; tone?: "alert"; children: React.ReactNode }) {
   return (
     <section className="rounded-2xl p-5 md:p-6"
-      style={{ background: tone === "alert" ? "#FDECEA" : "var(--pure-white)", border: "1px solid var(--mist-gray)" }}>
+      style={{ background: tone === "alert" ? "var(--tone-alert-bg, #FDECEA)" : "var(--pure-white)", border: "1px solid var(--mist-gray)" }}>
       <h2 className="font-fraunces font-semibold mb-3" style={{ fontSize: "20px", color: tone === "alert" ? "var(--error-red)" : "var(--bindr-navy)" }}>{title}</h2>
       {children}
     </section>
