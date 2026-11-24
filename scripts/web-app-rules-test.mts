@@ -11,7 +11,7 @@ import {
   getFirestore, connectFirestoreEmulator, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField,
   collection, query, where, serverTimestamp, orderBy, limit,
 } from "firebase/firestore";
-import { feedingLogDoc, medicationLogDoc, tasksFor } from "../app/app/today.ts";
+import { feedingLogDoc, medicationLogDoc, doseLogId, tasksFor } from "../app/app/today.ts";
 import {
   healthRecordDoc, dayFromInput, vaccineDoc, vaccineChanges, allergyDoc, allergyChanges, reminderDoc, reminderChanges,
   nextOccurrence, nextReminderId,
@@ -199,6 +199,15 @@ const dose = medicationLogDoc("rex", "m1", "Apoquel", "5 mg", due, uid, now, "WE
 await setDoc(doc(db, `pets/rex/medicationLogs/${dose.id}`), dose.data);
 check("dose logged", (await getDoc(doc(db, `pets/rex/medicationLogs/${dose.id}`))).data()?.ownerId === uid);
 await denied("can't log a dose as someone else", setDoc(doc(db, "pets/rex/medicationLogs/FAKE"), medicationLogDoc("rex", "m1", "Apoquel", "5 mg", due, "owner", now, "FAKE").data));
+check("dose saved with via web", (await getDoc(doc(db, `pets/rex/medicationLogs/${dose.id}`))).data()?.via === "web");
+check("meal saved with via web", feed.data.via === "web");
+// One ID per dose, the same as the app's: checking the same dose off twice is refused
+const slot = medicationLogDoc("rex", "m1", "Apoquel", "5 mg", due, uid, now, doseLogId("m1", due));
+check("dose ID is the schedule and its time", slot.id === `m1-${Math.floor(due.getTime() / 1000)}`);
+await setDoc(doc(db, `pets/rex/medicationLogs/${slot.id}`), slot.data);
+await denied("the same dose again (same ID) is refused", setDoc(doc(db, `pets/rex/medicationLogs/${slot.id}`),
+  medicationLogDoc("rex", "m1", "Apoquel", "5 mg", due, uid, new Date(now.getTime() + 5000), slot.id).data));
+await deleteDoc(doc(db, `pets/rex/medicationLogs/${slot.id}`));
 await deleteDoc(doc(db, `pets/rex/medicationLogs/${dose.id}`));
 check("dose undone", !(await getDoc(doc(db, `pets/rex/medicationLogs/${dose.id}`))).exists());
 

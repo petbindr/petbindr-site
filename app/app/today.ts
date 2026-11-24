@@ -215,8 +215,17 @@ export function feedingLogDoc(petId: string, itemId: string, uid: string, name: 
     data: {
       id, petId, scheduleItemId: itemId, completedAt: now, completedBy: uid, completedByName: name, date: day,
       ...(amount !== "all" ? { amount } : {}),
+      // Where it was checked off (firestore.rules validVia; weekly metrics)
+      via: "web",
     },
   };
+}
+
+/** One ID per scheduled dose, the same as the app's (MedicationLog.slotId): the
+ *  same dose checked off in the app and here can't make two logs (the second is
+ *  refused as an overwrite). */
+export function doseLogId(scheduleId: string, due: Date): string {
+  return `${scheduleId}-${Math.floor(due.getTime() / 1000)}`;
 }
 
 /** pets/{petId}/medicationLogs/{id}: the app keeps who gave it in "ownerId" */
@@ -225,7 +234,7 @@ export function medicationLogDoc(petId: string, scheduleId: string, name: string
     id,
     data: {
       id, ownerId: uid, petId, scheduleId, medicationName: name, dosage,
-      scheduledTime: due, actualTime: now, wasGiven: true, notes: "",
+      scheduledTime: due, actualTime: now, wasGiven: true, notes: "", via: "web",
     },
   };
 }

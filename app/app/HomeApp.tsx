@@ -29,7 +29,7 @@ import AccountCard from "./AccountCard";
 import { SitInvites, MyClients, type PetView } from "./SitterMode";
 import { toSit, isLive, isUpcoming, clientsFrom, sitsByPet, may, doneToday, type Sit, type ShareDoc } from "./sitter";
 import {
-  tasksFor, startOfDay, feedingLogDoc, medicationLogDoc,
+  tasksFor, startOfDay, feedingLogDoc, medicationLogDoc, doseLogId,
   type PetDay, type TodayTask, type FeedingAmount, type MedicationSchedule,
   type FeedingLog, type MedicationLog, type FeedingSchedule,
 } from "./today";
@@ -650,7 +650,7 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
         const log = feedingLogDoc(task.petId, task.itemId, uid, myName, new Date(), amount, task.time);
         await setDoc(doc(db, `${base}/feedingLogs/${log.id}`), log.data);
       } else {
-        const log = medicationLogDoc(task.petId, task.itemId, task.title, task.detail, task.time, uid, new Date(), crypto.randomUUID().toUpperCase());
+        const log = medicationLogDoc(task.petId, task.itemId, task.title, task.detail, task.time, uid, new Date(), doseLogId(task.itemId, task.time));
         await setDoc(doc(db, `${base}/medicationLogs/${log.id}`), log.data);
       }
     });
