@@ -12,7 +12,10 @@ import {
   collection, query, where, serverTimestamp, orderBy, limit,
 } from "firebase/firestore";
 import { feedingLogDoc, medicationLogDoc, tasksFor } from "../app/app/today.ts";
-import { healthRecordDoc, dayFromInput } from "../app/app/records.ts";
+import {
+  healthRecordDoc, dayFromInput, vaccineDoc, vaccineChanges, allergyDoc, allergyChanges, reminderDoc, reminderChanges,
+  nextOccurrence, nextReminderId,
+} from "../app/app/records.ts";
 import { dayAt, linkMessage } from "../app/app/links.ts";
 import { feedingChanges, medicationChanges, newMedication, timeAt } from "../app/app/care.ts";
 
@@ -95,6 +98,70 @@ check("co-owner edits the pet's notes", (await getDoc(doc(db, "pets/rex"))).data
 await denied("co-owner can't make themselves the owner", updateDoc(doc(db, "pets/rex"), { ownerId: uid }));
 const x = healthRecordDoc("other", uid, "Weight", day, { title: "Weight", weightData: { weight: 3, unit: "kg" } });
 await denied("can't add to a pet she doesn't co-own", setDoc(doc(db, `pets/other/healthRecords/${x.id}`), x.data));
+
+// Vaccines, allergies and reminders (app/app/HealthEditors.tsx; 2026-11-24, review #14)
+const vxDue = new Date(2027, 10, 1, 12);
+const vx = vaccineDoc("rex", uid, { vaccineName: " Rabies ", given: day, nextDue: vxDue, administeredBy: "", notes: "" });
+await setDoc(doc(db, `pets/rex/healthRecords/${vx.id}`), vx.data);
+const savedVx = (await getDoc(doc(db, `pets/rex/healthRecords/${vx.id}`))).data();
+check("co-owner adds a vaccine in the app's shape", savedVx?.type === "Vaccination" && savedVx?.title === "Rabies" &&
+  savedVx?.vaccinationData?.vaccineName === "Rabies" && savedVx?.vaccinationData?.nextDueDate?.toDate().getTime() === vxDue.getTime() &&
+  !("administeredBy" in (savedVx?.vaccinationData || {})) && ["id", "petId", "date", "notes", "source", "createdAt", "createdBy", "attachments"].every((k) => k in (savedVx || {})));
+// The app added a lot number meanwhile; the web edit keeps it
+await admin.doc(`pets/rex/healthRecords/${vx.id}`).update({ "vaccinationData.lotNumber": "L123", title: "Annual Rabies Booster" });
+const vxOpened = { vaccineName: "Rabies", given: day, nextDue: vxDue, administeredBy: "", notes: "" };
+const vxEdit = vaccineChanges(vxOpened, { ...vxOpened, vaccineName: "Rabies (3 year)", nextDue: null, administeredBy: "Vet Co" }, "Annual Rabies Booster");
+await updateDoc(doc(db, `pets/rex/healthRecords/${vx.id}`), vxEdit);
+const editedVx = (await getDoc(doc(db, `pets/rex/healthRecords/${vx.id}`))).data();
+check("vaccine edit saves only what changed (lot number and a typed title kept, due date cleared)",
+  editedVx?.vaccinationData?.vaccineName === "Rabies (3 year)" && editedVx?.vaccinationData?.lotNumber === "L123" &&
+  editedVx?.title === "Annual Rabies Booster" && editedVx?.vaccinationData?.nextDueDate === null && editedVx?.vaccinationData?.administeredBy === "Vet Co");
+check("vaccine with no changes writes nothing", Object.keys(vaccineChanges(vxOpened, vxOpened)).length === 0);
+await deleteDoc(doc(db, `pets/rex/healthRecords/${vx.id}`));
+check("co-owner deletes a vaccine", !(await getDoc(doc(db, `pets/rex/healthRecords/${vx.id}`))).exists());
+const vxOther = vaccineDoc("other", uid, { vaccineName: "Rabies", given: day, nextDue: null, administeredBy: "", notes: "" });
+await denied("can't add a vaccine to a pet she doesn't co-own", setDoc(doc(db, `pets/other/healthRecords/${vxOther.id}`), vxOther.data));
+
+const al = allergyDoc("rex", { allergenName: " Chicken ", category: "Food", severity: "Severe", symptoms: "Itching", notes: "", isActive: true });
+await setDoc(doc(db, `pets/rex/allergies/${al.id}`), al.data);
+const savedAl = (await getDoc(doc(db, `pets/rex/allergies/${al.id}`))).data();
+check("co-owner adds an allergy with every field the app needs",
+  ["id", "petId", "allergenName", "category", "severity", "symptoms", "notes", "isActive"].every((k) => k in (savedAl || {})) &&
+  savedAl?.allergenName === "Chicken" && savedAl?.severity === "Severe" && savedAl?.category === "Food");
+check("unknown allergy category/severity fall back to the app's", allergyDoc("rex", { allergenName: "x", category: "Bogus", severity: "Bad", symptoms: "", notes: "", isActive: true }).data.category === "Other");
+const alOpened = { allergenName: "Chicken", category: "Food", severity: "Severe", symptoms: "Itching", notes: "", isActive: true };
+const alEdit = allergyChanges(alOpened, { ...alOpened, isActive: false });
+check("allergy edit is just the one field", JSON.stringify(alEdit) === JSON.stringify({ isActive: false }));
+await updateDoc(doc(db, `pets/rex/allergies/${al.id}`), alEdit);
+check("co-owner marks an allergy inactive", (await getDoc(doc(db, `pets/rex/allergies/${al.id}`))).data()?.isActive === false);
+await deleteDoc(doc(db, `pets/rex/allergies/${al.id}`));
+check("co-owner deletes an allergy", !(await getDoc(doc(db, `pets/rex/allergies/${al.id}`))).exists());
+await denied("can't add an allergy to a pet she doesn't co-own", setDoc(doc(db, `pets/other/allergies/${al.id}`), { ...al.data, petId: "other" }));
+
+const rmWhen = new Date(2026, 11, 1, 9, 0);
+const rm = reminderDoc(uid, "rex", { title: "Flea dose", date: rmWhen, category: "Medication", notes: "", repeatDays: 30 });
+await setDoc(doc(db, `customReminders/${rm.id}`), rm.data);
+const savedRm = (await getDoc(doc(db, `customReminders/${rm.id}`))).data();
+check("co-owner adds a repeating reminder in the app's shape",
+  ["id", "ownerId", "petId", "title", "date", "category", "notes", "isCompleted", "isRecurring"].every((k) => k in (savedRm || {})) &&
+  savedRm?.ownerId === uid && savedRm?.isRecurring === true && savedRm?.recurringFrequencyDays === 30 && savedRm?.isCompleted === false);
+const rmOpened = { title: "Flea dose", date: rmWhen, category: "Medication", notes: "", repeatDays: 30 };
+await updateDoc(doc(db, `customReminders/${rm.id}`), reminderChanges(rmOpened, { ...rmOpened, repeatDays: null }));
+const noRepeat = (await getDoc(doc(db, `customReminders/${rm.id}`))).data();
+check("turning repeat off clears both fields", noRepeat?.isRecurring === false && noRepeat?.recurringFrequencyDays === null);
+check("her reminders list (the app's query) finds it",
+  (await getDocs(query(collection(db, "customReminders"), where("ownerId", "==", uid)))).docs.some((d) => d.id === rm.id));
+await denied("can't make a reminder for someone else", setDoc(doc(db, "customReminders/someone"), { ...rm.data, id: "someone", ownerId: "owner" }));
+await admin.doc("customReminders/owners").set({ id: "owners", ownerId: "owner", petId: "rex", title: "Mine", date: rmWhen, category: "Custom", notes: "", isCompleted: false, isRecurring: false });
+await denied("can't read the owner's own reminders", getDoc(doc(db, "customReminders/owners")));
+await deleteDoc(doc(db, `customReminders/${rm.id}`));
+check("co-owner deletes her reminder", !(await admin.doc(`customReminders/${rm.id}`).get()).exists);
+// Same next ID and date as the app (CalendarStore.nextReminderId / nextOccurrence)
+check("next reminder ID matches the app's", (await nextReminderId("ABC-123")) === "A0730F69-11FF-9734-55AE-51F7B5813982");
+const jan31 = new Date(2026, 0, 31, 9);
+check("monthly from Jan 31 goes to Feb 28, then Mar 31", nextOccurrence(jan31, 30, new Date(2026, 0, 31, 10)).getDate() === 28 &&
+  nextOccurrence(jan31, 30, new Date(2026, 1, 28, 10)).getMonth() === 2 && nextOccurrence(jan31, 30, new Date(2026, 1, 28, 10)).getDate() === 31);
+check("weekly checked off late lands in the future", nextOccurrence(new Date(2026, 0, 1, 9), 7, new Date(2026, 0, 20, 12)).getDate() === 22);
 
 // Sitter links from the website (SitterLinkMaker): her links, and turning one off
 check("link dates: first day from midnight, last day to 11:59 PM", dayAt("2026-11-12", 0)!.getHours() === 0 && dayAt("2026-11-14", 23, 59)!.getMinutes() === 59 && dayAt("bad", 0) === null);

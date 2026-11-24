@@ -13,6 +13,8 @@ import { firebase } from "./firebase";
 import { toDate, repeatSummary, type MedicationSchedule, type MealRepeat } from "./today";
 import AddToRecord from "./AddToRecord";
 import CareEditor from "./CareEditor";
+import { VaccinesEditor, AllergiesEditor, RemindersEditor, type AllergyDoc } from "./HealthEditors";
+import HealthSummary from "./HealthSummary";
 import type { Medication, Schedule } from "./care";
 import { latestVaccines, weightSummary, newest, fmtDay, fmtWeight, type HealthRecord, type Attachment } from "./health";
 
@@ -45,6 +47,7 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
   const [feeding, setFeeding] = useState<Feeding>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [records, setRecords] = useState<HealthRecord[]>([]);
+  const [summary, setSummary] = useState(false);
 
   useEffect(() => {
     const base = `pets/${petId}`;
@@ -76,7 +79,7 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
     return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [storage, pet?.photoURL]);
 
-  useEffect(() => { window.scrollTo(0, 0); }, [petId]);
+  useEffect(() => { window.scrollTo(0, 0); setSummary(false); }, [petId]);
 
   if (pet === undefined) return <p className="font-inter text-[var(--slate-gray)]">Loading…</p>;
   if (pet === null) {
@@ -109,6 +112,18 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
   const routines = routineRows(pet.routinesAndBehaviors);
   const info = feeding?.feedingInfo;
   const items = [...(feeding?.scheduleItems || [])].sort((a, b) => minutes(toDate(a.time)) - minutes(toDate(b.time)));
+  const user = firebase().auth.currentUser;
+  const owner = !sitter && !!user;
+
+  if (summary && owner) {
+    return (
+      <HealthSummary name={name}
+        identity={summaryIdentity(pet)}
+        chip={(pet.microchipInfo?.chipNumber || "").trim() || undefined} photo={photo}
+        allergies={activeAllergies} meds={activeMeds} records={records} deceased={!!pet.isDeceased}
+        vet={pet.primaryVetClinic} onClose={() => setSummary(false)} />
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -127,6 +142,12 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
           {details(pet) && <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "15px" }}>{details(pet)}</p>}
         </div>
       </header>
+
+      {owner && (
+        <div className="flex flex-wrap gap-2">
+          <button className="btn-ghost" style={{ padding: "8px 14px" }} onClick={() => setSummary(true)}>Health Summary (print)</button>
+        </div>
+      )}
 
       {sitter && (
         <p className="font-inter rounded-xl px-4 py-3 text-[var(--charcoal)]" style={{ background: "var(--pure-white)", border: "1px solid var(--mist-gray)", fontSize: "15px" }}>
@@ -251,10 +272,18 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
         <CareEditor petId={petId} petName={name} schedule={feeding as Schedule} meds={meds as unknown as Medication[]} />
       )}
 
+      {owner && !pet.isDeceased && (
+        <>
+          <VaccinesEditor petId={petId} uid={user!.uid} records={records} />
+          <AllergiesEditor petId={petId} allergies={allergies as AllergyDoc[]} />
+          <RemindersEditor petId={petId} uid={user!.uid} petName={name} />
+        </>
+      )}
+
       <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
         {sitter
           ? `You see what ${sitter.ownerName || "the owner"} chose to share. Something missing? Ask them to change what you can see.`
-          : "For everything else (vaccines, allergies, photos), use the PetBindr iPhone app or ask the owner to change it."}
+          : "For everything else (photos, files, other health records), use the PetBindr iPhone app or ask the owner to change it."}
       </p>
     </div>
   );
@@ -277,6 +306,23 @@ function details(pet: PetData): string {
     parts.push(years > 0 ? `${years} year${years === 1 ? "" : "s"} old` : "Under 1 year old");
   }
   return parts.join(" · ");
+}
+
+/** As the app's Health Summary: "Dog, Beagle • Male, neutered • 7 years old" */
+function summaryIdentity(pet: PetData): string {
+  const parts = [[pet.species, pet.breed].filter((x) => x && x.trim()).join(", ")];
+  if (pet.gender && pet.gender !== "Unknown") {
+    let g = pet.gender;
+    const fixable = !["Reptile", "Fish", "Bird"].includes(pet.species || "");
+    if (typeof pet.isFixed === "boolean" && fixable) {
+      const word = pet.gender === "Female" ? "spayed" : "neutered";
+      g += pet.isFixed ? `, ${word}` : `, not ${word}`;
+    }
+    parts.push(g);
+  }
+  const age = details({ birthday: pet.birthday });
+  if (age) parts.push(age.toLowerCase().replace(/^under 1/, "under 1"));
+  return parts.filter(Boolean).join(" • ");
 }
 
 function medLine(m: MedicationSchedule): string {
