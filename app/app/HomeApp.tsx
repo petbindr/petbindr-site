@@ -227,6 +227,17 @@ function SignedIn({ user }: { user: User }) {
     return () => clearInterval(t);
   }, []);
 
+  // Retention counts (weekly metrics email): today's UTC date on users/{uid}.lastActiveDay,
+  // at most once a day per browser (same field and format as the iOS app; the rules check it)
+  const activeDay = now.toISOString().slice(0, 10);
+  useEffect(() => {
+    const key = `lastActiveDayWritten.${user.uid}`;
+    try { if (localStorage.getItem(key) === activeDay) return; } catch {}
+    setDoc(doc(db, "users", user.uid), { lastActiveDay: activeDay }, { merge: true })
+      .then(() => { try { localStorage.setItem(key, activeDay); } catch {} })
+      .catch(() => {});
+  }, [db, user.uid, activeDay]);
+
   useEffect(() => {
     // Live: right after signing up here the profile isn't saved yet, and a one-time
     // read missed it, so check-offs went out with the email address as the name
