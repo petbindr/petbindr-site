@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { JsonLd, textOf } from "@/lib/jsonld";
 
-const description = "Answers to common questions about PetBindr: sharing with a sitter, sitter links, reminders, printing, your account and getting help.";
+const description = "Answers to common questions about PetBindr: sharing with a sitter, sitter links, reminders, widgets, Android, your account and getting help.";
 
 export const metadata: Metadata = {
   title: "Help and FAQ — PetBindr",
@@ -39,6 +39,26 @@ const faqs: { q: string; a: React.ReactNode }[] = [
         <Link href="/app" className="underline text-[var(--bindr-navy)]">petbindr.com/app</Link>, which works on Android and
         computers too. The iPhone app isn&rsquo;t out yet;{" "}
         <Link href="/#get-notified" className="underline text-[var(--bindr-navy)]">join the waitlist</Link> and we&rsquo;ll email you when it is.
+      </p>
+    ),
+  },
+  {
+    q: "Is there an Android app?",
+    a: (
+      <p>
+        Not a separate one. On Android, open{" "}
+        <Link href="/app" className="underline text-[var(--bindr-navy)]">petbindr.com/app</Link> in your browser: you can sign in,
+        add your pets, and check off feedings and medications there. Sitters with a sitter link don&rsquo;t need an app or an
+        account at all.
+      </p>
+    ),
+  },
+  {
+    q: "I joined the waitlist. Can I invite a friend?",
+    a: (
+      <p>
+        Yes. After you join, you get your own share link, on the thank-you screen and in your confirmation email.
+        When a friend joins through it, we note that they came from your link. It&rsquo;s never shown publicly.
       </p>
     ),
   },
@@ -92,6 +112,36 @@ const faqs: { q: string; a: React.ReactNode }[] = [
       <p>
         Yes. On iPhone you get a reminder when a feeding or dose is due. If a medication or meal hasn&rsquo;t been
         checked off, the owners are alerted so nothing is missed. Check-offs also show who gave it and when.
+      </p>
+    ),
+  },
+  {
+    q: "Can I set when a missed dose counts as missed?",
+    a: (
+      <p>
+        Yes, for each medication. Edit the medication and pick <strong>Missed after</strong>: 30 minutes is the
+        standard. Choose a short time for something like insulin, or a longer one for a pill that can be given any
+        time that morning. If the dose isn&rsquo;t checked off by then, you and your co-owners get an alert.
+      </p>
+    ),
+  },
+  {
+    q: "Can I check things off without opening the app?",
+    a: (
+      <p>
+        Yes, on iPhone. When a dose is due, a <strong>Live Activity</strong> on the lock screen (and the Dynamic Island)
+        shows it with a <strong>Given</strong> button. The <strong>Today</strong> home screen widget lists the day&rsquo;s
+        feedings and medications, and you can check them off right there. If two people check off the same dose,
+        it&rsquo;s only recorded once.
+      </p>
+    ),
+  },
+  {
+    q: "Can I find my pet from iPhone search?",
+    a: (
+      <p>
+        Yes. Your pets and their vets show up in iPhone search (Spotlight). Tap a pet to open it, or a vet to see their
+        details and call. Only names and vet contact details go into search, not medications or notes.
       </p>
     ),
   },
