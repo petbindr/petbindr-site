@@ -12,7 +12,7 @@ import {
   collection, query, where, serverTimestamp, orderBy, limit, disableNetwork, enableNetwork,
 } from "firebase/firestore";
 import { feedingLogDoc, medicationLogDoc, doseLogId, tasksFor } from "../app/app/today.ts";
-import { undoOwnDose, undoOwnMeal, DOSE_KEPT, MEAL_KEPT } from "../app/app/undo.ts";
+import { undoOwnDose, undoOwnMeal, setOwnMealAmount, DOSE_KEPT, MEAL_KEPT } from "../app/app/undo.ts";
 import {
   healthRecordDoc, dayFromInput, vaccineDoc, vaccineChanges, allergyDoc, allergyChanges, reminderDoc, reminderChanges,
   nextOccurrence, nextReminderId,
@@ -269,6 +269,26 @@ check("dose undone", !(await getDoc(doc(db, `pets/rex/medicationLogs/${dose.id}`
   const guarded = await race((id) => undoOwnMeal(db, "rex", id, uid));
   check("meal offline race, Not done yet: her check-off refused", guarded.mine.includes("permission-denied"));
   check("meal offline race, Not done yet: the owner's meal kept and she's told", guarded.undo === MEAL_KEPT && guarded.kept === "owner");
+
+  // "Ate some" on her own meal, offline, after the owner's check-off won (Fresh list 10 O1)
+  const amountRace = async (change: (id: string) => Promise<unknown>) => {
+    await disableNetwork(db);
+    const mine = setDoc(doc(db, `pets/rex/feedingLogs/${own.id}`), own.data).then(() => "saved", (e) => String(e.code));
+    const changed = change(own.id).then(() => "done", (e) => String(e.code));
+    await admin.doc(`pets/rex/feedingLogs/${own.id}`).set({ ...own.data, completedBy: "owner", completedByName: "Jordan", via: "app" });
+    await enableNetwork(db);
+    const out = { mine: await mine, change: await changed, amount: (await admin.doc(`pets/rex/feedingLogs/${own.id}`).get()).data()?.amount };
+    await admin.doc(`pets/rex/feedingLogs/${own.id}`).delete();
+    return out;
+  };
+  const plainAmount = await amountRace((id) => updateDoc(doc(db, `pets/rex/feedingLogs/${id}`), { amount: "some" }));
+  check("amount offline race, plain update (old web): the owner's meal changed to some", plainAmount.change === "done" && plainAmount.amount === "some");
+  const guardedAmount = await amountRace((id) => setOwnMealAmount(db, "rex", id, uid, "some"));
+  check("amount offline race, with marker: the owner's meal unchanged and she's told", guardedAmount.change === MEAL_KEPT && guardedAmount.amount === undefined);
+  await setDoc(doc(db, `pets/rex/feedingLogs/${own.id}`), own.data);
+  await setOwnMealAmount(db, "rex", own.id, uid, "none");
+  check("Didn't eat on her own meal (with marker) saved", (await admin.doc(`pets/rex/feedingLogs/${own.id}`).get()).data()?.amount === "none");
+  await admin.doc(`pets/rex/feedingLogs/${own.id}`).delete();
 
   await admin.doc(`pets/rex/feedingLogs/${own.id}`).set({ ...own.data, completedBy: "owner", completedByName: "Jordan" });
   check("meal Undo marker can't remove the owner's meal", (await undoOwnMeal(db, "rex", own.id, uid).then(() => "done", (e) => e.code)) === MEAL_KEPT);

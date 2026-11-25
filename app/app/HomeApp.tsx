@@ -20,7 +20,7 @@ import {
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { firebase, webAppConfigured } from "./firebase";
-import { undoOwnDose, undoOwnMeal, DOSE_KEPT, MEAL_KEPT } from "./undo";
+import { undoOwnDose, undoOwnMeal, setOwnMealAmount, DOSE_KEPT, MEAL_KEPT } from "./undo";
 import { signupSource } from "@/lib/signupSource";
 import { feedingChanges, newId, timeAt } from "./care";
 import PetPage from "./PetPage";
@@ -673,7 +673,10 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
 
   function setAmount(amount: FeedingAmount) {
     if (!task.done) return checkOff(amount);
-    run(() => updateDoc(doc(db, `${base}/feedingLogs/${task.done!.logId}`), { amount: amount === "all" ? deleteField() : amount }));
+    const value = amount === "all" ? deleteField() : amount;
+    // One's own meal: with the marker, so it can't change someone else's log that got there first (undo.ts)
+    if (task.done.byUserId === uid) return run(() => setOwnMealAmount(db, task.petId, task.done!.logId, uid, value));
+    run(() => updateDoc(doc(db, `${base}/feedingLogs/${task.done!.logId}`), { amount: value }));
   }
 
   function undo() {

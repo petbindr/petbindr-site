@@ -5,16 +5,20 @@
 // have its check-off refused (someone else's got there first) and then delete
 // theirs. With the doseUndos / mealUndos marker in the same batch the rules let
 // this delete remove only a log this person made; theirs stays.
-import { doc, getDocFromServer, serverTimestamp, writeBatch, type Firestore } from "firebase/firestore";
+// "Ate some" / "Didn't eat" on one's own meal is sent with the same marker
+// (Fresh list 10 O1): offline, after someone else's check-off of the meal won,
+// it changed their log's amount.
+import { doc, getDocFromServer, serverTimestamp, writeBatch, type FieldValue, type Firestore } from "firebase/firestore";
 
 export const DOSE_KEPT = "dose-kept";
 export const MEAL_KEPT = "meal-kept";
 
-async function undoOwn(db: Firestore, petId: string, logId: string, uid: string, isMeal: boolean) {
+async function undoOwn(db: Firestore, petId: string, logId: string, uid: string, isMeal: boolean, amount?: string | FieldValue) {
   const ref = doc(db, `pets/${petId}/${isMeal ? "feedingLogs" : "medicationLogs"}/${logId}`);
   const batch = writeBatch(db);
   batch.set(doc(db, `pets/${petId}/${isMeal ? "mealUndos" : "doseUndos"}/${uid}`), { logId, at: serverTimestamp() });
-  batch.delete(ref);
+  if (amount !== undefined) batch.update(ref, { amount });
+  else batch.delete(ref);
   try {
     await batch.commit();
   } catch (err) {
@@ -34,3 +38,4 @@ async function undoOwn(db: Firestore, petId: string, logId: string, uid: string,
 
 export const undoOwnDose = (db: Firestore, petId: string, logId: string, uid: string) => undoOwn(db, petId, logId, uid, false);
 export const undoOwnMeal = (db: Firestore, petId: string, logId: string, uid: string) => undoOwn(db, petId, logId, uid, true);
+export const setOwnMealAmount = (db: Firestore, petId: string, logId: string, uid: string, amount: string | FieldValue) => undoOwn(db, petId, logId, uid, true, amount);

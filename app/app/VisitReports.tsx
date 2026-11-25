@@ -141,15 +141,34 @@ function ReportDetail({ report }: { report: Report }) {
 function ReportPhoto({ saved, label }: { saved: string; label: string }) {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  // A report sent with no signal arrives before its photos (the app's
+  // PendingPhotoUploads): "on the way", checked again until it's there, like
+  // the app (Fresh list 10 O4; it said "Photo unavailable" for good)
+  const [pending, setPending] = useState(false);
   useEffect(() => {
     const path = storagePath(saved);
     if (!path) { setFailed(true); return; }
     let url: string | null = null;
     let cancelled = false;
-    getBlob(ref(firebase().storage, path))
-      .then((b) => { if (cancelled) return; url = URL.createObjectURL(b); setSrc(url); })
-      .catch(() => { if (!cancelled) setFailed(true); });
-    return () => { cancelled = true; if (url) URL.revokeObjectURL(url); };
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let delay = 5000;
+    let waiting = false;
+    const load = () => getBlob(ref(firebase().storage, path))
+      .then((b) => { if (cancelled) return; url = URL.createObjectURL(b); setPending(false); setSrc(url); })
+      .catch((err) => {
+        if (cancelled) return;
+        const code = (err as { code?: string }).code || "";
+        if (code === "storage/object-not-found" || (waiting && code === "storage/retry-limit-exceeded")) {
+          waiting = true;
+          setPending(true);
+          timer = setTimeout(load, delay);
+          delay = Math.min(delay * 2, 30000);
+        } else {
+          setFailed(true);
+        }
+      });
+    load();
+    return () => { cancelled = true; if (timer) clearTimeout(timer); if (url) URL.revokeObjectURL(url); };
   }, [saved]);
 
   if (failed) {
@@ -157,6 +176,15 @@ function ReportPhoto({ saved, label }: { saved: string; label: string }) {
       <div className="rounded-xl flex items-center justify-center font-inter text-(--slate-gray)"
         style={{ aspectRatio: "1", background: "var(--warm-cream)", fontSize: "14px" }}>
         Photo unavailable
+      </div>
+    );
+  }
+  if (!src && pending) {
+    return (
+      <div className="rounded-xl flex flex-col items-center justify-center text-center font-inter text-(--slate-gray) px-3"
+        style={{ aspectRatio: "1", background: "var(--warm-cream)", fontSize: "13px" }} role="img" aria-label={`${label}, still uploading`}>
+        <strong style={{ fontSize: "14px" }}>Photo on the way</strong>
+        <span>It&apos;s still uploading and will show here when it arrives.</span>
       </div>
     );
   }
