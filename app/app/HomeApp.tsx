@@ -20,6 +20,7 @@ import {
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { firebase, webAppConfigured } from "./firebase";
+import { undoOwnDose, DOSE_KEPT } from "./undo";
 import { signupSource } from "@/lib/signupSource";
 import { feedingChanges, newId, timeAt } from "./care";
 import PetPage from "./PetPage";
@@ -549,7 +550,9 @@ function AddFirstPet({ uid, more = false, onDone }: { uid: string; more?: boolea
       setName(""); setBirthday(""); setMealTime(""); setPortion(""); setBusy(false); onDone?.();
     } catch (err) {
       const code = (err as { code?: string }).code || "";
-      setError(code.includes("permission-denied") ? "Couldn't save your pet. Sign out and back in, then try again." : "Couldn't save that. Check your connection and try again.");
+      setError(code === DOSE_KEPT
+        ? "Someone else already logged this dose before your check-off was sent, so theirs stays."
+        : code.includes("permission-denied") ? "Couldn't save your pet. Sign out and back in, then try again." : "Couldn't save that. Check your connection and try again.");
       setBusy(false);
     }
   }
@@ -674,7 +677,12 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
 
   function undo() {
     if (!task.done) return;
-    run(() => deleteDoc(doc(db, `${base}/${isFeeding ? "feedingLogs" : "medicationLogs"}/${task.done!.logId}`)));
+    const { logId, byUserId } = task.done;
+    // A dose this person logged: sent with the Undo marker, so it can't remove
+    // someone else's log that got there first (undo.ts). Removing a dose
+    // someone else logged (the row says who) stays a plain delete.
+    if (!isFeeding && byUserId === uid) return run(() => undoOwnDose(db, task.petId, logId, uid));
+    run(() => deleteDoc(doc(db, `${base}/${isFeeding ? "feedingLogs" : "medicationLogs"}/${logId}`)));
   }
 
   const done = task.done;

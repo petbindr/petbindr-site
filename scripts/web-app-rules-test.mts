@@ -9,9 +9,10 @@ import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator, createUserWithEmailAndPassword } from "firebase/auth";
 import {
   getFirestore, connectFirestoreEmulator, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, deleteField,
-  collection, query, where, serverTimestamp, orderBy, limit,
+  collection, query, where, serverTimestamp, orderBy, limit, disableNetwork, enableNetwork,
 } from "firebase/firestore";
 import { feedingLogDoc, medicationLogDoc, doseLogId, tasksFor } from "../app/app/today.ts";
+import { undoOwnDose, DOSE_KEPT } from "../app/app/undo.ts";
 import {
   healthRecordDoc, dayFromInput, vaccineDoc, vaccineChanges, allergyDoc, allergyChanges, reminderDoc, reminderChanges,
   nextOccurrence, nextReminderId,
@@ -210,6 +211,39 @@ await denied("the same dose again (same ID) is refused", setDoc(doc(db, `pets/re
 await deleteDoc(doc(db, `pets/rex/medicationLogs/${slot.id}`));
 await deleteDoc(doc(db, `pets/rex/medicationLogs/${dose.id}`));
 check("dose undone", !(await getDoc(doc(db, `pets/rex/medicationLogs/${dose.id}`))).exists());
+
+// "Not done yet" on her own dose goes with the Undo marker (app/app/undo.ts)
+{
+  const own = medicationLogDoc("rex", "m1", "Apoquel", "5 mg", due, uid, now, doseLogId("m1", due));
+  await setDoc(doc(db, `pets/rex/medicationLogs/${own.id}`), own.data);
+  await undoOwnDose(db, "rex", own.id, uid);
+  check("Not done yet on her own dose removes it", !(await getDoc(doc(db, `pets/rex/medicationLogs/${own.id}`))).exists());
+  check("Undo marker written", (await admin.doc(`pets/rex/doseUndos/${uid}`).get()).data()?.logId === own.id);
+
+  // The tab goes offline, she checks the dose off and taps Not done yet; meanwhile
+  // the owner logs the same dose. Back online her check-off is refused (same ID).
+  const race = async (undo: (id: string) => Promise<unknown>) => {
+    await disableNetwork(db);
+    const mine = setDoc(doc(db, `pets/rex/medicationLogs/${own.id}`), own.data).then(() => "saved", (e) => String(e.code));
+    const gone = undo(own.id).then(() => "done", (e) => String(e.code));
+    await admin.doc(`pets/rex/medicationLogs/${own.id}`).set({ ...own.data, ownerId: "owner", givenBy: "owner", via: "app" });
+    await enableNetwork(db);
+    const out = { mine: await mine, undo: await gone, kept: (await admin.doc(`pets/rex/medicationLogs/${own.id}`).get()).data()?.ownerId };
+    await admin.doc(`pets/rex/medicationLogs/${own.id}`).delete();
+    return out;
+  };
+  const plain = await race((id) => deleteDoc(doc(db, `pets/rex/medicationLogs/${id}`)));
+  check("offline race, plain delete (old web undo): the owner's dose was deleted", plain.mine.includes("permission-denied") && plain.undo === "done" && plain.kept === undefined);
+  const guarded = await race((id) => undoOwnDose(db, "rex", id, uid));
+  check("offline race, Not done yet: her check-off refused", guarded.mine.includes("permission-denied"));
+  check("offline race, Not done yet: the owner's dose kept and she's told", guarded.undo === DOSE_KEPT && guarded.kept === "owner");
+
+  // Removing a dose someone else logged (the row says who) is still a plain delete
+  await admin.doc(`pets/rex/medicationLogs/${own.id}`).set({ ...own.data, ownerId: "owner", givenBy: "owner" });
+  check("Undo marker can't remove the owner's dose", (await undoOwnDose(db, "rex", own.id, uid).then(() => "done", (e) => e.code)) === DOSE_KEPT);
+  await deleteDoc(doc(db, `pets/rex/medicationLogs/${own.id}`));
+  check("co-owner can still remove a dose the owner logged", !(await admin.doc(`pets/rex/medicationLogs/${own.id}`).get()).exists);
+}
 
 // Someone else's pet stays private
 await denied("can't read a pet she doesn't co-own", getDoc(doc(db, "pets/other")));
