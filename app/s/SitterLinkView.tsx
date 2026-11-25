@@ -276,7 +276,7 @@ function ActiveLink({ data, token, onChanged }: { data: Extract<LinkData, { stat
       <header className="text-center space-y-3">
         <a href="https://www.petbindr.com/?utm_source=sitterlink&utm_medium=sitter-page-logo" className="inline-block" aria-label="PetBindr">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="PetBindr" width={120} height={36} style={{ height: "auto", width: 120 }} />
+          <img src="/logo.png" alt="PetBindr" className="logo-auto" width={120} height={36} style={{ height: "auto", width: 120 }} />
         </a>
         <div className="flex justify-center -space-x-3">
           {data.pets.map((p) => (

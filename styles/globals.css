@@ -103,6 +103,10 @@
   .theme-auto .bg-white { background-color: var(--pure-white); }
   .theme-auto .shadow-xs { box-shadow: none; } /* v3 name: shadow-sm */
   .theme-auto input::placeholder, .theme-auto textarea::placeholder { color: var(--slate-gray); }
+  /* The logo's navy wordmark vanished on the dark background (Fresh list 8 S4).
+     Inverted with the hues turned back: navy text -> light blue (about
+     --bindr-navy above), the book's light cover -> dark teal, the paw light. */
+  .theme-auto .logo-auto { filter: invert(1) hue-rotate(180deg); }
 }
 
 /* ─── Base ────────────────────────────────────────────────────────────────── */
