@@ -762,7 +762,7 @@ function TodayRow({ item, pet, tz, token, onChanged, glucoseUnit }: {
               value={glucoseInput}
               onChange={(e) => setGlucoseInput(e.target.value)}
               disabled={saving}
-              className="rounded-lg border border-[var(--mist-gray)] px-2 py-1"
+              className="rounded-lg border border-[var(--mist-gray)] bg-[var(--pure-white)] px-2 py-1 text-[var(--charcoal)]"
               style={{ width: "5.5rem", fontSize: "1rem" }}
               aria-label={`Blood glucose in ${unitLabel(glucoseUnit)} (optional)`}
               aria-invalid={reading.kind === "invalid"}
