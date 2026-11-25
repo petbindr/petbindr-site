@@ -55,10 +55,10 @@ const { NextRequest } = await import("next/server.js");
 let ok = 0, bad = 0;
 const check = (label: string, cond: boolean) => { cond ? ok++ : bad++; console.log(cond ? "ok   " : "WRONG", label); };
 let ipCounter = 0;
-async function join(email: string, extra: Record<string, string> = {}) {
+async function join(email: string, extra: Record<string, string> = {}, ip = `10.0.0.${++ipCounter}`) {
   const req = new NextRequest("https://petbindr.com/api/waitlist", {
     method: "POST", body: JSON.stringify({ email, ...extra }),
-    headers: { "content-type": "application/json", "x-forwarded-for": `10.0.0.${++ipCounter}` },
+    headers: { "content-type": "application/json", "x-forwarded-for": ip },
   });
   const res = await POST(req);
   return { status: res.status, body: await res.json() };
@@ -102,6 +102,23 @@ await db.doc("waitlist/twice@example.test").set({ email: "twice@example.test", u
 const both = await Promise.all([join("twice@example.test"), join("twice@example.test")]);
 check("two at once: same reply both times", both.every((r) => sameReply(r, fresh)));
 check("two at once: one 'already on the list' email", mailTo("twice@example.test").length === 1);
+
+// More rounds of the above, so the race shows up: the losing request used to get
+// "Service temporarily unavailable" about 1 in 4 times (a transaction error the SDK
+// doesn't retry). Same connection for the new address: a real double click.
+for (let round = 0; round < 3; round++) {
+  const known = `dbl${round}@example.test`, brandNew = `dblnew${round}@example.test`;
+  await db.doc(`waitlist/${known}`).set({ email: known, unsubscribeToken: "t4", createdAt: Timestamp.now() });
+  const ipNew = `10.1.${round}.2`;
+  const k = await Promise.all([join(known), join(known)]);
+  check(`two at once, on the list (${round}): same reply both times`, k.every((r) => r.status === 200 && sameReply(r, fresh)));
+  check(`two at once, on the list (${round}): one email`, mailTo(known).length === 1);
+  const n = await Promise.all([join(brandNew, {}, ipNew), join(brandNew, {}, ipNew)]);
+  const saved = (await db.doc(`waitlist/${brandNew}`).get()).data() || {};
+  check(`double click, new (${round}): same reply both times`, n.every((r) => r.status === 200 && sameReply(r, fresh)));
+  check(`double click, new (${round}): one entry with one of the replies' codes`, n.some((r) => codeOf(r) === saved.referralCode));
+  check(`double click, new (${round}): one welcome email`, mailTo(brandNew).filter((m) => m.subject === "You're on the list.").length === 1);
+}
 
 // After unsubscribing, joining again puts them back on, with the normal email
 await db.doc("waitlist/gone@example.test").set({ email: "gone@example.test", unsubscribeToken: "t2", unsubscribed: true, createdAt: Timestamp.now() });

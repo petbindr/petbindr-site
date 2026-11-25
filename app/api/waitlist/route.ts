@@ -56,11 +56,32 @@ const ALREADY_NOTICE_EVERY_MS = 24 * 3600_000;
 // script posting thousands of addresses could email-bomb strangers
 const PER_IP_PER_HOUR = 5;
 
+// Two submits at once (a double click) run their transactions on the same documents.
+// Firestore lets one win; the other's transaction can come back "Transaction is
+// invalid or closed" (INVALID_ARGUMENT), which the Admin SDK doesn't retry, so the
+// second click got "Service temporarily unavailable" (2026-11-25, about 1 in 4 in
+// the emulator). Run it again: by then it sees what the first one wrote.
+function contended(err: unknown) {
+  const e = err as { code?: number | string; message?: string } | null;
+  return e?.code === 10 || e?.code === "aborted" ||
+    (e?.code === 3 && /transaction is invalid or closed/i.test(e?.message || ""));
+}
+async function runTx<T>(db: FirebaseFirestore.Firestore, fn: (tx: FirebaseFirestore.Transaction) => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await db.runTransaction(fn);
+    } catch (err) {
+      if (attempt >= 4 || !contended(err)) throw err;
+      await new Promise((r) => setTimeout(r, 20 * attempt + Math.random() * 30));
+    }
+  }
+}
+
 async function allowedFromIp(db: FirebaseFirestore.Firestore, req: NextRequest) {
   const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
   const ref = db.collection("waitlistThrottle").doc(createHash("sha256").update(ip).digest("hex").slice(0, 32));
   const now = Date.now();
-  return db.runTransaction(async (tx) => {
+  return runTx(db, async (tx) => {
     const snap = await tx.get(ref);
     const recent = ((snap.exists ? snap.data()?.at : []) as number[] || []).filter((t) => now - t < 3600_000);
     if (recent.length >= PER_IP_PER_HOUR) return false;
@@ -151,7 +172,7 @@ export async function POST(req: NextRequest) {
       // first one's entry on retry, so it neither overwrites the unsubscribe token
       // (why this was create() before) nor counts the referral twice.
       unsubscribeToken = newUnsubscribeToken();
-      const result = await db.runTransaction(async (tx) => {
+      const result = await runTx(db, async (tx) => {
         const now = await tx.get(docRef);
         if (now.exists) return { created: false, code: (now.data()?.referralCode as string | undefined) };
         const code = await unusedCode(db, tx);
@@ -317,7 +338,7 @@ async function unusedCode(db: FirebaseFirestore.Firestore, tx: FirebaseFirestore
 
 /** The entry's referral code, created now if it has none (entries from before 2026-11-24). */
 async function ensureReferralCode(db: FirebaseFirestore.Firestore, docRef: FirebaseFirestore.DocumentReference) {
-  return db.runTransaction(async (tx) => {
+  return runTx(db, async (tx) => {
     const d = (await tx.get(docRef)).data() || {};
     if (typeof d.referralCode === "string") return d.referralCode as string;
     const code = await unusedCode(db, tx);
@@ -335,7 +356,7 @@ async function noticeAlreadyOnList(
     // In a transaction: two submits at once (from different connections) both
     // passed a plain read-then-write check and each sent a notice
     const now = Date.now();
-    const token = await docRef.firestore.runTransaction(async (tx) => {
+    const token = await runTx(docRef.firestore, async (tx) => {
       const d = (await tx.get(docRef)).data() || {};
       const last = d.alreadyNoticeAt?.toMillis?.() ?? 0;
       if (now - last < ALREADY_NOTICE_EVERY_MS) return null;
