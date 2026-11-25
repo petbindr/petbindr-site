@@ -14,9 +14,16 @@ function sentOrThrow(result: { error?: unknown } | null | undefined) {
   if (result?.error) throw result.error;
 }
 
-// trim before checking: " a@b.com" (a pasted space) was rejected as invalid
+// trim before checking: " a@b.com" (a pasted space) was rejected as invalid.
+// zod 4: the email check is z.email(), piped after the trim/lowercase.
+const EMAIL_ERROR = "Please enter a valid email address.";
 const schema = z.object({
-  email: z.string().trim().toLowerCase().max(254).email("Please enter a valid email address."),
+  email: z
+    .string({ error: EMAIL_ERROR })
+    .trim()
+    .toLowerCase()
+    .max(254, { error: EMAIL_ERROR })
+    .pipe(z.email({ error: EMAIL_ERROR })),
   // Where the visit came from (lib/signupSource): utm_* tags and the referring site
   source: z.string().max(100).optional(),
   medium: z.string().max(100).optional(),
@@ -74,7 +81,7 @@ export async function POST(req: NextRequest) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.errors[0]?.message ?? "Invalid email." },
+      { error: parsed.error.issues[0]?.message ?? "Invalid email." },
       { status: 400 }
     );
   }
