@@ -1,4 +1,4 @@
-import { Instagram } from "lucide-react";
+import InstagramIcon from "@/components/InstagramIcon";
 import FadeIn from "@/components/FadeIn";
 
 function TikTokIcon({ size = 18 }: { size?: number }) {
@@ -10,7 +10,7 @@ function TikTokIcon({ size = 18 }: { size?: number }) {
 }
 
 const socials = [
-  { icon: Instagram,   href: "https://instagram.com/petbindr",  label: "@petbindr on Instagram" },
+  { icon: InstagramIcon,  href: "https://instagram.com/petbindr",  label: "@petbindr on Instagram" },
   { icon: TikTokIcon,  href: "https://tiktok.com/@petbindr",    label: "@petbindr on TikTok" },
 ];
 
