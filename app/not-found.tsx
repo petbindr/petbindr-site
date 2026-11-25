@@ -22,14 +22,14 @@ export default function NotFound() {
     >
       <div className="max-w-2xl mx-auto">
         <h1
-          className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-4"
+          className="font-fraunces font-semibold text-(--bindr-navy) mb-4"
           style={{ fontSize: "clamp(28px, 4vw, 40px)" }}
         >
           We couldn&rsquo;t find that page
         </h1>
 
         <p
-          className="font-inter text-[var(--charcoal)] leading-relaxed mb-10"
+          className="font-inter text-(--charcoal) leading-relaxed mb-10"
           style={{ fontSize: "18px" }}
         >
           The link may be mistyped, or the page has moved. If someone sent you a sitter link,
@@ -41,7 +41,7 @@ export default function NotFound() {
             <li key={l.href}>
               <Link
                 href={l.href}
-                className="text-[var(--bindr-navy)] underline underline-offset-4 hover:opacity-80 transition-opacity"
+                className="text-(--bindr-navy) underline underline-offset-4 hover:opacity-80 transition-opacity"
               >
                 {l.label}
               </Link>

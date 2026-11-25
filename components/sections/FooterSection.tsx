@@ -29,7 +29,7 @@ export default function FooterSection() {
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors"
+              className="text-(--slate-gray) hover:text-(--bindr-navy) transition-colors"
               aria-label={`PetBindr on ${label}`}
             >
               <Icon size={20} />
@@ -39,33 +39,33 @@ export default function FooterSection() {
 
         {/* Links */}
         <nav className="flex flex-wrap items-center justify-center gap-6">
-          <Link href="/privacy" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+          <Link href="/privacy" className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors" style={{ fontSize: "14px" }}>
             Privacy
           </Link>
-          <Link href="/terms" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+          <Link href="/terms" className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors" style={{ fontSize: "14px" }}>
             Terms
           </Link>
-          <a href="/app?utm_source=home&utm_medium=footer" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+          <a href="/app?utm_source=home&utm_medium=footer" className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors" style={{ fontSize: "14px" }}>
             Sign in
           </a>
-          <Link href="/faq" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+          <Link href="/faq" className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors" style={{ fontSize: "14px" }}>
             Help
           </Link>
-          <Link href="/pet-sitter-instructions-template" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+          <Link href="/pet-sitter-instructions-template" className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors" style={{ fontSize: "14px" }}>
             Sitter template
           </Link>
-          <Link href="/security" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+          <Link href="/security" className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors" style={{ fontSize: "14px" }}>
             Security
           </Link>
-          <a href="mailto:hello@petbindr.com?subject=PetBindr%20feedback" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+          <a href="mailto:hello@petbindr.com?subject=PetBindr%20feedback" className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors" style={{ fontSize: "14px" }}>
             Send feedback
           </a>
-          <a href="mailto:hello@petbindr.com" className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors" style={{ fontSize: "14px" }}>
+          <a href="mailto:hello@petbindr.com" className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors" style={{ fontSize: "14px" }}>
             hello@petbindr.com
           </a>
         </nav>
 
-        <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+        <p className="font-inter text-(--slate-gray)" style={{ fontSize: "14px" }}>
           © PetBindr LLC 2026
         </p>
       </div>

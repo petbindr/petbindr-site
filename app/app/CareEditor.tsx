@@ -13,9 +13,9 @@ import {
   type FeedingInfo, type Meal, type Medication, type Schedule,
 } from "./care";
 
-const input = "w-full rounded-lg px-3 py-2 font-inter text-[var(--charcoal)]";
+const input = "w-full rounded-lg px-3 py-2 font-inter text-(--charcoal)";
 const inputStyle = { border: "1px solid var(--mist-gray)", background: "var(--input-bg, white)", fontSize: "16px" };
-const label = "block font-inter text-[var(--slate-gray)] mb-1";
+const label = "block font-inter text-(--slate-gray) mb-1";
 const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -110,7 +110,7 @@ export function FeedingEditor({ petId, schedule, onDone }: { petId: string; sche
 
       <fieldset className="space-y-3">
         <legend className={label} style={{ fontSize: "14px" }}>Feeding times</legend>
-        {rows.length === 0 && <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "15px" }}>No feeding times yet.</p>}
+        {rows.length === 0 && <p className="font-inter text-(--slate-gray)" style={{ fontSize: "15px" }}>No feeding times yet.</p>}
         {rows.map((r, i) => (
           <div key={r.id} className="rounded-xl p-3 space-y-2" style={{ border: "1px solid var(--mist-gray)" }}>
             <div className="flex gap-2 items-center">
@@ -122,7 +122,7 @@ export function FeedingEditor({ petId, schedule, onDone }: { petId: string; sche
                 aria-label={`Remove the ${r.time || "new"} feeding`}>Remove</button>
             </div>
             <div className="flex flex-wrap gap-2 items-center">
-              <label className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }} htmlFor={`rep-${r.id}`}>Repeats</label>
+              <label className="font-inter text-(--slate-gray)" style={{ fontSize: "14px" }} htmlFor={`rep-${r.id}`}>Repeats</label>
               <select id={`rep-${r.id}`} className="rounded-lg px-3 py-2 font-inter" style={inputStyle} value={r.every}
                 onChange={(e) => update(i, { every: Number(e.target.value) })}>
                 <option value={1}>Every day</option>
@@ -131,7 +131,7 @@ export function FeedingEditor({ petId, schedule, onDone }: { petId: string; sche
                 <option value={0}>On chosen days</option>
               </select>
               {r.every >= 2 && (
-                <span className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+                <span className="font-inter text-(--slate-gray)" style={{ fontSize: "14px" }}>
                   {r.start && opened?.mealDays?.[r.id] && (opened.mealDays[r.id] as { every?: number }).every === r.every ? `counting from ${r.start}` : "starting today"}
                 </span>
               )}
@@ -338,7 +338,7 @@ export default function CareEditor({ petId, petName, schedule, meds }: {
       {mode === "feeding" && <FeedingEditor petId={petId} schedule={schedule} onDone={finish} />}
       {mode !== null && mode !== "feeding" && <MedicationEditor petId={petId} med={mode.med} onDone={finish} />}
       {mode === null && (schedule?.scheduleItems || []).some((m) => repeatSummary(schedule?.mealDays?.[m.id])) && (
-        <p className="font-inter mt-3 text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+        <p className="font-inter mt-3 text-(--slate-gray)" style={{ fontSize: "14px" }}>
           Meals that aren&apos;t every day need the latest PetBindr iPhone app to show the right days there.
         </p>
       )}

@@ -20,7 +20,7 @@ export default function BuildInPublicSection() {
       <div className="max-w-3xl mx-auto text-center">
         <FadeIn>
           <h2
-            className="font-fraunces font-semibold text-[var(--bindr-navy)] text-center mb-6"
+            className="font-fraunces font-semibold text-(--bindr-navy) text-center mb-6"
             style={{ fontSize: "clamp(28px, 4vw, 44px)", letterSpacing: "-0.02em" }}
           >
             We&rsquo;re building this in the open.
@@ -29,7 +29,7 @@ export default function BuildInPublicSection() {
 
         <FadeIn delay={0.1}>
           <p
-            className="text-[var(--charcoal)] font-inter leading-relaxed mx-auto mb-10"
+            className="text-(--charcoal) font-inter leading-relaxed mx-auto mb-10"
             style={{ fontSize: "clamp(16px, 1.8vw, 18px)", maxWidth: "700px" }}
           >
             {/* "Vote on features" was promised here, and there's no voting (2026-11-18 review, item 24) */}

@@ -31,7 +31,7 @@ export default function SolutionSection() {
       <div className="max-w-5xl mx-auto">
         <FadeIn>
           <h2
-            className="font-fraunces font-semibold text-[var(--bindr-navy)] text-center mb-16 md:mb-20"
+            className="font-fraunces font-semibold text-(--bindr-navy) text-center mb-16 md:mb-20"
             style={{ fontSize: "clamp(28px, 4vw, 48px)", letterSpacing: "-0.02em" }}
           >
             PetBindr replaces the binder.
@@ -49,13 +49,13 @@ export default function SolutionSection() {
                 {/* Text */}
                 <div className="flex-1 max-w-md">
                   <h3
-                    className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-4"
+                    className="font-fraunces font-semibold text-(--bindr-navy) mb-4"
                     style={{ fontSize: "clamp(22px, 2.5vw, 30px)" }}
                   >
                     {heading}
                   </h3>
                   <p
-                    className="text-[var(--charcoal)] font-inter leading-relaxed"
+                    className="text-(--charcoal) font-inter leading-relaxed"
                     style={{ fontSize: "17px" }}
                   >
                     {body}
@@ -65,7 +65,7 @@ export default function SolutionSection() {
                 {/* Real app screens (iPhone 17 Pro Max, demo data on the test
                     servers), in public/screenshots/. These were grey
                     "Screenshot: …" placeholder boxes until 2026-11-14. */}
-                <div className="flex-shrink-0 flex justify-center w-full md:w-auto">
+                <div className="shrink-0 flex justify-center w-full md:w-auto">
                   <Image
                     src={screenshot.src}
                     alt={screenshot.alt}

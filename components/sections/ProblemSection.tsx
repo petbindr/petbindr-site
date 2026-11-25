@@ -25,7 +25,7 @@ export default function ProblemSection() {
       <div className="max-w-5xl mx-auto">
         <FadeIn>
           <h2
-            className="font-fraunces font-semibold text-[var(--bindr-navy)] text-center mb-14"
+            className="font-fraunces font-semibold text-(--bindr-navy) text-center mb-14"
             style={{ fontSize: "clamp(28px, 4vw, 44px)", letterSpacing: "-0.02em" }}
           >
             You&rsquo;ve done this dance before.
@@ -37,7 +37,7 @@ export default function ProblemSection() {
             <FadeIn key={i} delay={i * 0.1}>
               <div className="flex flex-col gap-5">
                 <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+                  className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
                   style={{ background: "var(--soft-teal)" }}
                 >
                   <Icon
@@ -47,7 +47,7 @@ export default function ProblemSection() {
                   />
                 </div>
                 <p
-                  className="text-[var(--charcoal)] font-inter leading-relaxed"
+                  className="text-(--charcoal) font-inter leading-relaxed"
                   style={{ fontSize: "17px" }}
                 >
                   {text}

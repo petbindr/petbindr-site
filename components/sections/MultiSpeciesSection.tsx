@@ -19,7 +19,7 @@ export default function MultiSpeciesSection() {
       <div className="max-w-3xl mx-auto text-center">
         <FadeIn>
           <h2
-            className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-6"
+            className="font-fraunces font-semibold text-(--bindr-navy) mb-6"
             style={{ fontSize: "clamp(28px, 4vw, 44px)", letterSpacing: "-0.02em" }}
           >
             Built for every kind of pet.
@@ -28,7 +28,7 @@ export default function MultiSpeciesSection() {
 
         <FadeIn delay={0.1}>
           <p
-            className="text-[var(--charcoal)] font-inter leading-relaxed mx-auto mb-12"
+            className="text-(--charcoal) font-inter leading-relaxed mx-auto mb-12"
             style={{ fontSize: "clamp(16px, 1.8vw, 18px)", maxWidth: "600px" }}
           >
             Dogs, cats, rabbits, ferrets, birds, reptiles, fish — first-class
@@ -48,7 +48,7 @@ export default function MultiSpeciesSection() {
                   aria-label={label}
                 />
                 <span
-                  className="text-[var(--bindr-navy)] font-inter font-medium"
+                  className="text-(--bindr-navy) font-inter font-medium"
                   style={{ fontSize: "12px" }}
                 >
                   {label}

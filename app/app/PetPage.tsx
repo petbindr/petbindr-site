@@ -81,7 +81,7 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
 
   useEffect(() => { window.scrollTo(0, 0); setSummary(false); }, [petId]);
 
-  if (pet === undefined) return <p className="font-inter text-[var(--slate-gray)]">Loading…</p>;
+  if (pet === undefined) return <p className="font-inter text-(--slate-gray)">Loading…</p>;
   if (pet === null) {
     return (
       <div className="space-y-4">
@@ -134,12 +134,12 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
           style={{ width: 88, height: 88, background: "var(--mist-gray)" }}>
           {photo
             ? <img src={photo} alt={name} width={88} height={88} style={{ objectFit: "cover", width: 88, height: 88 }} />
-            : <span className="font-fraunces text-[var(--bindr-navy)]" style={{ fontSize: 34 }}>{name.slice(0, 1)}</span>}
+            : <span className="font-fraunces text-(--bindr-navy)" style={{ fontSize: 34 }}>{name.slice(0, 1)}</span>}
         </div>
         <div className="min-w-0">
-          <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "clamp(26px, 6vw, 34px)" }}>{name}</h1>
-          <p className="font-inter text-[var(--charcoal)]">{[pet.species, pet.breed].filter(Boolean).join(" · ")}</p>
-          {details(pet) && <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "15px" }}>{details(pet)}</p>}
+          <h1 className="font-fraunces font-semibold text-(--bindr-navy)" style={{ fontSize: "clamp(26px, 6vw, 34px)" }}>{name}</h1>
+          <p className="font-inter text-(--charcoal)">{[pet.species, pet.breed].filter(Boolean).join(" · ")}</p>
+          {details(pet) && <p className="font-inter text-(--slate-gray)" style={{ fontSize: "15px" }}>{details(pet)}</p>}
         </div>
       </header>
 
@@ -150,7 +150,7 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
       )}
 
       {sitter && (
-        <p className="font-inter rounded-xl px-4 py-3 text-[var(--charcoal)]" style={{ background: "var(--pure-white)", border: "1px solid var(--mist-gray)", fontSize: "15px" }}>
+        <p className="font-inter rounded-xl px-4 py-3 text-(--charcoal)" style={{ background: "var(--pure-white)", border: "1px solid var(--mist-gray)", fontSize: "15px" }}>
           {sitter.live
             ? `Shared with you by ${sitter.ownerName || "the owner"}. Check things off on Today.`
             : `Your sit hasn't started yet. You can read ${name}'s routine now; check-offs open when it starts.`}
@@ -165,7 +165,7 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
                 <span className="font-semibold" style={{ color: a.severity === "Life-Threatening" ? "var(--error-red)" : "var(--charcoal)" }}>
                   {a.allergenName}{a.severity && a.severity !== "Unspecified" ? ` (${a.severity.toLowerCase()})` : ""}
                 </span>
-                {a.symptoms && <span className="text-[var(--slate-gray)]"> · Signs: {a.symptoms}</span>}
+                {a.symptoms && <span className="text-(--slate-gray)"> · Signs: {a.symptoms}</span>}
               </li>
             ))}
           </ul>
@@ -177,9 +177,9 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
           <ul className="space-y-3">
             {activeMeds.map((m) => (
               <li key={m.id} className="font-inter">
-                <p className="font-semibold text-[var(--charcoal)]">{m.medicationName}</p>
-                <p className="text-[var(--charcoal)]" style={{ fontSize: "15px" }}>{medLine(m)}</p>
-                {(m as { notes?: string }).notes && <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{(m as { notes?: string }).notes}</p>}
+                <p className="font-semibold text-(--charcoal)">{m.medicationName}</p>
+                <p className="text-(--charcoal)" style={{ fontSize: "15px" }}>{medLine(m)}</p>
+                {(m as { notes?: string }).notes && <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>{(m as { notes?: string }).notes}</p>}
               </li>
             ))}
           </ul>
@@ -191,16 +191,16 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
       {(items.length > 0 || info?.foodName || pet.foodInstructions) && (
         <Card title="Feeding">
           <div className="space-y-3 font-inter">
-            {info?.foodName && <p className="font-semibold text-[var(--charcoal)]">Food: {info.foodName}</p>}
+            {info?.foodName && <p className="font-semibold text-(--charcoal)">Food: {info.foodName}</p>}
             {items.length > 0 && (
               <ul className="space-y-2">
                 {items.map((it) => (
                   <li key={it.id} className="flex gap-3">
-                    <span className="w-20 shrink-0 text-[var(--slate-gray)]" style={{ fontSize: "15px" }}>{fmtTime(toDate(it.time))}</span>
-                    <span className="text-[var(--charcoal)]">
+                    <span className="w-20 shrink-0 text-(--slate-gray)" style={{ fontSize: "15px" }}>{fmtTime(toDate(it.time))}</span>
+                    <span className="text-(--charcoal)">
                       {it.portion || info?.defaultPortion || "—"}
-                      {repeatSummary(feeding?.mealDays?.[it.id]) && <span className="block text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{repeatSummary(feeding?.mealDays?.[it.id])}</span>}
-                      {it.notes && <span className="block text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{it.notes}</span>}
+                      {repeatSummary(feeding?.mealDays?.[it.id]) && <span className="block text-(--slate-gray)" style={{ fontSize: "14px" }}>{repeatSummary(feeding?.mealDays?.[it.id])}</span>}
+                      {it.notes && <span className="block text-(--slate-gray)" style={{ fontSize: "14px" }}>{it.notes}</span>}
                     </span>
                   </li>
                 ))}
@@ -222,14 +222,14 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
               const address = fullAddress(v!);
               return (
                 <li key={label} className="font-inter">
-                  <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{label}</p>
-                  <p className="font-semibold text-[var(--charcoal)]">{v!.name}{v!.veterinarianName ? `, ${v!.veterinarianName}` : ""}</p>
+                  <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>{label}</p>
+                  <p className="font-semibold text-(--charcoal)">{v!.name}{v!.veterinarianName ? `, ${v!.veterinarianName}` : ""}</p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                    {v!.phoneNumber && <a className="underline text-[var(--bindr-navy)]" href={`tel:${v!.phoneNumber.replace(/[^0-9+]/g, "")}`}>Call {v!.phoneNumber}</a>}
-                    {address && <a className="underline text-[var(--bindr-navy)]" target="_blank" rel="noreferrer"
+                    {v!.phoneNumber && <a className="underline text-(--bindr-navy)" href={`tel:${v!.phoneNumber.replace(/[^0-9+]/g, "")}`}>Call {v!.phoneNumber}</a>}
+                    {address && <a className="underline text-(--bindr-navy)" target="_blank" rel="noreferrer"
                       href={`https://maps.google.com/?q=${encodeURIComponent(`${v!.name} ${address}`)}`}>Directions</a>}
                   </div>
-                  {address && <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{address}</p>}
+                  {address && <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>{address}</p>}
                 </li>
               );
             })}
@@ -260,7 +260,7 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
         </Card>
       )}
 
-      {pet.notes && <Card title="Notes"><p className="font-inter text-[var(--charcoal)] whitespace-pre-line">{pet.notes}</p></Card>}
+      {pet.notes && <Card title="Notes"><p className="font-inter text-(--charcoal) whitespace-pre-line">{pet.notes}</p></Card>}
 
       {!sitter && !pet.isDeceased && firebase().auth.currentUser && (
         <AddToRecord petId={petId} petName={name} uid={firebase().auth.currentUser!.uid}
@@ -280,7 +280,7 @@ export default function PetPage({ petId, onBack, sitter }: { petId: string; onBa
         </>
       )}
 
-      <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+      <p className="font-inter text-center text-(--slate-gray)" style={{ fontSize: "14px" }}>
         {sitter
           ? `You see what ${sitter.ownerName || "the owner"} chose to share. Something missing? Ask them to change what you can see.`
           : "For everything else (photos, files, other health records), use the PetBindr iPhone app or ask the owner to change it."}
@@ -378,9 +378,9 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
             <ul className="space-y-2">
               {vaccines.map((v) => (
                 <li key={v.id}>
-                  <p className="font-semibold text-[var(--charcoal)]">{v.name}</p>
+                  <p className="font-semibold text-(--charcoal)">{v.name}</p>
                   <p style={{ fontSize: "15px" }}>
-                    <span className="text-[var(--slate-gray)]">Given {fmtDay(v.given)} · </span>
+                    <span className="text-(--slate-gray)">Given {fmtDay(v.given)} · </span>
                     <span style={{ color: STATUS[v.status].color, fontWeight: 600 }}>{STATUS[v.status].text(v.nextDue)}</span>
                   </p>
                   <Files files={v.attachments} />
@@ -392,9 +392,9 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
 
         {weight && (
           <Sub title="Weight">
-            <p className="text-[var(--charcoal)]">
+            <p className="text-(--charcoal)">
               <span className="font-semibold" style={{ fontSize: "18px" }}>{fmtWeight(weight.latest.value, weight.latest.unit)}</span>
-              <span className="text-[var(--slate-gray)]"> on {fmtDay(weight.latest.date)}</span>
+              <span className="text-(--slate-gray)"> on {fmtDay(weight.latest.date)}</span>
             </p>
             {weight.change && (
               <p style={{ fontSize: "15px", color: Math.abs(weight.change.percent) >= 10 ? "var(--amber-text, #9C5F0E)" : "var(--charcoal)" }}>
@@ -402,7 +402,7 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
               </p>
             )}
             {weight.recent.length > 1 && (
-              <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+              <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>
                 Recent: {weight.recent.slice(1).map((w) => `${fmtWeight(w.value, w.unit)} (${fmtDay(w.date)})`).join(", ")}
               </p>
             )}
@@ -416,12 +416,12 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
                 const v = r.vetVisitData || {};
                 return (
                   <li key={r.id}>
-                    <p className="text-[var(--charcoal)]"><span className="text-[var(--slate-gray)]">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{v.reason || r.title}</span></p>
-                    {[v.clinicName, v.veterinarianName].filter(Boolean).length > 0 && <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{[v.clinicName, v.veterinarianName].filter(Boolean).join(", ")}</p>}
+                    <p className="text-(--charcoal)"><span className="text-(--slate-gray)">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{v.reason || r.title}</span></p>
+                    {[v.clinicName, v.veterinarianName].filter(Boolean).length > 0 && <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>{[v.clinicName, v.veterinarianName].filter(Boolean).join(", ")}</p>}
                     {v.diagnosis && <Labeled label="Diagnosis" value={v.diagnosis} />}
                     {v.treatment && <Labeled label="Treatment" value={v.treatment} />}
                     {toDate(v.followUpDate) && <Labeled label="Follow-up" value={fmtDay(toDate(v.followUpDate))} />}
-                    {r.notes && <p className="text-[var(--slate-gray)] whitespace-pre-line" style={{ fontSize: "14px" }}>{r.notes}</p>}
+                    {r.notes && <p className="text-(--slate-gray) whitespace-pre-line" style={{ fontSize: "14px" }}>{r.notes}</p>}
                     <Files files={r.attachments} />
                   </li>
                 );
@@ -438,8 +438,8 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
                 const end = toDate(m.endDate);
                 return (
                   <li key={r.id}>
-                    <p className="font-semibold text-[var(--charcoal)]">{m.medicationName || r.title}</p>
-                    <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+                    <p className="font-semibold text-(--charcoal)">{m.medicationName || r.title}</p>
+                    <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>
                       {[m.dosage, m.frequency, `${fmtDay(toDate(m.startDate) || toDate(r.date))}${end ? ` – ${fmtDay(end)}` : ""}`, m.prescribedBy && `by ${m.prescribedBy}`, m.reason].filter(Boolean).join(" · ")}
                     </p>
                     <Files files={r.attachments} />
@@ -457,9 +457,9 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
                 const l = r.labResultData || {};
                 return (
                   <li key={r.id}>
-                    <p className="text-[var(--charcoal)]"><span className="text-[var(--slate-gray)]">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{l.testName || r.title}</span>
+                    <p className="text-(--charcoal)"><span className="text-(--slate-gray)">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{l.testName || r.title}</span>
                       {l.isAbnormal && <span style={{ color: "var(--error-red)", fontWeight: 600 }}> · Abnormal</span>}</p>
-                    {l.resultSummary && <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{l.resultSummary}</p>}
+                    {l.resultSummary && <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>{l.resultSummary}</p>}
                     <Files files={r.attachments} />
                   </li>
                 );
@@ -475,7 +475,7 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
                 const d = r.dentalData || {};
                 return (
                   <li key={r.id}>
-                    <p className="text-[var(--charcoal)]"><span className="text-[var(--slate-gray)]">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{d.procedureType || r.title}</span></p>
+                    <p className="text-(--charcoal)"><span className="text-(--slate-gray)">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{d.procedureType || r.title}</span></p>
                     {toDate(d.nextRecommendedDate) && <Labeled label="Next" value={fmtDay(toDate(d.nextRecommendedDate))} />}
                   </li>
                 );
@@ -489,7 +489,7 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
             <ul className="space-y-2">
               {documents.map((r) => (
                 <li key={r.id}>
-                  <p className="text-[var(--charcoal)]"><span className="text-[var(--slate-gray)]">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{r.title}</span></p>
+                  <p className="text-(--charcoal)"><span className="text-(--slate-gray)">{fmtDay(toDate(r.date))} · </span><span className="font-semibold">{r.title}</span></p>
                   <Files files={r.attachments} />
                 </li>
               ))}
@@ -498,7 +498,7 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
         )}
 
         {more && (
-          <button className="underline text-[var(--bindr-navy)]" onClick={() => setAll(!all)}>
+          <button className="underline text-(--bindr-navy)" onClick={() => setAll(!all)}>
             {all ? "Show less" : "Show the full history"}
           </button>
         )}
@@ -510,7 +510,7 @@ function HealthCard({ records, deceased }: { records: HealthRecord[]; deceased: 
 function Sub({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="font-semibold uppercase tracking-wide text-[var(--slate-gray)] mb-2" style={{ fontSize: "13px" }}>{title}</h3>
+      <h3 className="font-semibold uppercase tracking-wide text-(--slate-gray) mb-2" style={{ fontSize: "13px" }}>{title}</h3>
       {children}
     </div>
   );
@@ -545,7 +545,7 @@ function Files({ files }: { files?: Attachment[] }) {
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1" style={{ fontSize: "14px" }}>
       {list.map((f) => (
-        <button key={f.storagePath} className="underline text-[var(--bindr-navy)]" onClick={() => open(f)} disabled={!!opening}>
+        <button key={f.storagePath} className="underline text-(--bindr-navy)" onClick={() => open(f)} disabled={!!opening}>
           {opening === f.storagePath ? "Opening…" : `📎 ${f.fileName || "File"}`}
         </button>
       ))}
@@ -557,13 +557,13 @@ function Files({ files }: { files?: Attachment[] }) {
 // MARK: - Pieces
 
 function BackButton({ onBack }: { onBack: () => void }) {
-  return <button className="font-inter underline text-[var(--bindr-navy)]" onClick={onBack}>‹ Back to Today</button>;
+  return <button className="font-inter underline text-(--bindr-navy)" onClick={onBack}>‹ Back to Today</button>;
 }
 
 function Labeled({ label, value }: { label: string; value: string }) {
   return (
-    <p className="font-inter text-[var(--charcoal)]">
-      <span className="text-[var(--slate-gray)]">{label}: </span>
+    <p className="font-inter text-(--charcoal)">
+      <span className="text-(--slate-gray)">{label}: </span>
       <span className="whitespace-pre-line">{value}</span>
     </p>
   );

@@ -132,27 +132,27 @@ export default function SitterLinkMaker({ uid, pets }: { uid: string; pets: PetL
     }
   }
 
-  const input = "w-full rounded-lg px-3 py-2 font-inter text-[var(--charcoal)]";
+  const input = "w-full rounded-lg px-3 py-2 font-inter text-(--charcoal)";
   const inputStyle = { border: "1px solid var(--mist-gray)", background: "var(--input-bg, white)", fontSize: "16px" };
-  const label = "block font-inter text-[var(--slate-gray)] mb-1";
+  const label = "block font-inter text-(--slate-gray) mb-1";
 
   return (
     <section className="rounded-2xl p-5 md:p-6" style={{ background: "var(--pure-white)", border: "1px solid var(--mist-gray)" }}>
       <h2 className="font-fraunces font-semibold mb-1" style={{ fontSize: "20px", color: "var(--bindr-navy)" }}>Sitter Links</h2>
-      <p className="font-inter text-[var(--slate-gray)] mb-3" style={{ fontSize: "15px" }}>
+      <p className="font-inter text-(--slate-gray) mb-3" style={{ fontSize: "15px" }}>
         A page for your sitter with everything they need, and the day&apos;s feedings and meds to check off. No app or account for them.
       </p>
 
       {made && (
         <div className="rounded-xl p-4 mb-3 font-inter" style={{ background: "var(--tone-note-bg, #EEF8F9)", border: "1px solid var(--bindr-teal)" }}>
-          <p className="font-semibold text-[var(--charcoal)] mb-1">Link ready. Send it to {name.trim().split(/\s+/)[0]}:</p>
-          <p className="text-[var(--charcoal)] whitespace-pre-line break-words" style={{ fontSize: "15px" }}>{made.message}</p>
+          <p className="font-semibold text-(--charcoal) mb-1">Link ready. Send it to {name.trim().split(/\s+/)[0]}:</p>
+          <p className="text-(--charcoal) whitespace-pre-line wrap-break-word" style={{ fontSize: "15px" }}>{made.message}</p>
           <div className="flex flex-wrap gap-2 mt-3">
             <button className="btn-coral" style={{ padding: "10px 16px" }} onClick={() => share(made.message)}>Share</button>
             <button className="btn-ghost" style={{ padding: "10px 16px" }} onClick={() => copy(made.message)}>{copied ? "Copied" : "Copy Message"}</button>
             <button className="btn-ghost" style={{ padding: "10px 16px" }} onClick={() => copy(made.url)}>Copy Link Only</button>
           </div>
-          <p className="text-[var(--slate-gray)] mt-2" style={{ fontSize: "13px" }}>Send it now: for safety, the link isn&apos;t shown again. You can make a new one anytime.</p>
+          <p className="text-(--slate-gray) mt-2" style={{ fontSize: "13px" }}>Send it now: for safety, the link isn&apos;t shown again. You can make a new one anytime.</p>
         </div>
       )}
 
@@ -167,7 +167,7 @@ export default function SitterLinkMaker({ uid, pets }: { uid: string; pets: PetL
           {pets.length > 1 && (
             <fieldset>
               <legend className={label} style={{ fontSize: "14px" }}>Pets</legend>
-              <div className="flex flex-wrap gap-x-4 gap-y-2 font-inter text-[var(--charcoal)]">
+              <div className="flex flex-wrap gap-x-4 gap-y-2 font-inter text-(--charcoal)">
                 {pets.map((p) => (
                   <label key={p.id} className="flex items-center gap-2">
                     <input type="checkbox" style={{ width: 18, height: 18 }} checked={chosen.includes(p.id)}
@@ -194,7 +194,7 @@ export default function SitterLinkMaker({ uid, pets }: { uid: string; pets: PetL
           </div>
           <fieldset>
             <legend className={label} style={{ fontSize: "14px" }}>What they can see (home codes are never included in a link)</legend>
-            <div className="grid grid-cols-2 gap-y-2 gap-x-4 font-inter text-[var(--charcoal)]">
+            <div className="grid grid-cols-2 gap-y-2 gap-x-4 font-inter text-(--charcoal)">
               {SEES.map((s) => (
                 <label key={s.key} className="flex items-center gap-2">
                   <input type="checkbox" style={{ width: 18, height: 18 }} checked={!!sees[s.key]}
@@ -222,13 +222,13 @@ export default function SitterLinkMaker({ uid, pets }: { uid: string; pets: PetL
 
       {links.length > 0 && (
         <div className="mt-5">
-          <h3 className="font-semibold uppercase tracking-wide text-[var(--slate-gray)] mb-2 font-inter" style={{ fontSize: "13px" }}>Your links</h3>
+          <h3 className="font-semibold uppercase tracking-wide text-(--slate-gray) mb-2 font-inter" style={{ fontSize: "13px" }}>Your links</h3>
           <ul className="space-y-2 font-inter">
             {links.map((l) => (
               <li key={l.linkId} className="flex items-center justify-between gap-3">
-                <span className="text-[var(--charcoal)]">
+                <span className="text-(--charcoal)">
                   <span className="font-semibold">{l.sitterName}</span>
-                  <span className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+                  <span className="text-(--slate-gray)" style={{ fontSize: "14px" }}>
                     {" "}· {l.petNames.join(", ")}{l.endDate ? ` · until ${l.endDate.toLocaleDateString([], { month: "short", day: "numeric" })}` : ""} · {l.opens ? `opened ${l.opens}×` : "not opened yet"}
                   </span>
                 </span>

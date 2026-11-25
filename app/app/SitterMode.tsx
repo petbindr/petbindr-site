@@ -52,10 +52,10 @@ export function SitInvites({ sits, now }: { sits: Sit[]; now: Date }) {
         const when = datesText(s.start, s.end);
         return (
           <Card key={s.shareId} title={`${from} wants you to look after ${s.petName}`}>
-            <p className="font-inter text-[var(--charcoal)]">
+            <p className="font-inter text-(--charcoal)">
               {when ? `${when}. ` : ""}You&apos;ll see what {from} chose to share, and you can check off {s.petName}&apos;s feedings and medications during the sit.
             </p>
-            {s.ownerNotes && <p className="font-inter italic mt-2 text-[var(--charcoal)]">“{s.ownerNotes}”</p>}
+            {s.ownerNotes && <p className="font-inter italic mt-2 text-(--charcoal)">“{s.ownerNotes}”</p>}
             {error && working === null && <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--error-red)" }} role="alert">{error}</p>}
             <div className="flex flex-wrap gap-2 mt-3">
               <button className="btn-coral" style={{ padding: "10px 16px" }} disabled={!!working} onClick={() => respond(s, true)}>
@@ -91,7 +91,7 @@ export function MyClients({ clients, tasks, views, uid, sitterName, reportItems 
   if (clients.length === 0) return null;
   return (
     <section className="space-y-4" aria-label="My clients">
-      <h2 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "24px" }}>
+      <h2 className="font-fraunces font-semibold text-(--bindr-navy)" style={{ fontSize: "24px" }}>
         {clients.length === 1 ? "Your sit" : "Your clients"}
       </h2>
       {clients.map((c) => (
@@ -119,11 +119,11 @@ function ClientCard({ client: c, tasks, views, uid, sitterName, reportItems }: {
 
   return (
     <Card title={c.name}>
-      <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "15px" }}>
+      <p className="font-inter text-(--slate-gray)" style={{ fontSize: "15px" }}>
         {c.live.length === 0 && c.start ? `Starts ${datesText(c.start, null).replace(/^From /, "")}` : datesText(c.start, c.end)}
       </p>
       {c.notes.map((n) => (
-        <p key={n} className="font-inter mt-2 text-[var(--charcoal)]"><span className="font-semibold">This time: </span>{n}</p>
+        <p key={n} className="font-inter mt-2 text-(--charcoal)"><span className="font-semibold">This time: </span>{n}</p>
       ))}
 
       <ul className="mt-3 space-y-1">
@@ -134,10 +134,10 @@ function ClientCard({ client: c, tasks, views, uid, sitterName, reportItems }: {
             <li key={s.shareId} className="font-inter">
               <a href={`#pet/${s.petId}`} className="flex items-center justify-between gap-3 py-2" style={{ textDecoration: "none", minHeight: 44 }}>
                 <span>
-                  <span className="font-semibold text-[var(--bindr-navy)] underline">{v?.name || s.petName}</span>
-                  {kind && <span className="text-[var(--slate-gray)]"> · {kind}</span>}
+                  <span className="font-semibold text-(--bindr-navy) underline">{v?.name || s.petName}</span>
+                  {kind && <span className="text-(--slate-gray)"> · {kind}</span>}
                 </span>
-                <span className="text-[var(--slate-gray)]" aria-hidden>›</span>
+                <span className="text-(--slate-gray)" aria-hidden>›</span>
               </a>
             </li>
           );
@@ -146,8 +146,8 @@ function ClientCard({ client: c, tasks, views, uid, sitterName, reportItems }: {
 
       {next.length > 0 && (
         <div className="mt-2">
-          <p className="font-inter font-semibold text-[var(--charcoal)]" style={{ fontSize: "15px" }}>Next up</p>
-          <ul className="font-inter text-[var(--charcoal)]" style={{ fontSize: "15px" }}>
+          <p className="font-inter font-semibold text-(--charcoal)" style={{ fontSize: "15px" }}>Next up</p>
+          <ul className="font-inter text-(--charcoal)" style={{ fontSize: "15px" }}>
             {next.map((t, i) => (
               <li key={i}>{fmtTime(t.time)} · {t.petName} · {t.title}</li>
             ))}
@@ -214,11 +214,11 @@ function HomeInfo({ ownerId, ownerFirst, homeShared }: { ownerId: string; ownerF
   if (state === "closed" || state === "loading" || state === "error") {
     return (
       <div className="mt-3">
-        <button className="font-inter underline text-[var(--bindr-navy)]" style={{ padding: "8px 0", minHeight: 44 }} onClick={load} disabled={state === "loading"}>
+        <button className="font-inter underline text-(--bindr-navy)" style={{ padding: "8px 0", minHeight: 44 }} onClick={load} disabled={state === "loading"}>
           {state === "loading" ? "Loading…" : homeShared ? "Show home info and emergency contacts" : "Show emergency contacts"}
         </button>
         {homeShared && state === "closed" && (
-          <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "13px" }}>{ownerFirst} can see when home info was looked at.</p>
+          <p className="font-inter text-(--slate-gray)" style={{ fontSize: "13px" }}>{ownerFirst} can see when home info was looked at.</p>
         )}
         {state === "error" && <p className="font-inter" style={{ fontSize: "14px", color: "var(--error-red)" }} role="alert">{error}</p>}
       </div>
@@ -231,31 +231,31 @@ function HomeInfo({ ownerId, ownerFirst, homeShared }: { ownerId: string; ownerF
     <div className="mt-4 rounded-xl p-4 space-y-3" style={{ background: "var(--warm-cream)" }}>
       {rows.length > 0 && (
         <div className="space-y-1 font-inter">
-          <p className="font-semibold text-[var(--charcoal)]">Home</p>
+          <p className="font-semibold text-(--charcoal)">Home</p>
           {rows.map(([k, label]) => (
-            <p key={k} className="text-[var(--charcoal)]" style={{ fontSize: "15px" }}>
-              <span className="text-[var(--slate-gray)]">{label}: </span><span className="whitespace-pre-line">{house![k] as string}</span>
+            <p key={k} className="text-(--charcoal)" style={{ fontSize: "15px" }}>
+              <span className="text-(--slate-gray)">{label}: </span><span className="whitespace-pre-line">{house![k] as string}</span>
             </p>
           ))}
         </div>
       )}
       <div className="font-inter">
-        <p className="font-semibold text-[var(--charcoal)]">In an emergency</p>
+        <p className="font-semibold text-(--charcoal)">In an emergency</p>
         {contacts.length === 0 ? (
-          <p className="text-[var(--slate-gray)]" style={{ fontSize: "15px" }}>No emergency contacts saved.</p>
+          <p className="text-(--slate-gray)" style={{ fontSize: "15px" }}>No emergency contacts saved.</p>
         ) : (
           <ul className="space-y-2 mt-1">
             {contacts.map((x, i) => (
               <li key={x.id || i}>
-                <p className="text-[var(--charcoal)]">{x.name}{x.relationship ? ` · ${x.relationship}` : ""}</p>
-                {x.phoneNumber && <a className="underline text-[var(--bindr-navy)]" href={telHref(x.phoneNumber)}>Call {x.phoneNumber}</a>}
-                {x.notes && <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{x.notes}</p>}
+                <p className="text-(--charcoal)">{x.name}{x.relationship ? ` · ${x.relationship}` : ""}</p>
+                {x.phoneNumber && <a className="underline text-(--bindr-navy)" href={telHref(x.phoneNumber)}>Call {x.phoneNumber}</a>}
+                {x.notes && <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>{x.notes}</p>}
               </li>
             ))}
           </ul>
         )}
       </div>
-      <button className="font-inter underline text-[var(--slate-gray)]" style={{ fontSize: "14px" }} onClick={() => { setState("closed"); setHouse(null); }}>Hide</button>
+      <button className="font-inter underline text-(--slate-gray)" style={{ fontSize: "14px" }} onClick={() => { setState("closed"); setHouse(null); }}>Hide</button>
     </div>
   );
 }
@@ -329,17 +329,17 @@ function VisitReportForm({ client: c, views, uid, sitterName, reportItems, onClo
     return (
       <div className="mt-4 rounded-xl p-4 font-inter" style={{ background: "var(--warm-cream)" }} role="status">
         <p className="font-semibold" style={{ color: "var(--success-green)" }}>✓ Report sent to {c.name} at {fmtTime(sentAt)}</p>
-        <button className="underline text-[var(--slate-gray)] mt-1" style={{ fontSize: "14px" }} onClick={onClose}>Close</button>
+        <button className="underline text-(--slate-gray) mt-1" style={{ fontSize: "14px" }} onClick={onClose}>Close</button>
       </div>
     );
   }
 
   return (
     <div className="mt-4 rounded-xl p-4 space-y-4 font-inter" style={{ background: "var(--warm-cream)" }}>
-      <p className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "18px" }}>Visit report for {c.name}</p>
+      <p className="font-fraunces font-semibold text-(--bindr-navy)" style={{ fontSize: "18px" }}>Visit report for {c.name}</p>
       {pets.length > 1 && (
         <fieldset>
-          <legend className="font-semibold text-[var(--charcoal)]" style={{ fontSize: "15px" }}>Pets</legend>
+          <legend className="font-semibold text-(--charcoal)" style={{ fontSize: "15px" }}>Pets</legend>
           {pets.map((p) => (
             <label key={p.id} className="flex items-center gap-3" style={{ minHeight: 44 }}>
               <input type="checkbox" style={{ width: 20, height: 20 }} checked={chosen.includes(p.id)}
@@ -350,11 +350,11 @@ function VisitReportForm({ client: c, views, uid, sitterName, reportItems, onClo
         </fieldset>
       )}
       <div>
-        <p className="font-semibold text-[var(--charcoal)]" style={{ fontSize: "15px" }}>What you did today</p>
+        <p className="font-semibold text-(--charcoal)" style={{ fontSize: "15px" }}>What you did today</p>
         {items.length === 0 ? (
-          <p className="text-[var(--slate-gray)]" style={{ fontSize: "15px" }}>Nothing checked off by you yet today. Check things off on Today and they&apos;re added here.</p>
+          <p className="text-(--slate-gray)" style={{ fontSize: "15px" }}>Nothing checked off by you yet today. Check things off on Today and they&apos;re added here.</p>
         ) : (
-          <ul style={{ fontSize: "15px" }} className="text-[var(--charcoal)]">
+          <ul style={{ fontSize: "15px" }} className="text-(--charcoal)">
             {items.map((it, i) => (
               <li key={i}>{it.kind === "feeding" ? "🍽️" : "💊"} {fmtTime(it.time)} · {it.pet} · {it.title}{it.detail ? ` · ${it.detail}` : ""}</li>
             ))}
@@ -362,14 +362,14 @@ function VisitReportForm({ client: c, views, uid, sitterName, reportItems, onClo
         )}
       </div>
       <label className="block">
-        <span className="block font-semibold text-[var(--charcoal)] mb-1" style={{ fontSize: "15px" }}>Note</span>
-        <textarea className="w-full rounded-xl px-4 py-3 text-[var(--charcoal)]" rows={4} maxLength={2000}
+        <span className="block font-semibold text-(--charcoal) mb-1" style={{ fontSize: "15px" }}>Note</span>
+        <textarea className="w-full rounded-xl px-4 py-3 text-(--charcoal)" rows={4} maxLength={2000}
           style={{ border: "1px solid var(--mist-gray)", background: "var(--pure-white)", fontSize: "16px" }}
           placeholder="How did it go? Walks, mood, anything the owner should know."
           value={note} onChange={(e) => setNote(e.target.value)} />
       </label>
       <div>
-        <span className="block font-semibold text-[var(--charcoal)] mb-1" style={{ fontSize: "15px" }}>Photos (up to {MAX_REPORT_PHOTOS})</span>
+        <span className="block font-semibold text-(--charcoal) mb-1" style={{ fontSize: "15px" }}>Photos (up to {MAX_REPORT_PHOTOS})</span>
         {previews.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2">
             {previews.map((u, i) => (
@@ -402,7 +402,7 @@ function VisitReportForm({ client: c, views, uid, sitterName, reportItems, onClo
         </button>
         <button className="btn-ghost" style={{ padding: "10px 16px" }} disabled={busy} onClick={onClose}>Cancel</button>
       </div>
-      <p className="text-[var(--slate-gray)]" style={{ fontSize: "13px" }}>{c.name} and anyone who co-owns {picked.length === 1 ? "this pet" : "these pets"} get it in PetBindr.</p>
+      <p className="text-(--slate-gray)" style={{ fontSize: "13px" }}>{c.name} and anyone who co-owns {picked.length === 1 ? "this pet" : "these pets"} get it in PetBindr.</p>
     </div>
   );
 }

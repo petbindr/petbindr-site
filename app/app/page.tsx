@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-const footerLink = "font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors";
+const footerLink = "font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors";
 
 export default function AppPage() {
   return (
@@ -37,7 +37,7 @@ export default function AppPage() {
           <Link href="/security" className={footerLink}>Security</Link>
           <a href="mailto:hello@petbindr.com" className={footerLink}>hello@petbindr.com</a>
         </nav>
-        <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "13px" }}>© PetBindr LLC 2026</p>
+        <p className="font-inter text-(--slate-gray)" style={{ fontSize: "13px" }}>© PetBindr LLC 2026</p>
       </footer>
     </main>
   );

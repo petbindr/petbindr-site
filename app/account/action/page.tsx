@@ -19,12 +19,12 @@ export default function AccountActionPage() {
       <div className="max-w-xl mx-auto">
         <Link
           href="/"
-          className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors mb-10 inline-block"
+          className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors mb-10 inline-block"
           style={{ fontSize: "14px" }}
         >
           ← Back to PetBindr
         </Link>
-        <Suspense fallback={<p className="font-inter text-[var(--slate-gray)]">Loading…</p>}>
+        <Suspense fallback={<p className="font-inter text-(--slate-gray)">Loading…</p>}>
           <ActionHandler />
         </Suspense>
       </div>

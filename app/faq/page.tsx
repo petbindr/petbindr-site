@@ -36,9 +36,9 @@ const faqs: { q: string; a: React.ReactNode }[] = [
     a: (
       <p>
         On iPhone, and on the web at{" "}
-        <Link href="/app" className="underline text-[var(--bindr-navy)]">petbindr.com/app</Link>, which works on Android and
+        <Link href="/app" className="underline text-(--bindr-navy)">petbindr.com/app</Link>, which works on Android and
         computers too. The iPhone app isn&rsquo;t out yet;{" "}
-        <Link href="/#get-notified" className="underline text-[var(--bindr-navy)]">join the waitlist</Link> and we&rsquo;ll email you when it is.
+        <Link href="/#get-notified" className="underline text-(--bindr-navy)">join the waitlist</Link> and we&rsquo;ll email you when it is.
       </p>
     ),
   },
@@ -47,7 +47,7 @@ const faqs: { q: string; a: React.ReactNode }[] = [
     a: (
       <p>
         Not a separate one. On Android, open{" "}
-        <Link href="/app" className="underline text-[var(--bindr-navy)]">petbindr.com/app</Link> in your browser: you can sign in,
+        <Link href="/app" className="underline text-(--bindr-navy)">petbindr.com/app</Link> in your browser: you can sign in,
         add your pets, and check off feedings and medications there. Sitters with a sitter link don&rsquo;t need an app or an
         account at all.
       </p>
@@ -175,9 +175,9 @@ const faqs: { q: string; a: React.ReactNode }[] = [
       <p>
         In the app, go to your account menu and choose <strong>Delete Account</strong>. It deletes your pets, records,
         photos and sign-in. If you&rsquo;d rather we do it, email{" "}
-        <a href="mailto:hello@petbindr.com" className="underline text-[var(--bindr-navy)]">hello@petbindr.com</a>. More in the{" "}
-        <Link href="/privacy" className="underline text-[var(--bindr-navy)]">privacy policy</Link> and{" "}
-        <Link href="/security" className="underline text-[var(--bindr-navy)]">how we protect your info</Link>.
+        <a href="mailto:hello@petbindr.com" className="underline text-(--bindr-navy)">hello@petbindr.com</a>. More in the{" "}
+        <Link href="/privacy" className="underline text-(--bindr-navy)">privacy policy</Link> and{" "}
+        <Link href="/security" className="underline text-(--bindr-navy)">how we protect your info</Link>.
       </p>
     ),
   },
@@ -186,7 +186,7 @@ const faqs: { q: string; a: React.ReactNode }[] = [
     a: (
       <p>
         Email{" "}
-        <a href="mailto:hello@petbindr.com?subject=PetBindr%20help" className="underline text-[var(--bindr-navy)]">hello@petbindr.com</a>.
+        <a href="mailto:hello@petbindr.com?subject=PetBindr%20help" className="underline text-(--bindr-navy)">hello@petbindr.com</a>.
         A real person reads it. Tell us what you tapped and what you expected; a screenshot helps.
       </p>
     ),
@@ -208,27 +208,27 @@ export default function FaqPage() {
       <div className="max-w-2xl mx-auto">
         <Link
           href="/"
-          className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors mb-10 inline-block"
+          className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors mb-10 inline-block"
           style={{ fontSize: "14px" }}
         >
           ← Back to PetBindr
         </Link>
 
-        <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-4" style={{ fontSize: "clamp(28px, 4vw, 40px)" }}>
+        <h1 className="font-fraunces font-semibold text-(--bindr-navy) mb-4" style={{ fontSize: "clamp(28px, 4vw, 40px)" }}>
           Help and FAQ
         </h1>
-        <p className="font-inter text-[var(--charcoal)] leading-relaxed mb-12" style={{ fontSize: "18px" }}>
+        <p className="font-inter text-(--charcoal) leading-relaxed mb-12" style={{ fontSize: "18px" }}>
           Quick answers, in plain words. Can&rsquo;t find yours? Email{" "}
-          <a href="mailto:hello@petbindr.com?subject=PetBindr%20help" className="underline text-[var(--bindr-navy)]">hello@petbindr.com</a>.
+          <a href="mailto:hello@petbindr.com?subject=PetBindr%20help" className="underline text-(--bindr-navy)">hello@petbindr.com</a>.
         </p>
 
         <div className="space-y-10">
           {faqs.map((f) => (
             <section key={f.q}>
-              <h2 className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-3" style={{ fontSize: "22px" }}>
+              <h2 className="font-fraunces font-semibold text-(--bindr-navy) mb-3" style={{ fontSize: "22px" }}>
                 {f.q}
               </h2>
-              <div className="font-inter text-[var(--charcoal)] leading-relaxed space-y-4" style={{ fontSize: "16px" }}>
+              <div className="font-inter text-(--charcoal) leading-relaxed space-y-4" style={{ fontSize: "16px" }}>
                 {f.a}
               </div>
             </section>

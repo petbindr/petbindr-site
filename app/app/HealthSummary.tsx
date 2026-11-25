@@ -96,7 +96,7 @@ export default function HealthSummary({ name, identity, chip, photo, allergies, 
         <button className="btn-ghost" style={{ padding: "8px 14px" }} onClick={onClose}>← Back to {name}</button>
         <button className="btn-coral ml-auto" style={{ padding: "10px 18px" }} onClick={() => window.print()}>Print or Save as PDF</button>
       </div>
-      <p className="font-inter text-[var(--slate-gray)] print:hidden" style={{ fontSize: "14px" }}>
+      <p className="font-inter text-(--slate-gray) print:hidden" style={{ fontSize: "14px" }}>
         One page for the vet&apos;s front desk. Print it, or choose &ldquo;Save as PDF&rdquo; in the print window to email it.
       </p>
 

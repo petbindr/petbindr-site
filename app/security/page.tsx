@@ -153,18 +153,18 @@ const sections: { title: string; body: React.ReactNode }[] = [
         <p>
           You can delete your account and everything in it yourself, any time: in the app under{" "}
           <strong>Account &rarr; Delete Account</strong>, or on{" "}
-          <Link href="/app" className="text-[var(--bindr-navy)] underline">
+          <Link href="/app" className="text-(--bindr-navy) underline">
             petbindr.com/app
           </Link>{" "}
           under <strong>Your account</strong>. That also turns off every link and share you made.
         </p>
         <p>
           If something doesn&rsquo;t look right, or you&rsquo;d like help with anything, email{" "}
-          <a href="mailto:hello@petbindr.com" className="text-[var(--bindr-navy)] underline">
+          <a href="mailto:hello@petbindr.com" className="text-(--bindr-navy) underline">
             hello@petbindr.com
           </a>
           . A real person reads every message. See also our{" "}
-          <Link href="/privacy" className="text-[var(--bindr-navy)] underline">
+          <Link href="/privacy" className="text-(--bindr-navy) underline">
             Privacy Policy
           </Link>
           .
@@ -183,21 +183,21 @@ export default function SecurityPage() {
       <div className="max-w-2xl mx-auto">
         <Link
           href="/"
-          className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors mb-10 inline-block"
+          className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors mb-10 inline-block"
           style={{ fontSize: "14px" }}
         >
           ← Back to PetBindr
         </Link>
 
         <h1
-          className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-4"
+          className="font-fraunces font-semibold text-(--bindr-navy) mb-4"
           style={{ fontSize: "clamp(28px, 4vw, 40px)" }}
         >
           How we protect your info
         </h1>
 
         <p
-          className="font-inter text-[var(--charcoal)] leading-relaxed mb-12"
+          className="font-inter text-(--charcoal) leading-relaxed mb-12"
           style={{ fontSize: "18px" }}
         >
           You&rsquo;re trusting us with your pet&rsquo;s care, and sometimes the keys to your home.
@@ -208,13 +208,13 @@ export default function SecurityPage() {
           {sections.map((section) => (
             <section key={section.title}>
               <h2
-                className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-3"
+                className="font-fraunces font-semibold text-(--bindr-navy) mb-3"
                 style={{ fontSize: "22px" }}
               >
                 {section.title}
               </h2>
               <div
-                className="font-inter text-[var(--charcoal)] leading-relaxed space-y-4"
+                className="font-inter text-(--charcoal) leading-relaxed space-y-4"
                 style={{ fontSize: "16px" }}
               >
                 {section.body}

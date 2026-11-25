@@ -77,23 +77,23 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
   if (status === "success") {
     return (
       <div role="status" className={`rounded-xl border px-7 py-5 max-w-lg font-semibold text-base font-inter ${
-        dark ? "border-[#A8E6C4] bg-[#A8E6C41F] text-[#A8E6C4]" : "border-[var(--success-green)] bg-[#2E7D561F] text-[var(--success-green)]"}`}>
+        dark ? "border-[#A8E6C4] bg-[#A8E6C41F] text-[#A8E6C4]" : "border-(--success-green) bg-[#2E7D561F] text-(--success-green)"}`}>
         {/* True for everyone (new or already signed up), so it says nothing about the address */}
         Thanks! That address is on the list. We&rsquo;ll email you when we launch.
         {shareUrl && (
           <div className={`mt-4 pt-4 border-t font-normal ${dark ? "border-[#A8E6C455]" : "border-[#2E7D5640]"}`}>
-            <p className={`font-semibold ${dark ? "text-white" : "text-[var(--bindr-navy)]"}`}>Know someone who&rsquo;d use this?</p>
-            <p className={`mt-1 text-sm ${dark ? "text-[var(--soft-teal)]" : "text-[var(--slate-gray)]"}`}>
+            <p className={`font-semibold ${dark ? "text-white" : "text-(--bindr-navy)"}`}>Know someone who&rsquo;d use this?</p>
+            <p className={`mt-1 text-sm ${dark ? "text-(--soft-teal)" : "text-(--slate-gray)"}`}>
               Send them this link to PetBindr. Your email has your personal link too.
             </p>
-            <p className={`mt-2 text-sm break-all select-all ${dark ? "text-white" : "text-[var(--bindr-navy)]"}`}>{shareUrl}</p>
+            <p className={`mt-2 text-sm break-all select-all ${dark ? "text-white" : "text-(--bindr-navy)"}`}>{shareUrl}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" onClick={copyLink} className="btn-coral !py-2 !px-4 text-sm">
+              <button type="button" onClick={copyLink} className="btn-coral py-2! px-4! text-sm">
                 {copied ? "Copied" : "Copy link"}
               </button>
               {canShare && (
                 <button type="button" onClick={shareLink}
-                  className={`rounded-[10px] border px-4 py-2 text-sm font-semibold ${dark ? "border-white text-white" : "border-[var(--bindr-navy)] text-[var(--bindr-navy)]"}`}>
+                  className={`rounded-[10px] border px-4 py-2 text-sm font-semibold ${dark ? "border-white text-white" : "border-(--bindr-navy) text-(--bindr-navy)"}`}>
                   Share…
                 </button>
               )}
@@ -142,14 +142,14 @@ export default function WaitlistForm({ variant = "light" }: WaitlistFormProps) {
         {status === "error" && (
           // role="alert": read out when it appears (it was silent for screen readers)
           <p id={`waitlist-error-${variant ?? "light"}`} role="alert"
-            className={`mt-2 text-sm font-inter ${dark ? "text-[#FFB4A8]" : "text-[var(--error-red)]"}`}>{errorMsg}</p>
+            className={`mt-2 text-sm font-inter ${dark ? "text-[#FFB4A8]" : "text-(--error-red)"}`}>{errorMsg}</p>
         )}
       </form>
       <p
         className={`mt-3 text-sm font-medium font-inter ${
           variant === "dark"
-            ? "text-[var(--soft-teal)]"
-            : "text-[var(--slate-gray)]"
+            ? "text-(--soft-teal)"
+            : "text-(--slate-gray)"
         }`}
       >
         Launching on iOS soon. The first 1,000 signups become Founding Members —

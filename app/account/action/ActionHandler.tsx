@@ -139,20 +139,20 @@ export default function ActionHandler() {
   return (
     <>
       <h1
-        className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-4"
+        className="font-fraunces font-semibold text-(--bindr-navy) mb-4"
         style={{ fontSize: "clamp(26px, 4vw, 36px)" }}
       >
         {heading}
       </h1>
 
       {state.kind === "working" && (
-        <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "16px" }}>
+        <p className="font-inter text-(--slate-gray)" style={{ fontSize: "16px" }}>
           {state.text}
         </p>
       )}
 
       {(state.kind === "done" || state.kind === "error") && (
-        <p className="font-inter text-[var(--charcoal)] leading-relaxed" style={{ fontSize: "16px" }}>
+        <p className="font-inter text-(--charcoal) leading-relaxed" style={{ fontSize: "16px" }}>
           {state.text}
         </p>
       )}
@@ -160,7 +160,7 @@ export default function ActionHandler() {
       {state.kind === "resetForm" && (
         <form onSubmit={saveNewPassword} className="space-y-4">
           {state.email && (
-            <p className="font-inter text-[var(--charcoal)] leading-relaxed" style={{ fontSize: "16px" }}>
+            <p className="font-inter text-(--charcoal) leading-relaxed" style={{ fontSize: "16px" }}>
               For <strong>{state.email}</strong>
             </p>
           )}
@@ -186,7 +186,7 @@ export default function ActionHandler() {
             onChange={(e) => setConfirm(e.target.value)}
             required
           />
-          <label className="font-inter text-[var(--slate-gray)] flex items-center gap-2" style={{ fontSize: "14px" }}>
+          <label className="font-inter text-(--slate-gray) flex items-center gap-2" style={{ fontSize: "14px" }}>
             <input type="checkbox" checked={showPassword} onChange={(e) => setShowPassword(e.target.checked)} />
             Show passwords
           </label>

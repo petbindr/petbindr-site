@@ -27,7 +27,7 @@ export default function Hero() {
               held it back ~1 s (Lighthouse LCP 2.9 s, 2026-11-24) */}
           <div>
             <h1
-              className="font-fraunces font-semibold text-[var(--bindr-navy)] leading-tight tracking-tight mb-6"
+              className="font-fraunces font-semibold text-(--bindr-navy) leading-tight tracking-tight mb-6"
               style={{ fontSize: "clamp(36px, 6vw, 72px)", letterSpacing: "-0.03em" }}
             >
               Our pet binder was 13 pages. So we built this instead.
@@ -36,7 +36,7 @@ export default function Hero() {
 
           <FadeIn delay={0.1}>
             <p
-              className="text-[var(--charcoal)] font-inter mb-10 max-w-2xl"
+              className="text-(--charcoal) font-inter mb-10 max-w-2xl"
               style={{ fontSize: "clamp(17px, 2vw, 20px)", lineHeight: "1.6" }}
             >
               PetBindr is a live, shareable care plan for your pet. Update it
@@ -50,11 +50,11 @@ export default function Hero() {
           </FadeIn>
 
           <FadeIn delay={0.3}>
-            <p className="font-inter text-[var(--slate-gray)] mt-6" style={{ fontSize: "15px", lineHeight: "1.6" }}>
+            <p className="font-inter text-(--slate-gray) mt-6" style={{ fontSize: "15px", lineHeight: "1.6" }}>
               Already have an account, or on Android?{" "}
               <a
                 href="/app?utm_source=home&utm_medium=hero"
-                className="underline text-[var(--bindr-navy)]"
+                className="underline text-(--bindr-navy)"
               >
                 Sign in at petbindr.com/app
               </a>

@@ -72,7 +72,7 @@ export default function VisitReports({ uid }: { uid: string }) {
   return (
     <section className="rounded-2xl p-5 md:p-6" style={{ background: "var(--pure-white)", border: "1px solid var(--mist-gray)" }}>
       <h2 className="font-fraunces font-semibold mb-3" style={{ fontSize: "20px", color: "var(--bindr-navy)" }}>Visit reports</h2>
-      <ul className="divide-y divide-[var(--mist-gray)]">
+      <ul className="divide-y divide-(--mist-gray)">
         {reports.map((r) => <ReportRow key={r.id} report={r} />)}
       </ul>
     </section>
@@ -90,12 +90,12 @@ function ReportRow({ report }: { report: Report }) {
         aria-expanded={open}
       >
         <span>
-          <span className="block font-semibold text-[var(--charcoal)]">From {report.sitterName}</span>
-          <span className="block text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+          <span className="block font-semibold text-(--charcoal)">From {report.sitterName}</span>
+          <span className="block text-(--slate-gray)" style={{ fontSize: "14px" }}>
             {[names(report.petNames), when(report.createdAt), report.photoPaths.length ? `${report.photoPaths.length} photo${report.photoPaths.length === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · ")}
           </span>
         </span>
-        <span className="text-[var(--slate-gray)]" aria-hidden>{open ? "▾" : "›"}</span>
+        <span className="text-(--slate-gray)" aria-hidden>{open ? "▾" : "›"}</span>
       </button>
       {open && <ReportDetail report={report} />}
     </li>
@@ -106,7 +106,7 @@ function ReportDetail({ report }: { report: Report }) {
   return (
     <div className="space-y-3 pt-2 pb-1">
       {report.note && (
-        <p className="font-inter text-[var(--charcoal)] whitespace-pre-line" style={{ fontSize: "16px" }}>{report.note}</p>
+        <p className="font-inter text-(--charcoal) whitespace-pre-line" style={{ fontSize: "16px" }}>{report.note}</p>
       )}
       {report.photoPaths.length > 0 && (
         <div className="grid grid-cols-2 gap-2">
@@ -115,17 +115,17 @@ function ReportDetail({ report }: { report: Report }) {
       )}
       {report.items.length > 0 && (
         <div>
-          <p className="font-inter font-semibold text-[var(--bindr-navy)] mb-1" style={{ fontSize: "15px" }}>Done</p>
+          <p className="font-inter font-semibold text-(--bindr-navy) mb-1" style={{ fontSize: "15px" }}>Done</p>
           <ul className="space-y-1">
             {report.items.map((i, n) => (
               <li key={n} className="font-inter flex justify-between gap-3" style={{ fontSize: "15px" }}>
                 <span>
                   <span style={{ color: "var(--success-green)" }} aria-hidden>✓ </span>
                   {i.pet} · {i.title}
-                  {i.detail && <span className="text-[var(--slate-gray)]"> · {i.detail}</span>}
+                  {i.detail && <span className="text-(--slate-gray)"> · {i.detail}</span>}
                 </span>
                 {i.time && (
-                  <span className="text-[var(--slate-gray)] shrink-0">
+                  <span className="text-(--slate-gray) shrink-0">
                     {i.time.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                   </span>
                 )}
@@ -154,7 +154,7 @@ function ReportPhoto({ saved, label }: { saved: string; label: string }) {
 
   if (failed) {
     return (
-      <div className="rounded-xl flex items-center justify-center font-inter text-[var(--slate-gray)]"
+      <div className="rounded-xl flex items-center justify-center font-inter text-(--slate-gray)"
         style={{ aspectRatio: "1", background: "var(--warm-cream)", fontSize: "14px" }}>
         Photo unavailable
       </div>

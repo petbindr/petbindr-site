@@ -30,7 +30,7 @@ export default async function UnsubscribePage({ searchParams }: Props) {
     message = (
       <>
         The link may be incomplete. Email{" "}
-        <a href="mailto:hello@petbindr.com?subject=unsubscribe" className="text-[var(--bindr-navy)] underline">
+        <a href="mailto:hello@petbindr.com?subject=unsubscribe" className="text-(--bindr-navy) underline">
           hello@petbindr.com
         </a>{" "}
         and we&rsquo;ll take you off the list.
@@ -44,20 +44,20 @@ export default async function UnsubscribePage({ searchParams }: Props) {
       <div className="max-w-xl mx-auto">
         <Link
           href="/"
-          className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors mb-10 inline-block"
+          className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors mb-10 inline-block"
           style={{ fontSize: "14px" }}
         >
           ← Back to PetBindr
         </Link>
 
         <h1
-          className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-4"
+          className="font-fraunces font-semibold text-(--bindr-navy) mb-4"
           style={{ fontSize: "clamp(26px, 4vw, 36px)" }}
         >
           {heading}
         </h1>
 
-        <p className="font-inter text-[var(--charcoal)] leading-relaxed mb-8" style={{ fontSize: "16px" }}>
+        <p className="font-inter text-(--charcoal) leading-relaxed mb-8" style={{ fontSize: "16px" }}>
           {message}
         </p>
 

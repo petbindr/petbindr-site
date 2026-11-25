@@ -81,34 +81,34 @@ export default function SitterTemplatePage() {
       <div className="max-w-2xl mx-auto">
         <Link
           href="/"
-          className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors mb-10 inline-block"
+          className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors mb-10 inline-block"
           style={{ fontSize: "14px" }}
         >
           ← Back to PetBindr
         </Link>
 
-        <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-4" style={{ fontSize: "clamp(28px, 4vw, 40px)" }}>
+        <h1 className="font-fraunces font-semibold text-(--bindr-navy) mb-4" style={{ fontSize: "clamp(28px, 4vw, 40px)" }}>
           Pet sitter instructions template
         </h1>
-        <p className="font-inter text-[var(--charcoal)] leading-relaxed mb-4" style={{ fontSize: "18px" }}>
+        <p className="font-inter text-(--charcoal) leading-relaxed mb-4" style={{ fontSize: "18px" }}>
           A good sitter can only follow what you wrote down. Copy this list into a note or a document, fill in
           each line, and leave it where your sitter will see it. It takes about ten minutes, and it saves the
           late-night &ldquo;where does she keep the&hellip;?&rdquo; text.
         </p>
-        <p className="font-inter text-[var(--slate-gray)] mb-12" style={{ fontSize: "15px" }}>
+        <p className="font-inter text-(--slate-gray) mb-12" style={{ fontSize: "15px" }}>
           Printing this page gives you a clean checklist.
         </p>
 
         <div className="space-y-10">
           {sections.map((s) => (
             <section key={s.heading}>
-              <h2 className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-3" style={{ fontSize: "22px" }}>
+              <h2 className="font-fraunces font-semibold text-(--bindr-navy) mb-3" style={{ fontSize: "22px" }}>
                 {s.heading}
               </h2>
-              <ul className="font-inter text-[var(--charcoal)] leading-relaxed space-y-2 list-none" style={{ fontSize: "16px" }}>
+              <ul className="font-inter text-(--charcoal) leading-relaxed space-y-2 list-none" style={{ fontSize: "16px" }}>
                 {s.items.map((item) => (
                   <li key={item} className="flex gap-3">
-                    <span aria-hidden className="text-[var(--slate-gray)]">☐</span>
+                    <span aria-hidden className="text-(--slate-gray)">☐</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -121,10 +121,10 @@ export default function SitterTemplatePage() {
           className="mt-14 rounded-2xl p-6 md:p-8"
           style={{ background: "#fff", border: "1px solid var(--mist-gray)" }}
         >
-          <h2 className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-3" style={{ fontSize: "24px" }}>
+          <h2 className="font-fraunces font-semibold text-(--bindr-navy) mb-3" style={{ fontSize: "24px" }}>
             Or send your sitter a link instead
           </h2>
-          <p className="font-inter text-[var(--charcoal)] leading-relaxed mb-3" style={{ fontSize: "16px" }}>
+          <p className="font-inter text-(--charcoal) leading-relaxed mb-3" style={{ fontSize: "16px" }}>
             A document goes out of date the moment the vet changes a dose. In PetBindr you fill this in once,
             then send your sitter a link. They open it in their phone&rsquo;s browser: no app, no account. They see
             only what you chose to share, check off feedings and medications as they go, and you see who did

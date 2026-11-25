@@ -18,9 +18,9 @@ import {
 } from "./records";
 import { toDate, fmtDay, type HealthRecord } from "./health";
 
-const input = "w-full rounded-lg px-3 py-2 font-inter text-[var(--charcoal)]";
+const input = "w-full rounded-lg px-3 py-2 font-inter text-(--charcoal)";
 const inputStyle = { border: "1px solid var(--mist-gray)", background: "var(--input-bg, white)", fontSize: "16px" };
-const labelCls = "block font-inter text-[var(--slate-gray)] mb-1";
+const labelCls = "block font-inter text-(--slate-gray) mb-1";
 const SAVE_ERROR = "Couldn't save that. Check your connection and try again.";
 
 function dayInput(d: Date | null): string {
@@ -137,7 +137,7 @@ export function VaccinesEditor({ petId, uid, records }: { petId: string; uid: st
     <Shell title="Vaccines">
       {editing === null ? (
         <>
-          {vaccines.length === 0 && <p className="font-inter text-[var(--slate-gray)] mb-3">None recorded yet.</p>}
+          {vaccines.length === 0 && <p className="font-inter text-(--slate-gray) mb-3">None recorded yet.</p>}
           {vaccines.length > 0 && (
             <ul className="space-y-2 mb-3">
               {shown.map((r) => {
@@ -145,12 +145,12 @@ export function VaccinesEditor({ petId, uid, records }: { petId: string; uid: st
                 return (
                   <li key={r.id} className="flex items-start gap-3 font-inter">
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-[var(--charcoal)]">{r.vaccinationData?.vaccineName || r.title}</p>
-                      <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+                      <p className="font-semibold text-(--charcoal)">{r.vaccinationData?.vaccineName || r.title}</p>
+                      <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>
                         Given {fmtDay(toDate(r.date))}{due ? ` · next due ${fmtDay(due)}` : ""}
                       </p>
                     </div>
-                    <button className="underline text-[var(--bindr-navy)] shrink-0" style={{ fontSize: "15px" }} onClick={() => open(r)}
+                    <button className="underline text-(--bindr-navy) shrink-0" style={{ fontSize: "15px" }} onClick={() => open(r)}
                       aria-label={`Edit ${r.vaccinationData?.vaccineName || r.title} given ${fmtDay(toDate(r.date))}`}>Edit</button>
                   </li>
                 );
@@ -158,7 +158,7 @@ export function VaccinesEditor({ petId, uid, records }: { petId: string; uid: st
             </ul>
           )}
           {vaccines.length > 6 && (
-            <button className="font-inter underline text-[var(--bindr-navy)] mb-3 block" style={{ fontSize: "15px" }} onClick={() => setShowAll(!showAll)}>
+            <button className="font-inter underline text-(--bindr-navy) mb-3 block" style={{ fontSize: "15px" }} onClick={() => setShowAll(!showAll)}>
               {showAll ? "Show fewer" : `Show all ${vaccines.length}`}
             </button>
           )}
@@ -183,7 +183,7 @@ export function VaccinesEditor({ petId, uid, records }: { petId: string; uid: st
           <Field id="vx-notes" label="Note (optional)">
             <textarea id="vx-notes" className={input} style={inputStyle} rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </Field>
-          {hasFiles && <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>This record has files attached. To delete it, use the iPhone app.</p>}
+          {hasFiles && <p className="font-inter text-(--slate-gray)" style={{ fontSize: "14px" }}>This record has files attached. To delete it, use the iPhone app.</p>}
           <Err text={error} />
           <Buttons saving={saving} canSave={canSave} onCancel={() => setEditing(null)}
             onDelete={editing !== "new" && !hasFiles ? remove : undefined} />
@@ -246,7 +246,7 @@ export function AllergiesEditor({ petId, allergies }: { petId: string; allergies
     <Shell title="Edit Allergies">
       {editing === null ? (
         <>
-          {list.length === 0 && <p className="font-inter text-[var(--slate-gray)] mb-3">None recorded yet.</p>}
+          {list.length === 0 && <p className="font-inter text-(--slate-gray) mb-3">None recorded yet.</p>}
           {list.length > 0 && (
             <ul className="space-y-2 mb-3">
               {list.map((a) => (
@@ -255,9 +255,9 @@ export function AllergiesEditor({ petId, allergies }: { petId: string; allergies
                     <p className="font-semibold" style={{ color: a.isActive === false ? "var(--slate-gray)" : "var(--charcoal)" }}>
                       {a.allergenName}{a.isActive === false ? " (no longer allergic)" : ""}
                     </p>
-                    <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{[a.category, a.severity].filter(Boolean).join(" · ")}</p>
+                    <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>{[a.category, a.severity].filter(Boolean).join(" · ")}</p>
                   </div>
-                  <button className="underline text-[var(--bindr-navy)] shrink-0" style={{ fontSize: "15px" }} onClick={() => open(a)}
+                  <button className="underline text-(--bindr-navy) shrink-0" style={{ fontSize: "15px" }} onClick={() => open(a)}
                     aria-label={`Edit ${a.allergenName}`}>Edit</button>
                 </li>
               ))}
@@ -291,7 +291,7 @@ export function AllergiesEditor({ petId, allergies }: { petId: string; allergies
             <textarea id="al-notes" className={input} style={inputStyle} rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} />
           </Field>
           {editing !== "new" && (
-            <label className="flex items-center gap-2 font-inter text-[var(--charcoal)]">
+            <label className="flex items-center gap-2 font-inter text-(--charcoal)">
               <input type="checkbox" checked={!form.isActive} onChange={(e) => set("isActive", !e.target.checked)} />
               No longer allergic (keeps it in the record, hides it from sitters)
             </label>
@@ -410,7 +410,7 @@ export function RemindersEditor({ petId, uid, petName }: { petId: string; uid: s
     <Shell title="Your Reminders">
       {editing === null ? (
         <>
-          <p className="font-inter text-[var(--slate-gray)] mb-3" style={{ fontSize: "14px" }}>
+          <p className="font-inter text-(--slate-gray) mb-3" style={{ fontSize: "14px" }}>
             Flea meds, grooming, a vet visit for {petName}. Yours only: they show in your calendar in the PetBindr app too.
           </p>
           {upcoming.length > 0 && (
@@ -422,15 +422,15 @@ export function RemindersEditor({ petId, uid, petName }: { petId: string; uid: s
                 return (
                   <li key={r.id} className="flex items-start gap-3 font-inter">
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-[var(--charcoal)]">{r.title}</p>
+                      <p className="font-semibold text-(--charcoal)">{r.title}</p>
                       <p style={{ fontSize: "14px", color: late ? "var(--error-red)" : "var(--slate-gray)" }}>
                         {d ? `${late ? "Was due " : ""}${d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}, ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` : ""}
                         {repeatLabel ? ` · ${repeatLabel}` : ""}
                       </p>
                     </div>
-                    <button className="underline text-[var(--bindr-navy)] shrink-0" style={{ fontSize: "15px" }} onClick={() => complete(r)}
+                    <button className="underline text-(--bindr-navy) shrink-0" style={{ fontSize: "15px" }} onClick={() => complete(r)}
                       aria-label={`Mark ${r.title} done`}>Done</button>
-                    <button className="underline text-[var(--bindr-navy)] shrink-0" style={{ fontSize: "15px" }} onClick={() => open(r)}
+                    <button className="underline text-(--bindr-navy) shrink-0" style={{ fontSize: "15px" }} onClick={() => open(r)}
                       aria-label={`Edit ${r.title}`}>Edit</button>
                   </li>
                 );

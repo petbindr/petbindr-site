@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 const LAST_UPDATED = "November 24, 2026";
 
-const link = "text-[var(--bindr-navy)] underline";
+const link = "text-(--bindr-navy) underline";
 
 const sections: { title: string; body: React.ReactNode }[] = [
   {
@@ -272,20 +272,20 @@ export default function TermsPage() {
       <div className="max-w-2xl mx-auto">
         <Link
           href="/"
-          className="font-inter text-[var(--slate-gray)] hover:text-[var(--bindr-navy)] transition-colors mb-10 inline-block"
+          className="font-inter text-(--slate-gray) hover:text-(--bindr-navy) transition-colors mb-10 inline-block"
           style={{ fontSize: "14px" }}
         >
           ← Back to PetBindr
         </Link>
 
         <h1
-          className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-3"
+          className="font-fraunces font-semibold text-(--bindr-navy) mb-3"
           style={{ fontSize: "clamp(28px, 4vw, 40px)" }}
         >
           Terms of Service
         </h1>
 
-        <p className="font-inter text-[var(--slate-gray)] text-sm mb-12">
+        <p className="font-inter text-(--slate-gray) text-sm mb-12">
           Last updated: {LAST_UPDATED}
         </p>
 
@@ -293,13 +293,13 @@ export default function TermsPage() {
           {sections.map((section) => (
             <section key={section.title}>
               <h2
-                className="font-fraunces font-semibold text-[var(--bindr-navy)] mb-3"
+                className="font-fraunces font-semibold text-(--bindr-navy) mb-3"
                 style={{ fontSize: "22px" }}
               >
                 {section.title}
               </h2>
               <div
-                className="font-inter text-[var(--charcoal)] leading-relaxed space-y-4"
+                className="font-inter text-(--charcoal) leading-relaxed space-y-4"
                 style={{ fontSize: "16px" }}
               >
                 {section.body}

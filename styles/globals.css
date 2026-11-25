@@ -1,6 +1,54 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+
+@theme {
+  --color-bindr-navy: #1f3c5f;
+  --color-bindr-teal: #74c4cd;
+  --color-soft-teal: #b5dddf;
+  --color-warm-cream: #fbf8f3;
+  --color-pure-white: #ffffff;
+  --color-coral-cta: #c8432f;
+  --color-coral-cta-hover: #a93827;
+  --color-charcoal: #1a1f2e;
+  --color-slate-gray: #6b7785;
+  --color-mist-gray: #e8ecef;
+  --color-success-green: #2e7d56;
+  --color-alert-amber: #e5a547;
+  --color-error-red: #d14545;
+
+  --font-fraunces: Fraunces, serif;
+  --font-inter: Inter, sans-serif;
+
+  --text-hero: clamp(36px, 6vw, 72px);
+  --text-hero--line-height: 1.05;
+  --text-hero--letter-spacing: -0.03em;
+  --text-section: clamp(28px, 4vw, 48px);
+  --text-section--line-height: 1.1;
+  --text-section--letter-spacing: -0.02em;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+  /* v3 gave buttons a pointer cursor; v4 leaves the browser default */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 /* ─── Brand CSS Variables ─────────────────────────────────────────────────── */
 :root {
@@ -53,7 +101,7 @@
   }
   body:has(.theme-auto) { background-color: #10151D; }
   .theme-auto .bg-white { background-color: var(--pure-white); }
-  .theme-auto .shadow-sm { box-shadow: none; }
+  .theme-auto .shadow-xs { box-shadow: none; } /* v3 name: shadow-sm */
   .theme-auto input::placeholder, .theme-auto textarea::placeholder { color: var(--slate-gray); }
 }
 

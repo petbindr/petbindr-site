@@ -49,7 +49,7 @@ export default function HomeApp() {
   if (!webAppConfigured) {
     return <Card title="Coming soon"><p className="font-inter">PetBindr in your browser is almost ready.</p></Card>;
   }
-  if (user === undefined) return <p className="font-inter text-center text-[var(--slate-gray)]">Loading…</p>;
+  if (user === undefined) return <p className="font-inter text-center text-(--slate-gray)">Loading…</p>;
   return user ? <SignedIn user={user} /> : <SignedOut />;
 }
 
@@ -128,8 +128,8 @@ function SignedOut() {
   return (
     <div className="space-y-6">
       <header className="text-center space-y-2">
-        <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "clamp(26px, 6vw, 34px)" }}>{title}</h1>
-        <p className="font-inter text-[var(--charcoal)]">
+        <h1 className="font-fraunces font-semibold text-(--bindr-navy)" style={{ fontSize: "clamp(26px, 6vw, 34px)" }}>{title}</h1>
+        <p className="font-inter text-(--charcoal)">
           {mode === "up"
             ? (newOwner
               ? "Create your free account, then add your pet: feedings, meds and vet info in one place. Works on any phone or computer."
@@ -157,9 +157,9 @@ function SignedOut() {
         {mode !== "up" && <LinkButton onClick={() => { setMode("up"); setError(null); setNotice(null); }}>New here? Create an account</LinkButton>}
         {mode === "in" && <LinkButton onClick={() => { setMode("reset"); setError(null); }}>Forgot password?</LinkButton>}
       </div>
-      <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+      <p className="font-inter text-center text-(--slate-gray)" style={{ fontSize: "14px" }}>
         Your pets&apos; info is only shown to the people you share it with.{" "}
-        <a href="/security" className="underline text-[var(--bindr-navy)]">How we protect it</a>
+        <a href="/security" className="underline text-(--bindr-navy)">How we protect it</a>
       </p>
     </div>
   );
@@ -388,7 +388,7 @@ function SignedIn({ user }: { user: User }) {
     // A pet I'm sitting for: read-only, from the server's copy and the share's switches
     const sit = !ownIds.has(openPetId) ? sitPets.find((s) => s.petId === openPetId) : undefined;
     if (sit) return <PetPage petId={openPetId} sitter={{ uid: user.uid, live: isLive(sit, now), ownerName: sit.ownerName }} onBack={() => { window.location.hash = ""; }} />;
-    if (!loaded.own || !loaded.co || !sitsLoaded) return <p className="font-inter text-[var(--slate-gray)]">Loading…</p>;
+    if (!loaded.own || !loaded.co || !sitsLoaded) return <p className="font-inter text-(--slate-gray)">Loading…</p>;
     return <PetPage petId={openPetId} onBack={() => { window.location.hash = ""; }} />;
   }
 
@@ -400,7 +400,7 @@ function SignedIn({ user }: { user: User }) {
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between gap-3">
-        <h1 className="font-fraunces font-semibold text-[var(--bindr-navy)]" style={{ fontSize: "clamp(24px, 6vw, 32px)" }}>
+        <h1 className="font-fraunces font-semibold text-(--bindr-navy)" style={{ fontSize: "clamp(24px, 6vw, 32px)" }}>
           {first ? `Hi, ${first}` : "PetBindr"}
         </h1>
         <button className="btn-ghost" style={{ padding: "8px 14px", fontSize: "15px" }} onClick={() => { window.location.hash = ""; signOut(firebase().auth); }}>Sign Out</button>
@@ -408,7 +408,7 @@ function SignedIn({ user }: { user: User }) {
 
       {!verified && (
         <Card title="Confirm your email">
-          <p className="font-inter text-[var(--charcoal)]">
+          <p className="font-inter text-(--charcoal)">
             We sent a link to <strong>{user.email}</strong>. Open it to confirm your email; invites to co-own a pet, or pets handed over to you, show up after that. You can add your own pet right away.
           </p>
           {verifyNote && <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--slate-gray)" }} role="status">{verifyNote}</p>}
@@ -424,20 +424,20 @@ function SignedIn({ user }: { user: User }) {
       <SitInvites sits={sits.filter((s) => !ownIds.has(s.petId))} now={now} />
 
       {!ready ? (
-        <p className="font-inter text-[var(--slate-gray)]">Loading your pets…</p>
+        <p className="font-inter text-(--slate-gray)">Loading your pets…</p>
       ) : pets.length === 0 && !sitting ? (
         <>
         <AddFirstPet uid={user.uid} />
         <Card title="Caring for someone else's pet?">
-          <p className="font-inter text-[var(--charcoal)]">
+          <p className="font-inter text-(--charcoal)">
             Their pets show up here when they share them with <strong>{user.email}</strong>:
           </p>
-          <ul className="font-inter text-[var(--charcoal)] list-disc pl-5 mt-2 space-y-1">
+          <ul className="font-inter text-(--charcoal) list-disc pl-5 mt-2 space-y-1">
             <li><strong>Sitting for someone?</strong> Ask them to share their pet with you in the PetBindr app (Invite a Sitter, then PetBindr app). Your clients, their pets and today&apos;s feedings and medications all show here.</li>
             <li><strong>Family or a partner?</strong> Ask the owner to invite you as a co-owner (the pet&apos;s page, then Manage Ownership).</li>
             <li><strong>A pet being given to you?</strong> The owner hands it over in the app.</li>
           </ul>
-          <p className="font-inter text-[var(--slate-gray)] mt-2" style={{ fontSize: "15px" }}>
+          <p className="font-inter text-(--slate-gray) mt-2" style={{ fontSize: "15px" }}>
             {verified ? "Invites show up here to accept." : "Confirm your email first, so invites can reach you."}
           </p>
         </Card>
@@ -446,9 +446,9 @@ function SignedIn({ user }: { user: User }) {
         <>
           <Card title={`Today${tasks.length ? ` · ${doneCount === tasks.length ? "All done" : `${doneCount} of ${tasks.length} done`}` : ""}`}>
             {tasks.length === 0 ? (
-              <p className="font-inter text-[var(--charcoal)]">No feedings or doses today.</p>
+              <p className="font-inter text-(--charcoal)">No feedings or doses today.</p>
             ) : (
-              <ul className="divide-y divide-[var(--mist-gray)]">
+              <ul className="divide-y divide-(--mist-gray)">
                 {tasks.map((t) => (
                   <TaskRow key={t.key} task={t} showPet={taskPets.length > 1} uid={user.uid} myName={myName || user.email || "Someone"} />
                 ))}
@@ -461,10 +461,10 @@ function SignedIn({ user }: { user: User }) {
                 <li key={p.id} className="font-inter">
                   <a href={`#pet/${p.id}`} className="flex items-center justify-between gap-3 py-1" style={{ textDecoration: "none" }}>
                     <span>
-                      <span className="font-semibold text-[var(--bindr-navy)] underline">{p.name}</span>
-                      <span className="text-[var(--slate-gray)]"> · {[p.species, p.breed].filter((x, i, a) => x && !(i === 1 && x.trim().toLowerCase() === (a[0] || "").trim().toLowerCase())).join(" · ")}</span>
+                      <span className="font-semibold text-(--bindr-navy) underline">{p.name}</span>
+                      <span className="text-(--slate-gray)"> · {[p.species, p.breed].filter((x, i, a) => x && !(i === 1 && x.trim().toLowerCase() === (a[0] || "").trim().toLowerCase())).join(" · ")}</span>
                     </span>
-                    <span className="text-[var(--slate-gray)]" aria-hidden>›</span>
+                    <span className="text-(--slate-gray)" aria-hidden>›</span>
                   </a>
                 </li>
               ))}
@@ -485,11 +485,11 @@ function SignedIn({ user }: { user: User }) {
 
       {ready && pets.length > 0 && <AlertEmails uid={user.uid} email={user.email || ""} />}
 
-      <p className="font-inter text-center text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+      <p className="font-inter text-center text-(--slate-gray)" style={{ fontSize: "14px" }}>
         Signed in as {user.email}. Tap a pet for its vets, allergies, medications and more.
       </p>
       <p className="font-inter text-center" style={{ fontSize: "14px" }}>
-        <a href="mailto:hello@petbindr.com?subject=PetBindr%20feedback%20(web)" className="text-[var(--bindr-navy)] underline">Send feedback</a>
+        <a href="mailto:hello@petbindr.com?subject=PetBindr%20feedback%20(web)" className="text-(--bindr-navy) underline">Send feedback</a>
       </p>
     </div>
   );
@@ -554,12 +554,12 @@ function AddFirstPet({ uid, more = false, onDone }: { uid: string; more?: boolea
     }
   }
 
-  const input = "w-full rounded-xl px-4 py-3 text-[var(--charcoal)]";
+  const input = "w-full rounded-xl px-4 py-3 text-(--charcoal)";
   const inputStyle = { border: "1px solid var(--mist-gray)", background: "var(--warm-cream)", fontSize: "16px" };
-  const label = "block mb-1 text-[var(--charcoal)] font-semibold";
+  const label = "block mb-1 text-(--charcoal) font-semibold";
   return (
     <Card title={more ? "Add another pet" : "Add your pet"}>
-      {!more && <p className="font-inter text-[var(--charcoal)] mb-4">
+      {!more && <p className="font-inter text-(--charcoal) mb-4">
         Start a free binder: feedings, medications, vets and records in one place, ready to share with family or a sitter.
       </p>}
       <form onSubmit={save} className="space-y-4 font-inter">
@@ -576,26 +576,26 @@ function AddFirstPet({ uid, more = false, onDone }: { uid: string; more?: boolea
             </select>
           </div>
           <div>
-            <label className={label} htmlFor="new-pet-birthday" style={{ fontSize: "15px" }}>Birthday <span className="font-normal text-[var(--slate-gray)]">(optional)</span></label>
+            <label className={label} htmlFor="new-pet-birthday" style={{ fontSize: "15px" }}>Birthday <span className="font-normal text-(--slate-gray)">(optional)</span></label>
             <input id="new-pet-birthday" type="date" className={input} style={inputStyle} value={birthday} max={maxDay}
               onChange={(e) => setBirthday(e.target.value)} />
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className={label} htmlFor="new-pet-meal" style={{ fontSize: "15px" }}>A feeding time <span className="font-normal text-[var(--slate-gray)]">(optional)</span></label>
+            <label className={label} htmlFor="new-pet-meal" style={{ fontSize: "15px" }}>A feeding time <span className="font-normal text-(--slate-gray)">(optional)</span></label>
             <input id="new-pet-meal" type="time" className={input} style={inputStyle} value={mealTime}
               onChange={(e) => setMealTime(e.target.value)} />
           </div>
           {mealTime && (
             <div>
-              <label className={label} htmlFor="new-pet-portion" style={{ fontSize: "15px" }}>Portion <span className="font-normal text-[var(--slate-gray)]">(optional)</span></label>
+              <label className={label} htmlFor="new-pet-portion" style={{ fontSize: "15px" }}>Portion <span className="font-normal text-(--slate-gray)">(optional)</span></label>
               <input id="new-pet-portion" className={input} style={inputStyle} value={portion} maxLength={200} placeholder="e.g. 1 cup"
                 onChange={(e) => setPortion(e.target.value)} />
             </div>
           )}
         </div>
-        <p className="text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+        <p className="text-(--slate-gray)" style={{ fontSize: "14px" }}>
           You can add more meals, medications and the vet on your pet&apos;s page afterwards.
         </p>
         {error && <p style={{ color: "var(--error-red)" }} role="alert">{error}</p>}
@@ -686,12 +686,12 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
   return (
     <li className="py-3">
       <div className="flex items-center gap-3">
-        <div className="w-16 shrink-0 font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{fmtTime(task.time)}</div>
+        <div className="w-16 shrink-0 font-inter text-(--slate-gray)" style={{ fontSize: "14px" }}>{fmtTime(task.time)}</div>
         <div className="flex-1 min-w-0">
-          <p className="font-inter font-semibold text-[var(--charcoal)]">
+          <p className="font-inter font-semibold text-(--charcoal)">
             {isFeeding ? "🍽️ " : "💊 "}{showPet ? `${task.petName} · ` : ""}{task.title}
           </p>
-          {task.detail && <p className="font-inter text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>{task.detail}</p>}
+          {task.detail && <p className="font-inter text-(--slate-gray)" style={{ fontSize: "14px" }}>{task.detail}</p>}
           {done && done.skipped && (
             <p className="font-inter" style={{ fontSize: "14px", color: "var(--slate-gray)" }}>
               Skipped by {done.by} at {fmtTime(done.at)} (not given)
@@ -709,12 +709,12 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
           )}
           <div className="flex flex-wrap gap-x-4">
             {isFeeding && !choosing && !busy && (
-              <button className="font-inter underline text-[var(--bindr-navy)]" style={{ fontSize: "14px", padding: "4px 0" }} onClick={() => setChoosing(true)}>
+              <button className="font-inter underline text-(--bindr-navy)" style={{ fontSize: "14px", padding: "4px 0" }} onClick={() => setChoosing(true)}>
                 {done ? "Change how much" : "Ate some or didn't eat?"}
               </button>
             )}
             {done && !busy && (
-              <button className="font-inter underline text-[var(--slate-gray)]" style={{ fontSize: "14px", padding: "4px 0" }} onClick={undo}>
+              <button className="font-inter underline text-(--slate-gray)" style={{ fontSize: "14px", padding: "4px 0" }} onClick={undo}>
                 Not done yet
               </button>
             )}
@@ -739,7 +739,7 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
               {AMOUNT_TEXT[a]}
             </button>
           ))}
-          <button className="font-inter underline text-[var(--slate-gray)]" style={{ fontSize: "14px" }} onClick={() => setChoosing(false)}>Cancel</button>
+          <button className="font-inter underline text-(--slate-gray)" style={{ fontSize: "14px" }} onClick={() => setChoosing(false)}>Cancel</button>
         </div>
       )}
     </li>
@@ -779,12 +779,12 @@ function AlertEmails({ uid, email }: { uid: string; email: string }) {
   }
   return (
     <Card title="Alerts">
-      <label className="flex items-start gap-3 font-inter text-[var(--charcoal)] cursor-pointer">
+      <label className="flex items-start gap-3 font-inter text-(--charcoal) cursor-pointer">
         <input type="checkbox" className="mt-1" style={{ width: 20, height: 20 }} checked={on} disabled={saving}
           onChange={(e) => toggle(e.target.checked)} />
         <span>
           Email me at <strong>{email}</strong> when a dose or feeding is missed.
-          <span className="block text-[var(--slate-gray)]" style={{ fontSize: "14px" }}>
+          <span className="block text-(--slate-gray)" style={{ fontSize: "14px" }}>
             Only if you don&apos;t have the PetBindr iPhone app (it sends a notification instead).
           </span>
         </span>
@@ -841,7 +841,7 @@ function CoOwnerInviteOffers({ user }: { user: User }) {
         const kind = [i.species, i.breed].filter(Boolean).join(" · ");
         return (
           <Card key={i.inviteId} title={`${i.fromName} invited you to co-own ${i.petName}`}>
-            <p className="font-inter text-[var(--charcoal)]">
+            <p className="font-inter text-(--charcoal)">
               {kind ? `${kind}. ` : ""}You&apos;ll both see {i.petName}&apos;s feedings, medications, vet and records, and either of you can check things off and make changes.
             </p>
             {error && <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--error-red)" }} role="alert">{error}</p>}
@@ -913,10 +913,10 @@ function TransferOffers({ user }: { user: User }) {
         const kind = [o.species, o.breed].filter(Boolean).join(" · ");
         return (
           <Card key={o.petId} title={`${o.fromName} is giving you ${o.petName}`}>
-            <p className="font-inter text-[var(--charcoal)]">
+            <p className="font-inter text-(--charcoal)">
               {kind ? `${kind}, with` : "With"} all their records: vaccines, vet visits, medications, feeding and the vet&apos;s details.
             </p>
-            {o.note && <p className="font-inter italic mt-2 text-[var(--charcoal)]">“{o.note}”</p>}
+            {o.note && <p className="font-inter italic mt-2 text-(--charcoal)">“{o.note}”</p>}
             {o.keepAsCoOwner && (
               <p className="font-inter mt-2" style={{ fontSize: "15px", color: "var(--slate-gray)" }}>
                 {o.fromName} will stay on as a co-owner. If you'd rather not share, ask them or email hello@petbindr.com.
@@ -958,9 +958,9 @@ function Field({ label, value, onChange, type = "text", autoComplete }: {
 }) {
   return (
     <label className="block font-inter">
-      <span className="block mb-1 text-[var(--charcoal)] font-semibold" style={{ fontSize: "15px" }}>{label}</span>
+      <span className="block mb-1 text-(--charcoal) font-semibold" style={{ fontSize: "15px" }}>{label}</span>
       <input
-        className="w-full rounded-xl px-4 py-3 text-[var(--charcoal)]"
+        className="w-full rounded-xl px-4 py-3 text-(--charcoal)"
         style={{ border: "1px solid var(--mist-gray)", background: "var(--warm-cream)", fontSize: "16px" }}
         type={type} value={value} onChange={(e) => onChange(e.target.value)} autoComplete={autoComplete} required
       />
@@ -969,5 +969,5 @@ function Field({ label, value, onChange, type = "text", autoComplete }: {
 }
 
 function LinkButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return <button className="block mx-auto underline text-[var(--bindr-navy)]" onClick={onClick}>{children}</button>;
+  return <button className="block mx-auto underline text-(--bindr-navy)" onClick={onClick}>{children}</button>;
 }

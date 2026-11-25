@@ -61,7 +61,7 @@ export default function AccountCard({ user }: { user: User }) {
   return (
     <section className="rounded-2xl p-5 md:p-6" style={{ background: "var(--pure-white)", border: "1px solid var(--mist-gray)" }}>
       <h2 className="font-fraunces font-semibold mb-3" style={{ fontSize: "20px", color: "var(--bindr-navy)" }}>Your account</h2>
-      <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "15px" }}>
+      <p className="font-inter text-(--charcoal)" style={{ fontSize: "15px" }}>
         Signed in as <strong>{user.email}</strong>
       </p>
       <div className="flex flex-wrap gap-2 mt-3">
@@ -76,7 +76,7 @@ export default function AccountCard({ user }: { user: User }) {
       </div>
       {confirming && (
         <form onSubmit={deleteAccount} className="mt-4 space-y-3 rounded-xl p-4" style={{ background: "var(--tone-alert-bg, #FDECEA)" }}>
-          <p className="font-inter text-[var(--charcoal)]" style={{ fontSize: "15px" }}>
+          <p className="font-inter text-(--charcoal)" style={{ fontSize: "15px" }}>
             This deletes your account, your pets, their records and photos, and your home information, and
             ends access for everyone you shared with. A pet you co-own with someone stays with them.
             It can&rsquo;t be undone.
