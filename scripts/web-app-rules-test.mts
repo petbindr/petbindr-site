@@ -12,7 +12,7 @@ import {
   collection, query, where, serverTimestamp, orderBy, limit, disableNetwork, enableNetwork,
 } from "firebase/firestore";
 import { feedingLogDoc, medicationLogDoc, doseLogId, tasksFor } from "../app/app/today.ts";
-import { undoOwnDose, DOSE_KEPT } from "../app/app/undo.ts";
+import { undoOwnDose, undoOwnMeal, DOSE_KEPT, MEAL_KEPT } from "../app/app/undo.ts";
 import {
   healthRecordDoc, dayFromInput, vaccineDoc, vaccineChanges, allergyDoc, allergyChanges, reminderDoc, reminderChanges,
   nextOccurrence, nextReminderId,
@@ -243,6 +243,37 @@ check("dose undone", !(await getDoc(doc(db, `pets/rex/medicationLogs/${dose.id}`
   check("Undo marker can't remove the owner's dose", (await undoOwnDose(db, "rex", own.id, uid).then(() => "done", (e) => e.code)) === DOSE_KEPT);
   await deleteDoc(doc(db, `pets/rex/medicationLogs/${own.id}`));
   check("co-owner can still remove a dose the owner logged", !(await admin.doc(`pets/rex/medicationLogs/${own.id}`).get()).exists);
+}
+
+// "Not done yet" on her own meal goes with the meal Undo marker (Fresh list 9 O1):
+// one meal has one log ID a day, the same race as the dose
+{
+  const own = feedingLogDoc("rex", "am", uid, "Priya", now, "all");
+  await setDoc(doc(db, `pets/rex/feedingLogs/${own.id}`), own.data);
+  await undoOwnMeal(db, "rex", own.id, uid);
+  check("Not done yet on her own meal removes it", !(await getDoc(doc(db, `pets/rex/feedingLogs/${own.id}`))).exists());
+  check("meal Undo marker written", (await admin.doc(`pets/rex/mealUndos/${uid}`).get()).data()?.logId === own.id);
+
+  const race = async (undo: (id: string) => Promise<unknown>) => {
+    await disableNetwork(db);
+    const mine = setDoc(doc(db, `pets/rex/feedingLogs/${own.id}`), own.data).then(() => "saved", (e) => String(e.code));
+    const gone = undo(own.id).then(() => "done", (e) => String(e.code));
+    await admin.doc(`pets/rex/feedingLogs/${own.id}`).set({ ...own.data, completedBy: "owner", completedByName: "Jordan", via: "app" });
+    await enableNetwork(db);
+    const out = { mine: await mine, undo: await gone, kept: (await admin.doc(`pets/rex/feedingLogs/${own.id}`).get()).data()?.completedBy };
+    await admin.doc(`pets/rex/feedingLogs/${own.id}`).delete();
+    return out;
+  };
+  const plain = await race((id) => deleteDoc(doc(db, `pets/rex/feedingLogs/${id}`)));
+  check("meal offline race, plain delete (old web undo): the owner's meal was deleted", plain.mine.includes("permission-denied") && plain.undo === "done" && plain.kept === undefined);
+  const guarded = await race((id) => undoOwnMeal(db, "rex", id, uid));
+  check("meal offline race, Not done yet: her check-off refused", guarded.mine.includes("permission-denied"));
+  check("meal offline race, Not done yet: the owner's meal kept and she's told", guarded.undo === MEAL_KEPT && guarded.kept === "owner");
+
+  await admin.doc(`pets/rex/feedingLogs/${own.id}`).set({ ...own.data, completedBy: "owner", completedByName: "Jordan" });
+  check("meal Undo marker can't remove the owner's meal", (await undoOwnMeal(db, "rex", own.id, uid).then(() => "done", (e) => e.code)) === MEAL_KEPT);
+  await deleteDoc(doc(db, `pets/rex/feedingLogs/${own.id}`));
+  check("co-owner can still remove a meal the owner logged", !(await admin.doc(`pets/rex/feedingLogs/${own.id}`).get()).exists);
 }
 
 // Someone else's pet stays private

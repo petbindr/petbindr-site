@@ -20,7 +20,7 @@ import {
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { firebase, webAppConfigured } from "./firebase";
-import { undoOwnDose, DOSE_KEPT } from "./undo";
+import { undoOwnDose, undoOwnMeal, DOSE_KEPT, MEAL_KEPT } from "./undo";
 import { signupSource } from "@/lib/signupSource";
 import { feedingChanges, newId, timeAt } from "./care";
 import PetPage from "./PetPage";
@@ -550,9 +550,7 @@ function AddFirstPet({ uid, more = false, onDone }: { uid: string; more?: boolea
       setName(""); setBirthday(""); setMealTime(""); setPortion(""); setBusy(false); onDone?.();
     } catch (err) {
       const code = (err as { code?: string }).code || "";
-      setError(code === DOSE_KEPT
-        ? "Someone else already logged this dose before your check-off was sent, so theirs stays."
-        : code.includes("permission-denied") ? "Couldn't save your pet. Sign out and back in, then try again." : "Couldn't save that. Check your connection and try again.");
+      setError(code.includes("permission-denied") ? "Couldn't save your pet. Sign out and back in, then try again." : "Couldn't save that. Check your connection and try again.");
       setBusy(false);
     }
   }
@@ -645,7 +643,10 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
       const code = (err as { code?: string }).code || "";
       // "Someone else checked it off" only fits a feeding just checked off; otherwise
       // it's lost access (e.g. removed as a co-owner)
-      setError(code.includes("permission-denied")
+      // An Undo refused because someone else's check-off reached the server first (undo.ts)
+      setError(code === DOSE_KEPT || code === MEAL_KEPT
+        ? `Someone else already logged this ${code === MEAL_KEPT ? "meal" : "dose"} before your check-off was sent, so theirs stays.`
+        : code.includes("permission-denied")
         ? (isFeeding && !task.done ? "Someone else just checked this off. It'll update in a moment." : "You can't change this anymore. The owner may have changed who can see this pet.")
         : "Couldn't save that. Check your connection and try again.");
     } finally {
@@ -678,10 +679,10 @@ function TaskRow({ task, showPet, uid, myName }: { task: TodayTask; showPet: boo
   function undo() {
     if (!task.done) return;
     const { logId, byUserId } = task.done;
-    // A dose this person logged: sent with the Undo marker, so it can't remove
-    // someone else's log that got there first (undo.ts). Removing a dose
+    // A dose or meal this person logged: sent with the Undo marker, so it can't
+    // remove someone else's log that got there first (undo.ts). Removing one
     // someone else logged (the row says who) stays a plain delete.
-    if (!isFeeding && byUserId === uid) return run(() => undoOwnDose(db, task.petId, logId, uid));
+    if (byUserId === uid) return run(() => (isFeeding ? undoOwnMeal : undoOwnDose)(db, task.petId, logId, uid));
     run(() => deleteDoc(doc(db, `${base}/${isFeeding ? "feedingLogs" : "medicationLogs"}/${logId}`)));
   }
 
