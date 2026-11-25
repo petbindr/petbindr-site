@@ -838,8 +838,8 @@ function PetCard({ pet }: { pet: Pet }) {
         {pet.allergies && pet.allergies.length > 0 && (
           <Section title="⚠️ Allergies" alert>
             <ul className="space-y-1">
-              {pet.allergies.map((a) => (
-                <li key={a.name}>
+              {pet.allergies.map((a, i) => (
+                <li key={`${i}-${a.name}`}>
                   <strong>{a.name}</strong>
                   {a.severity ? ` (${a.severity})` : ""}
                   {a.symptoms ? `: ${a.symptoms}` : ""}
